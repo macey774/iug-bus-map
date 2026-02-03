@@ -322,37 +322,7 @@ animateBus4Loop(bus4CombinedRoute, 80, "BUS 4", "Socatur");
 animateBus8(bus8Stops, 90, "BUS 8", "Coaster");
 
 
-/**********************************************************
- * ??? TITRE PROFESSIONNEL – CONTRÔLE DES COUCHES
- **********************************************************/
 
-const layersInfo = L.control({ position: 'topright' });
-
-layersInfo.onAdd = function () {
-    const div = L.DomUtil.create('div', 'layers-info');
-    div.innerHTML = `
-        <div style="
-            background: rgba(255,255,255,0.95);
-            padding: 8px 12px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-            font-size: 13px;
-            line-height: 1.4;
-            margin-bottom: 6px;
-        ">
-            <div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">
-                ??? Gestion de la carte
-            </div>
-            <div style="font-size: 12px; color: #555;">
-                Active ou désactive les éléments<br>
-                (bus, lignes, campus, parkings)
-            </div>
-        </div>
-    `;
-    return div;
-};
-
-layersInfo.addTo(map);
 
 
 /**********************************************************
@@ -372,12 +342,9 @@ L.control.layers(null, {
 
 
 
-
-
-
-
-
-
+/**********************************************************
+ * BOUTON POSITION UTILISATEUR
+ **********************************************************/
 let userMarker = null;
 
 document.getElementById("locateBtn").onclick = () => {
@@ -392,31 +359,40 @@ map.on('locationfound', e => {
         color: 'blue',
         fillOpacity: 0.7
     }).addTo(map).bindPopup("?? Vous êtes ici").openPopup();
-
-    const nearest = findNearestStop(e.latlng, bus8Stops);
-    if (nearest) {
-        L.popup()
-            .setLatLng(nearest.coords)
-            .setContent(
-                "?? Arrêt le plus proche<br><b>" +
-                nearest.name +
-                "</b><br>?? " +
-                Math.round(nearest.distance) +
-                " m"
-            )
-            .openOn(map);
-    }
 });
 
+/**********************************************************
+ * BOUTON SUIVI BUS
+ **********************************************************/
+const followBtn = document.getElementById("followBusBtn");
+const followMenu = document.getElementById("followMenu");
 
+followBtn.onclick = () => {
+    followMenu.classList.toggle("hidden");
+};
 
+/**********************************************************
+ * CHOIX DU BUS À SUIVRE
+ **********************************************************/
+followMenu.querySelectorAll("button").forEach(btn => {
+    btn.onclick = () => {
+        const type = btn.getAttribute("data-type");
 
+        if(type === "nearest" && userMarker) {
+            alert("Fonction 'Le plus proche' activée !");
+            // Ici : logique pour suivre bus le plus proche
+        }
+        else if(type === "bus4") {
+            alert("Suivi BUS 4 activé !");
+            // Ici : logique pour suivre BUS 4
+        }
+        else if(type === "bus8") {
+            alert("Suivi BUS 8 activé !");
+            // Ici : logique pour suivre BUS 8
+        }
 
-
-
-
-
-
-
+        followMenu.classList.add("hidden");
+    };
+});
 
 

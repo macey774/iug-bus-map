@@ -1,13 +1,17 @@
-
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+
+    <!-- IMPORTANT : pour mobile + accents -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Suivi des bus scolaires</title>
 
     <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
 
+    <!-- CSS principal -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,15 +21,68 @@
 </header>
 
 <div id="map"></div>
-<div class="mobile-btn" id="locateBtn">??</div>
-  <div class="mobile-btn" style="bottom:80px;" id="followBusBtn">??</div>
+
+<!-- Boutons flottants mobile -->
+<div class="mobile-btn" id="locateBtn" title="Ma position">??</div>
+<div class="mobile-btn" id="followBusBtn" title="Suivi du bus">??</div>
+
+<!-- Menu suivi bus -->
+<div id="followMenu" class="hidden">
+    <button data-type="nearest">Le plus proche</button>
+    <button data-type="bus4">BUS 4</button>
+    <button data-type="bus8">BUS 8</button>
+</div>
+
+
+
 <footer>
     Institut Universitaire du Golfe de Guinée
 </footer>
 
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<!-- JS principal -->
 <script src="script.js"></script>
 
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

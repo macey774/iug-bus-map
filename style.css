@@ -1,8 +1,16 @@
-body {
+/* ===========================
+   STYLE GLOBAL
+=========================== */
+html, body {
+    height: 100%;
     margin: 0;
     font-family: Arial, sans-serif;
+    overflow: hidden;
 }
 
+/* ===========================
+   HEADER
+=========================== */
 header {
     background: #004080;
     color: white;
@@ -10,36 +18,100 @@ header {
     text-align: center;
 }
 
+/* ===========================
+   CARTE
+=========================== */
 #map {
-    height: calc(100vh - 100px);
+    width: 100%;
+    height: calc(100vh - 140px); /* header + footer + attribution */
 }
 
+/* ===========================
+   FOOTER TOUJOURS VISIBLE
+=========================== */
 footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
     background: #eee;
     text-align: center;
-    padding: 5px;
+    padding: 6px;
     font-size: 12px;
+    z-index: 1000;
 }
 
-.bus-arret {
-    filter: hue-rotate(60deg);
+
+
+/* ===========================
+   BOUTONS FLOTTANTS (MOBILE)
+=========================== */
+.mobile-btn {
+    position: fixed;
+    right: 15px;
+    bottom: 70px;
+    width: 48px;
+    height: 48px;
+    background: #004080;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    cursor: pointer;
+    z-index: 1200;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 
-.bus-hs {
-    filter: grayscale(100%);
+#followBusBtn {
+    bottom: 130px;
 }
 
+/* ===========================
+   MENU SUIVI BUS
+=========================== */
+#followMenu {
+    position: fixed;
+    right: 70px;
+    bottom: 130px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 5px;
+    z-index: 1300;
+    display: flex;
+    flex-direction: column;
+}
+
+#followMenu button {
+    margin: 2px 0;
+    padding: 6px 12px;
+    background: #004080;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#followMenu button:hover {
+    background: #0066cc;
+}
+
+.hidden {
+    display: none;
+}
+
+/* ===========================
+   VERSION MOBILE
+=========================== */
 @media (max-width: 768px) {
     header h1 {
         font-size: 18px;
     }
 
     #map {
-        height: calc(100vh - 80px);
+        height: calc(100vh - 130px);
     }
-}
-
-#map {
-    height: 100vh;
-    width: 100%;
 }
