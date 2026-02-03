@@ -7,7 +7,7 @@ const map = L.map('map').setView([4.040770, 9.752837], 14);
 
 // Fond de carte OpenStreetMap
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; Mabel Cédric Yvan'
+    attribution: '&copy; Mabel Cedric Yvan'
 }).addTo(map);
 
 
@@ -73,10 +73,10 @@ const bus4Stops = [
     { name: "Tradex Borne 10", coords: [3.998247, 9.768313] },
     { name: "Carrefour Ari", coords: [3.995235, 9.782917] },
     { name: "Tradex Yassa", coords: [4.001153, 9.805164] },
-    { name: "Entrée MAETUR Yassa", coords: [4.009370, 9.800646] },
+    { name: "Entree MAETUR Yassa", coords: [4.009370, 9.800646] },
     { name: "Total Nkolmbong", coords: [4.018734, 9.795956] },
     { name: "Carrefour Nyalla Pariso", coords: [4.024639, 9.793029] },
-    { name: "Château Nyalla", coords: [4.033330, 9.786290] },
+    { name: "Chateau Nyalla", coords: [4.033330, 9.786290] },
     { name: "Rails Nyalla", coords: [4.034902, 9.777759] },
 
     // ?? Retour Campus (fermeture de boucle)
@@ -214,8 +214,8 @@ function animateBus4Loop(combinedStops, speed, label, busType) {
         marker.bindPopup(
             "?? " + label +
             "<br><b>Type :</b> " + busType +
-            "<br><b>Arrêt actuel :</b> " + current +
-            "<br><b>Prochain arrêt :</b> " + next
+            "<br><b>Arret actuel :</b> " + current +
+            "<br><b>Prochain arret :</b> " + next
         );
 
         pointIndex++;
@@ -330,8 +330,8 @@ animateBus8(bus8Stops, 90, "BUS 8", "Coaster");
  **********************************************************/
 
 L.control.layers(null, {
-    "?? Arrêts BUS 4": bus4Layer,
-    "?? Arrêts BUS 8": bus8Layer,
+    "?? Arrets BUS 4": bus4Layer,
+    "?? Arrets BUS 8": bus8Layer,
     "?? Ligne BUS 4": bus4LineLayer,
     "?? Ligne BUS 8": bus8LineLayer,
     "?? Campus": campusLayer,
@@ -358,41 +358,6 @@ map.on('locationfound', e => {
         radius: 7,
         color: 'blue',
         fillOpacity: 0.7
-    }).addTo(map).bindPopup("?? Vous êtes ici").openPopup();
+    }).addTo(map).bindPopup("?? Vous etes ici").openPopup();
 });
-
-/**********************************************************
- * BOUTON SUIVI BUS
- **********************************************************/
-const followBtn = document.getElementById("followBusBtn");
-const followMenu = document.getElementById("followMenu");
-
-followBtn.onclick = () => {
-    followMenu.classList.toggle("hidden");
-};
-
-/**********************************************************
- * CHOIX DU BUS À SUIVRE
- **********************************************************/
-followMenu.querySelectorAll("button").forEach(btn => {
-    btn.onclick = () => {
-        const type = btn.getAttribute("data-type");
-
-        if(type === "nearest" && userMarker) {
-            alert("Fonction 'Le plus proche' activée !");
-            // Ici : logique pour suivre bus le plus proche
-        }
-        else if(type === "bus4") {
-            alert("Suivi BUS 4 activé !");
-            // Ici : logique pour suivre BUS 4
-        }
-        else if(type === "bus8") {
-            alert("Suivi BUS 8 activé !");
-            // Ici : logique pour suivre BUS 8
-        }
-
-        followMenu.classList.add("hidden");
-    };
-});
-
 
