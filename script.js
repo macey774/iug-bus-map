@@ -1,5 +1,5 @@
 /**********************************************************
- * 1️⃣ INITIALISATION DE LA CARTE
+ * 1?? INITIALISATION DE LA CARTE
  **********************************************************/
 
 const map = L.map('map').setView([4.040770, 9.752837], 18);
@@ -15,7 +15,7 @@ const carIcon = L.icon({
 });
 
 /**********************************************************
- * 2️⃣ DÉFINITION DES ICÔNES
+ * 2?? D�FINITION DES IC�NES
  **********************************************************/
 
 const bus4StopIcon = L.icon({
@@ -37,7 +37,7 @@ const busIcon = L.icon({
 });
 
 /**********************************************************
- * 3️⃣ LAYERS
+ * 3?? LAYERS
  **********************************************************/
 
 const bus4Layer = L.layerGroup().addTo(map);
@@ -48,7 +48,7 @@ const campusLayer = L.layerGroup().addTo(map);
 const parkingLayer = L.layerGroup().addTo(map);
 
 /**********************************************************
- * 4️⃣ ARRÊTS
+ * 4?? ARR�TS
  **********************************************************/
 
 const bus4Stops = [
@@ -60,10 +60,10 @@ const bus4Stops = [
     { name: "Tradex Borne 10", coords: [3.998247, 9.768313] },
     { name: "Carrefour Ari", coords: [3.995235, 9.782917] },
     { name: "Tradex Yassa", coords: [4.001153, 9.805164] },
-    { name: "Entrée MAETUR Yassa", coords: [4.009370, 9.800646] },
+    { name: "Entr�e MAETUR Yassa", coords: [4.009370, 9.800646] },
     { name: "Total Nkolmbong", coords: [4.018734, 9.795956] },
     { name: "Carrefour Nyalla Pariso", coords: [4.024639, 9.793029] },
-    { name: "Château Nyalla", coords: [4.033330, 9.786290] },
+    { name: "Ch�teau Nyalla", coords: [4.033330, 9.786290] },
     { name: "Rails Nyalla", coords: [4.034902, 9.777759] },
     { name: "Campus C", coords: [4.039735, 9.751857] }
 ];
@@ -87,30 +87,30 @@ const parkings = [
 ];
 
 
-// 🔰 Tracé ligne BUS 4 (OSRM)
+// ?? Trac� ligne BUS 4 (OSRM)
 getOSRMRoute(bus4Stops.map(s => s.coords)).then(route => {
     L.polyline(route, { color: 'yellow', weight: 5, opacity: 0.9 }).addTo(bus4LineLayer);
 });
 
-// 🔰 Tracé ligne BUS 8 (OSRM)
+// ?? Trac� ligne BUS 8 (OSRM)
 getOSRMRoute(bus8Stops.map(s => s.coords)).then(route => {
     L.polyline(route, { color: 'green', weight: 5, opacity: 0.9 }).addTo(bus8LineLayer);
 });
 
 
 /**********************************************************
- * 5️⃣ AJOUT DES MARKERS
+ * 5?? AJOUT DES MARKERS
  **********************************************************/
 
 bus4Stops.forEach(s => L.marker(s.coords, { icon: bus4StopIcon }).addTo(bus4Layer)
-    .bindPopup("🛑 BUS 4<br><b>" + s.name + "</b>"));
+    .bindPopup("?? BUS 4<br><b>" + s.name + "</b>"));
 bus8Stops.forEach(s => L.marker(s.coords, { icon: bus8StopIcon }).addTo(bus8Layer)
-    .bindPopup("🛑 BUS 8<br><b>" + s.name + "</b>"));
-campuses.forEach(c => L.marker(c.coords).addTo(campusLayer).bindPopup("🎓 " + c.name));
-parkings.forEach(p => L.marker(p.coords).addTo(parkingLayer).bindPopup("🅿️ " + p.name));
+    .bindPopup("?? BUS 8<br><b>" + s.name + "</b>"));
+campuses.forEach(c => L.marker(c.coords).addTo(campusLayer).bindPopup("?? " + c.name));
+parkings.forEach(p => L.marker(p.coords).addTo(parkingLayer).bindPopup("??? " + p.name));
 
 /**********************************************************
- * 6️⃣ FONCTIONS UTILITAIRES
+ * 6?? FONCTIONS UTILITAIRES
  **********************************************************/
 
 async function getOSRMRoute(coords) {
@@ -128,7 +128,7 @@ async function getOSRMRoute(coords) {
 }
 
 /**********************************************************
- * 7️⃣ ANIMATION DES BUS AVEC ARRÊTS EXACTS
+ * 7?? ANIMATION DES BUS AVEC ARR�TS EXACTS
  **********************************************************/
 
 function animateBusExactStops(route, stops, speed, label, busType) {
@@ -139,20 +139,20 @@ function animateBusExactStops(route, stops, speed, label, busType) {
         const currentStop = stops[stopIndex];
         const nextStop = stops[(stopIndex + 1) % stops.length];
 
-        // Trajet OSRM entre arrêt actuel et suivant
+        // Trajet OSRM entre arr�t actuel et suivant
         const segment = await getOSRMRoute([currentStop.coords, nextStop.coords]);
 
         for (let i = 0; i < segment.length; i++) {
             marker.setLatLng(segment[i]);
             marker.bindPopup(
-                `🚌 ${label}<br><b>Type :</b> ${busType}<br><b>Arrêt actuel :</b> ${currentStop.name}<br><b>Prochain arrêt :</b> ${nextStop.name}`
+                `?? ${label}<br><b>Type :</b> ${busType}<br><b>Arr�t actuel :</b> ${currentStop.name}<br><b>Prochain arr�t :</b> ${nextStop.name}`
             );
 
             await new Promise(r => setTimeout(r, speed));
         }
 
         stopIndex = (stopIndex + 1) % stops.length;
-        setTimeout(moveToNextStop, 2000); // pause 2 secondes à l'arrêt
+        setTimeout(moveToNextStop, 2000); // pause 2 secondes � l'arr�t
     }
 
     moveToNextStop();
@@ -160,7 +160,7 @@ function animateBusExactStops(route, stops, speed, label, busType) {
 }
 
 /**********************************************************
- * 8️⃣ LANCEMENT DES BUS AVEC TRAJETS EXACTS
+ * 8?? LANCEMENT DES BUS AVEC TRAJETS EXACTS
  **********************************************************/
 
 let markerBus4, markerBus8;
@@ -169,35 +169,35 @@ markerBus4 = animateBusExactStops(bus4Stops, bus4Stops, 80, "BUS 4", "Socatur");
 markerBus8 = animateBusExactStops(bus8Stops, bus8Stops, 90, "BUS 8", "Coaster");
 
 /**********************************************************
- * 9️⃣ CONTRÔLE DES COUCHES
+ * 9?? CONTR�LE DES COUCHES
  **********************************************************/
 
 L.control.layers(null, {
-    "🛑 Arrêts BUS 4": bus4Layer,
-    "🛑 Arrêts BUS 8": bus8Layer,
-    "🟡 Ligne BUS 4": bus4LineLayer,
-    "🟢 Ligne BUS 8": bus8LineLayer,
-    "🎓 Campus": campusLayer,
-    "🅿️ Parkings": parkingLayer
+    "?? Arr�ts BUS 4": bus4Layer,
+    "?? Arr�ts BUS 8": bus8Layer,
+    "?? Ligne BUS 4": bus4LineLayer,
+    "?? Ligne BUS 8": bus8LineLayer,
+    "?? Campus": campusLayer,
+    "??? Parkings": parkingLayer
 }).addTo(map);
 
 /**********************************************************
- * 🔟 POSITION UTILISATEUR
+ * ?? POSITION UTILISATEUR
  **********************************************************/
 let userMarker = null;
 document.getElementById("locateBtn").onclick = () => map.locate({ enableHighAccuracy: true });
 map.on('locationfound', e => {
     if (userMarker) map.removeLayer(userMarker);
     userMarker = L.circleMarker(e.latlng, { radius: 7, color: 'blue', fillOpacity: 0.7 })
-        .addTo(map).bindPopup("📍 Vous êtes ici").openPopup();
+        .addTo(map).bindPopup("?? Vous �tes ici").openPopup();
 });
 
 /**********************************************************
- * 1️⃣1️⃣ SUIVI DU BUS LE PLUS PROCHE
+ * 1??1?? SUIVI DU BUS LE PLUS PROCHE
  **********************************************************/
 let followNearestInterval = null;
 document.getElementById("followBusBtn").onclick = () => {
-    if (!userMarker) { alert("📍 Veuillez d'abord activer votre position !"); return; }
+    if (!userMarker) { alert("?? Veuillez d'abord activer votre position !"); return; }
     const userLatLng = userMarker.getLatLng();
     const busMarkers = [markerBus4, markerBus8];
 
@@ -217,5 +217,5 @@ document.getElementById("followBusBtn").onclick = () => {
         if (nearestBus) map.setView(nearestBus.getLatLng(), 16, { animate: true });
     }, 1000);
 
-    alert("🚍 Suivi du bus le plus proche activé !");
+    alert("?? Suivi du bus le plus proche activ� !");
 };
