@@ -3,12 +3,21 @@
  **********************************************************/
 
 // Création de la carte centrée sur l'IUG
-const map = L.map('map').setView([4.040770, 9.752837], 14);
+const map = L.map('map').setView([4.040770, 9.752837], 18);
 
-// Fond de carte OpenStreetMap
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; Mabel Cedric Yvan'
-}).addTo(map);
+
+
+// Fond satellite
+L.tileLayer(
+'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+).addTo(map);
+
+// Icône véhicule
+const carIcon = L.icon({
+    iconUrl: 'car.png',
+    iconSize: [40, 40],
+    iconAnchor: [20, 20]
+});
 
 
 /**********************************************************
@@ -73,10 +82,10 @@ const bus4Stops = [
     { name: "Tradex Borne 10", coords: [3.998247, 9.768313] },
     { name: "Carrefour Ari", coords: [3.995235, 9.782917] },
     { name: "Tradex Yassa", coords: [4.001153, 9.805164] },
-    { name: "Entree MAETUR Yassa", coords: [4.009370, 9.800646] },
+    { name: "Entrée MAETUR Yassa", coords: [4.009370, 9.800646] },
     { name: "Total Nkolmbong", coords: [4.018734, 9.795956] },
     { name: "Carrefour Nyalla Pariso", coords: [4.024639, 9.793029] },
-    { name: "Chateau Nyalla", coords: [4.033330, 9.786290] },
+    { name: "Château Nyalla", coords: [4.033330, 9.786290] },
     { name: "Rails Nyalla", coords: [4.034902, 9.777759] },
 
     // ?? Retour Campus (fermeture de boucle)
@@ -214,8 +223,8 @@ function animateBus4Loop(combinedStops, speed, label, busType) {
         marker.bindPopup(
             "?? " + label +
             "<br><b>Type :</b> " + busType +
-            "<br><b>Arret actuel :</b> " + current +
-            "<br><b>Prochain arret :</b> " + next
+            "<br><b>Arrêt actuel :</b> " + current +
+            "<br><b>Prochain arrêt :</b> " + next
         );
 
         pointIndex++;
@@ -330,8 +339,8 @@ animateBus8(bus8Stops, 90, "BUS 8", "Coaster");
  **********************************************************/
 
 L.control.layers(null, {
-    "?? Arrets BUS 4": bus4Layer,
-    "?? Arrets BUS 8": bus8Layer,
+    "?? Arrêts BUS 4": bus4Layer,
+    "?? Arrêts BUS 8": bus8Layer,
     "?? Ligne BUS 4": bus4LineLayer,
     "?? Ligne BUS 8": bus8LineLayer,
     "?? Campus": campusLayer,
@@ -358,6 +367,53 @@ map.on('locationfound', e => {
         radius: 7,
         color: 'blue',
         fillOpacity: 0.7
-    }).addTo(map).bindPopup("?? Vous etes ici").openPopup();
+    }).addTo(map).bindPopup("?? Vous êtes ici").openPopup();
 });
 
+/**********************************************************
+ * SUIVI DU BUS LE PLUS PROCHE
+ **********************************************************/
+
+let followNearestInterval = null; // intervalle pour suivre le bus
+
+document.getElementById("followBusBtn").onclick = () => {
+    // Vérifie que la position utilisateur est connue
+    if (!userMarker) {
+        alert("?? Veuillez d'abord activer votre position !");
+        return;
+    }
+
+    const userLatLng = userMarker.getLatLng();
+
+    // Liste des markers de bus animés
+    const busMarkers = [markerBus4, markerBus8]; // Assurez-vous que ces variables existent globalement
+
+    // Fonction pour trouver le bus le plus proche
+    function findNearestBus() {
+        let nearestBus = null;
+        let minDistance = Infinity;
+
+        busMarkers.forEach(bus => {
+            const dist = userLatLng.distanceTo(bus.getLatLng());
+            if (dist < minDistance) {
+                minDistance = dist;
+                nearestBus = bus;
+            }
+        });
+
+        return nearestBus;
+    }
+
+    // Arrête l'ancien suivi si déjà actif
+    if (followNearestInterval) clearInterval(followNearestInterval);
+
+    // Centre la carte sur le bus le plus proche toutes les 1 seconde
+    followNearestInterval = setInterval(() => {
+        const nearestBus = findNearestBus();
+        if (nearestBus) {
+            map.setView(nearestBus.getLatLng(), 16, { animate: true });
+        }
+    }, 1000);
+
+    alert("?? Suivi du bus le plus proche activé !");
+};
