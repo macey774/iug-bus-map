@@ -1,84 +1,77 @@
 <!DOCTYPE html>
+
 <html lang="fr">
 
 <head>
-    <!-- ===================================================== -->
-    <!-- META CONFIGURATION -->
-    <!-- ===================================================== -->
+    <!-- ================= META ================= -->
 
+    <!-- Encodage UTF-8 (important pour les accents) -->
     <meta charset="UTF-8">
 
-    <!-- Optimisation mobile + gestion du zoom propre -->
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Responsive mobile -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <!-- Titre de l'application -->
     <title>Suivi des bus scolaires</title>
 
-    <!-- ===================================================== -->
-    <!-- FEUILLES DE STYLE -->
-    <!-- ===================================================== -->
+    <!-- ================= LIBRAIRIES EXTERNES ================= -->
 
-    <!-- Leaflet CSS (Carte) -->
-    <link rel="stylesheet"
-        href="https://unpkg.com/leaflet/dist/leaflet.css"
-        integrity=""
-        crossorigin=""/>
+    <!-- Leaflet CSS (carte) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
 
-    <!-- Google Material Icons -->
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
-        rel="stylesheet">
+    <!-- Google Material Icons (icônes modernes) -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
-    <!-- CSS principal -->
+    <!-- ================= STYLE PERSONNEL ================= -->
+
+    <!-- Feuille de style principale -->
     <link rel="stylesheet" href="style.css">
-
 </head>
+
 
 <body>
 
     <!-- ===================================================== -->
-    <!-- HEADER PRINCIPAL -->
-    <!-- Contient : titre + barre de recherche -->
+    <!-- ======================= HEADER ====================== -->
     <!-- ===================================================== -->
+
     <header class="header-container">
 
-        <!-- Titre de l'application -->
-        <h1 class="header-title">Bus scolaires</h1>
+        <!-- Titre principal -->
+        <h1 class="header-title">
+            Bus scolaires
+        </h1>
 
-        <!-- ================= Recherche ================= -->
+        <!-- Barre de recherche principale -->
         <div class="search-wrapper">
 
             <div class="search-bar-wrapper">
 
-                <!-- Input recherche arrêt -->
-                <input
+                <!-- Champ de recherche d'arrêt -->
+                <input 
                     id="searchStop"
                     class="search-bar"
-                    type="text"
                     placeholder="Rechercher un arrêt..."
-                    autocomplete="off"
-                    aria-label="Rechercher un arrêt"
                 />
 
-                <!-- Boutons associés à la recherche -->
+                <!-- Boutons à droite de la barre -->
                 <div class="search-buttons">
 
                     <!-- Bouton Rechercher -->
-                    <button
+                    <button 
                         id="searchBtn"
                         class="search-btn"
-                        title="Rechercher"
-                        aria-label="Rechercher un arrêt">
-
+                        title="Rechercher un arrêt"
+                    >
                         <span class="material-icons">search</span>
                     </button>
 
-                    <!-- Bouton Itinéraire -->
-                    <button
+                    <!-- Bouton Ouvrir fenêtre itinéraire -->
+                    <button 
                         id="routeBtn"
                         class="route-btn"
                         title="Ouvrir l'itinéraire"
-                        aria-label="Ouvrir la fenêtre d'itinéraire">
-
+                    >
                         <span class="material-icons">directions</span>
                     </button>
 
@@ -92,22 +85,22 @@
 
 
     <!-- ===================================================== -->
-    <!-- MINI FENÊTRE ITINÉRAIRE (MODAL) -->
+    <!-- ================= MINI FENÊTRE ITINÉRAIRE ============ -->
     <!-- ===================================================== -->
-    <div id="routeModal" class="route-modal" aria-hidden="true">
+
+    <div id="routeModal" class="route-modal">
 
         <div class="route-modal-content">
 
-            <!-- Titre -->
+            <!-- Titre de la fenêtre -->
             <h3>Itinéraire</h3>
 
-            <!-- ================= Point de départ ================= -->
+            <!-- ================= POINT DE DÉPART ================= -->
+            <!-- Toujours "Ma position" (non modifiable) -->
             <div class="input-wrapper">
-
                 <span class="material-icons">my_location</span>
 
-                <!-- Non modifiable -->
-                <input
+                <input 
                     type="text"
                     id="startInput"
                     value="Ma position"
@@ -115,79 +108,78 @@
                 />
             </div>
 
-            <!-- ================= Destination ================= -->
+            <!-- ================= DESTINATION ================= -->
+            <!-- L'utilisateur saisit un arrêt -->
             <div class="input-wrapper">
-
                 <span class="material-icons">location_on</span>
 
-                <input
+                <input 
                     type="text"
                     id="endInput"
                     placeholder="Entrez un arrêt..."
-                    autocomplete="off"
                 />
             </div>
 
-            <!-- ================= Bouton Tracer ================= -->
+            <!-- ================= BOUTON TRACER ================= -->
+            <!-- Lance le calcul d'itinéraire -->
             <button id="traceBtn" class="trace-btn">
                 <span class="material-icons">route</span>
                 Tracer
             </button>
 
-            <!-- ================= Bouton Effacer ================= -->
+            <!-- ================= BOUTON EFFACER ================= -->
+            <!-- Supprime ligne + position -->
             <button id="clearRouteBtn" class="clear-btn">
                 <span class="material-icons">highlight_off</span>
                 Effacer itinéraire
             </button>
 
-            <!-- ================= Bouton Fermer ================= -->
-            <button
-                id="closeRouteModal"
-                class="close-btn"
-                aria-label="Fermer la fenêtre itinéraire">
+            <!-- ================= BOUTON FERMER ================= -->
+            <!-- Ferme simplement la mini fenêtre -->
+            <button id="closeRouteModal" class="close-btn">
                 ✖
             </button>
 
         </div>
+
     </div>
 
 
     <!-- ===================================================== -->
-    <!-- CARTE PRINCIPALE -->
+    <!-- ======================= CARTE ======================== -->
     <!-- ===================================================== -->
-    <main>
-        <div id="map"></div>
-    </main>
+
+    <!-- Conteneur principal Leaflet -->
+    <div id="map"></div>
 
 
     <!-- ===================================================== -->
-    <!-- BOUTONS FLOTTANTS (Optimisés Mobile) -->
+    <!-- ================= BOUTONS FLOTTANTS ================= -->
     <!-- ===================================================== -->
 
-    <!-- Bouton Ma position -->
-    <button
+    <!-- Bouton flottant : Ma position -->
+    <div 
         class="mobile-btn"
         id="locateBtn"
-        title="Ma position"
-        aria-label="Afficher ma position">
-
+        title="Afficher ma position"
+    >
         <span class="material-icons">my_location</span>
-    </button>
+    </div>
 
-    <!-- Bouton Arrêt le plus proche -->
-    <button
+    <!-- Bouton flottant : Arrêt le plus proche -->
+    <div 
         class="mobile-btn"
         id="nearestStopBtn"
-        title="Arrêt le plus proche"
-        aria-label="Trouver l'arrêt le plus proche">
-
+        title="Trouver l'arrêt le plus proche"
+    >
         <span class="material-icons">location_on</span>
-    </button>
+    </div>
 
 
     <!-- ===================================================== -->
-    <!-- FOOTER -->
+    <!-- ======================= FOOTER ======================= -->
     <!-- ===================================================== -->
+
     <footer class="footer">
         <div class="footer-title">
             Institut Universitaire du Golfe de Guinée
@@ -196,14 +188,16 @@
 
 
     <!-- ===================================================== -->
-    <!-- SCRIPTS -->
+    <!-- ======================= SCRIPTS ====================== -->
     <!-- ===================================================== -->
 
-    <!-- Leaflet JS -->
+    <!-- Leaflet JS (carte interactive) -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-    <!-- Script principal -->
+    <!-- Script principal de l'application -->
     <script src="script.js"></script>
 
 </body>
 </html>
+
+
