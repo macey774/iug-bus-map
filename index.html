@@ -1,108 +1,209 @@
+<!DOCTYPE html>
 <html lang="fr">
+
 <head>
+    <!-- ===================================================== -->
+    <!-- META CONFIGURATION -->
+    <!-- ===================================================== -->
+
     <meta charset="UTF-8">
 
-    <!-- IMPORTANT : pour mobile + accents -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Optimisation mobile + gestion du zoom propre -->
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
     <title>Suivi des bus scolaires</title>
 
-    <!-- ================= Leaflet CSS ================= -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+    <!-- ===================================================== -->
+    <!-- FEUILLES DE STYLE -->
+    <!-- ===================================================== -->
 
-    <!-- ================= Google Material Icons ================= -->
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Leaflet CSS (Carte) -->
+    <link rel="stylesheet"
+        href="https://unpkg.com/leaflet/dist/leaflet.css"
+        integrity=""
+        crossorigin=""/>
 
-    <!-- ================= CSS principal ================= -->
+    <!-- Google Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+        rel="stylesheet">
+
+    <!-- CSS principal -->
     <link rel="stylesheet" href="style.css">
+
 </head>
+
 <body>
 
-<!-- ================= HEADER ================= -->
-<header class="header-container">
-    <!-- Titre du site -->
-    <h1 class="header-title">Bus scolaires</h1>
+    <!-- ===================================================== -->
+    <!-- HEADER PRINCIPAL -->
+    <!-- Contient : titre + barre de recherche -->
+    <!-- ===================================================== -->
+    <header class="header-container">
 
-    <!-- Barre de recherche + boutons -->
-    <div class="search-wrapper">
-        <div class="search-bar-wrapper">
-            <!-- Input principal pour rechercher un arrêt -->
-            <input id="searchStop" class="search-bar" placeholder="Rechercher un arrêt..." />
-            
-            <!-- Boutons à droite de l'input -->
-            <div class="search-buttons">
-                <!-- Bouton Recherche -->
-                <button id="searchBtn" class="search-btn" title="Rechercher">
-                    <span class="material-icons">search</span>
-                </button>
+        <!-- Titre de l'application -->
+        <h1 class="header-title">Bus scolaires</h1>
 
-                <!-- Bouton Itinéraire -->
-                <button id="routeBtn" class="route-btn" title="Itinéraire">
-                    <span class="material-icons">directions</span>
-                </button>
+        <!-- ================= Recherche ================= -->
+        <div class="search-wrapper">
+
+            <div class="search-bar-wrapper">
+
+                <!-- Input recherche arrÃªt -->
+                <input
+                    id="searchStop"
+                    class="search-bar"
+                    type="text"
+                    placeholder="Rechercher un arrÃªt..."
+                    autocomplete="off"
+                    aria-label="Rechercher un arrÃªt"
+                />
+
+                <!-- Boutons associÃ©s Ã  la recherche -->
+                <div class="search-buttons">
+
+                    <!-- Bouton Rechercher -->
+                    <button
+                        id="searchBtn"
+                        class="search-btn"
+                        title="Rechercher"
+                        aria-label="Rechercher un arrÃªt">
+
+                        <span class="material-icons">search</span>
+                    </button>
+
+                    <!-- Bouton ItinÃ©raire -->
+                    <button
+                        id="routeBtn"
+                        class="route-btn"
+                        title="Ouvrir l'itinÃ©raire"
+                        aria-label="Ouvrir la fenÃªtre d'itinÃ©raire">
+
+                        <span class="material-icons">directions</span>
+                    </button>
+
+                </div>
+
             </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- ===================================================== -->
+    <!-- MINI FENÃŠTRE ITINÃ‰RAIRE (MODAL) -->
+    <!-- ===================================================== -->
+    <div id="routeModal" class="route-modal" aria-hidden="true">
+
+        <div class="route-modal-content">
+
+            <!-- Titre -->
+            <h3>ItinÃ©raire</h3>
+
+            <!-- ================= Point de dÃ©part ================= -->
+            <div class="input-wrapper">
+
+                <span class="material-icons">my_location</span>
+
+                <!-- Non modifiable -->
+                <input
+                    type="text"
+                    id="startInput"
+                    value="Ma position"
+                    readonly
+                />
+            </div>
+
+            <!-- ================= Destination ================= -->
+            <div class="input-wrapper">
+
+                <span class="material-icons">location_on</span>
+
+                <input
+                    type="text"
+                    id="endInput"
+                    placeholder="Entrez un arrÃªt..."
+                    autocomplete="off"
+                />
+            </div>
+
+            <!-- ================= Bouton Tracer ================= -->
+            <button id="traceBtn" class="trace-btn">
+                <span class="material-icons">route</span>
+                Tracer
+            </button>
+
+            <!-- ================= Bouton Effacer ================= -->
+            <button id="clearRouteBtn" class="clear-btn">
+                <span class="material-icons">highlight_off</span>
+                Effacer itinÃ©raire
+            </button>
+
+            <!-- ================= Bouton Fermer ================= -->
+            <button
+                id="closeRouteModal"
+                class="close-btn"
+                aria-label="Fermer la fenÃªtre itinÃ©raire">
+                âœ–
+            </button>
+
         </div>
     </div>
-</header>
 
-<!-- ================= MINI FENÊTRE ITINÉRAIRE ================= -->
-<div id="routeModal" class="route-modal">
-    <div class="route-modal-content">
-        <!-- Titre -->
-        <h3>Itinéraire</h3>
 
-        <!-- Point de départ (non modifiable) -->
-        <div class="input-wrapper">
-            <span class="material-icons">my_location</span>
-            <input type="text" id="startInput" value="Ma position" readonly />
+    <!-- ===================================================== -->
+    <!-- CARTE PRINCIPALE -->
+    <!-- ===================================================== -->
+    <main>
+        <div id="map"></div>
+    </main>
+
+
+    <!-- ===================================================== -->
+    <!-- BOUTONS FLOTTANTS (OptimisÃ©s Mobile) -->
+    <!-- ===================================================== -->
+
+    <!-- Bouton Ma position -->
+    <button
+        class="mobile-btn"
+        id="locateBtn"
+        title="Ma position"
+        aria-label="Afficher ma position">
+
+        <span class="material-icons">my_location</span>
+    </button>
+
+    <!-- Bouton ArrÃªt le plus proche -->
+    <button
+        class="mobile-btn"
+        id="nearestStopBtn"
+        title="ArrÃªt le plus proche"
+        aria-label="Trouver l'arrÃªt le plus proche">
+
+        <span class="material-icons">location_on</span>
+    </button>
+
+
+    <!-- ===================================================== -->
+    <!-- FOOTER -->
+    <!-- ===================================================== -->
+    <footer class="footer">
+        <div class="footer-title">
+            Institut Universitaire du Golfe de GuinÃ©e
         </div>
-
-        <!-- Arrêt de destination (modifiable) -->
-        <div class="input-wrapper">
-            <span class="material-icons">location_on</span> <!-- icône “pin” pour l’arrêt -->
-            <input type="text" id="endInput" placeholder="Entrez un arrêt..." />
-        </div>
-
-        <!-- Bouton Tracer l'itinéraire -->
-        <button id="traceBtn" class="trace-btn">
-            <span class="material-icons">route</span>
-            Tracer
-        </button>
-      
-              <!-- Bouton Effacer -->
-        <button id="clearRouteBtn" class="clear-btn">
-            <span class="material-icons">delete</span>
-            Effacer itinéraire
-        </button>
+    </footer>
 
 
-        <!-- Bouton Fermer -->
-        <button id="closeRouteModal" class="close-btn">?</button>
-    </div>
-</div>
+    <!-- ===================================================== -->
+    <!-- SCRIPTS -->
+    <!-- ===================================================== -->
 
-<!-- ================= CARTE LEAFLET ================= -->
-<div id="map"></div>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-<!-- ================= BOUTONS FLOTTANTS MOBILE ================= -->
-<div class="mobile-btn" id="locateBtn" title="Ma position">
-    <span class="material-icons">my_location</span>
-</div>
-<div class="mobile-btn" id="nearestStopBtn" title="Arrêt le plus proche">
-    <span class="material-icons">location_on</span>
-</div>
-
-<!-- ================= FOOTER ================= -->
-<footer class="footer">
-    <div class="footer-title">Institut Universitaire du Golfe de Guinée</div>
-</footer>
-
-<!-- ================= SCRIPTS ================= -->
-<!-- Leaflet JS -->
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
-<!-- JS principal -->
-<script src="script.js"></script>
+    <!-- Script principal -->
+    <script src="script.js"></script>
 
 </body>
 </html>
