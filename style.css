@@ -1,60 +1,71 @@
-/* ====================== GLOBAL ====================== */
-/* RÈinitialisation de base et police */
-body, html {
+/* =========================================================
+   üåç GLOBAL RESET
+========================================================= */
+
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent; /* Supprime flash bleu mobile */
+}
+
+html, body {
     margin: 0;
     padding: 0;
     height: 100%;
     font-family: 'Arial', sans-serif;
 }
 
-/* Mise en page verticale avec header / map / footer */
 body {
     display: flex;
     flex-direction: column;
-    height: 100vh; /* prend toute la hauteur de l'Ècran */
+    height: 100vh;
+    overflow: hidden; /* Emp√™che scroll parasite mobile */
 }
 
-/* ====================== HEADER ====================== */
-header.header-container {
+
+/* =========================================================
+   üß≠ HEADER
+========================================================= */
+
+.header-container {
     display: flex;
-    justify-content: space-between; /* Titre ‡ gauche, barre ‡ droite */
+    justify-content: space-between;
     align-items: center;
     padding: 10px 15px;
-    background-color: #4285f4; /* bleu Google Maps */
+    background-color: #4285f4;
     color: #ffffff;
     box-shadow: 0 2px 5px rgba(0,0,0,0.15);
     z-index: 1000;
 }
 
-header .header-title {
+.header-title {
     margin: 0;
     font-size: 1.5rem;
+    font-weight: 600;
 }
 
-/* Wrapper pour la barre de recherche dans le header */
-header .search-wrapper {
+/* ----------- Barre de recherche ----------- */
+
+.search-wrapper {
     display: flex;
     align-items: center;
 }
 
-/* Wrapper pour input + boutons */
 .search-bar-wrapper {
     position: relative;
     display: flex;
     align-items: center;
-    width: 300px; /* largeur totale de la barre */
+    width: 300px;
 }
 
-/* Barre de recherche principale */
 .search-bar {
     width: 100%;
-    padding: 8px 110px 8px 12px; /* espace ‡ droite pour boutons */
+    padding: 8px 110px 8px 12px;
     font-size: 1rem;
     border: 1px solid #ccc;
     border-radius: 25px;
     outline: none;
     box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-    transition: all 0.25s ease-in-out;
+    transition: all 0.2s ease;
 }
 
 .search-bar:focus {
@@ -62,7 +73,6 @@ header .search-wrapper {
     box-shadow: 0 0 8px rgba(66,133,244,0.3);
 }
 
-/* Container des boutons (Recherche + ItinÈraire) ‡ droite de l'input */
 .search-buttons {
     position: absolute;
     right: 4px;
@@ -70,28 +80,9 @@ header .search-wrapper {
     gap: 4px;
 }
 
-/* Bouton Recherche */
-.search-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 6px 10px;
-    border: none;
-    border-radius: 20px;
-    background-color: #ffffff;
-    color: #4285f4;
-    cursor: pointer;
-    font-size: 0.9rem;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-    transition: all 0.2s ease-in-out;
-}
+/* Boutons header */
 
-.search-btn:hover {
-    background-color: #f0f0f0;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-}
-
-/* Bouton ItinÈraire */
+.search-btn,
 .route-btn {
     display: flex;
     align-items: center;
@@ -104,47 +95,32 @@ header .search-wrapper {
     cursor: pointer;
     font-size: 0.9rem;
     box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-    transition: all 0.2s ease-in-out;
+    transition: all 0.2s ease;
 }
 
+.search-btn:hover,
 .route-btn:hover {
-    background-color: #ffffff;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+    background-color: #f0f0f0;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
-/* ====================== MAP ====================== */
+
+/* =========================================================
+   üó∫Ô∏è MAP
+========================================================= */
+
 #map {
-    flex: 1; /* prend tout l'espace restant entre header et footer */
+    flex: 1;
     width: 100%;
 }
 
-/* ====================== FOOTER ====================== */
-.footer {
-    position: fixed; /* collÈ au bas */
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    padding: 6px 0;
-    text-align: center;
-    z-index: 1000;
-    pointer-events: none; /* laisse passer les clics */
-}
 
-.footer-title {
-    color: #ffffff; /* texte blanc */
-    font-size: 22px;
-    font-weight: 600;
-    text-shadow: 
-        2px 2px 4px rgba(0,0,0,0.9),
-        -2px -2px 4px rgba(0,0,0,0.9),
-        0 0 6px rgba(0,0,0,0.7),
-        1px -1px 5px rgba(0,0,0,0.7); /* profondeur autour du texte */
-}
+/* =========================================================
+   üìå BOUTONS FLOTTANTS
+========================================================= */
 
-/* ====================== BOUTONS FLOTTANTS ====================== */
 .mobile-btn {
     position: fixed;
-    bottom: 65px;
     right: 20px;
     width: 50px;
     height: 50px;
@@ -155,9 +131,8 @@ header .search-wrapper {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s ease-in-out;
+    transition: transform 0.2s ease, background-color 0.2s ease;
     z-index: 1000;
-    font-size: 24px;
 }
 
 .mobile-btn:hover {
@@ -165,87 +140,72 @@ header .search-wrapper {
     transform: scale(1.1);
 }
 
-/* Espacement si deux boutons flottants */
-#nearestStopBtn {
-    bottom: 135px; /* au-dessus du bouton localisation */
-}
-
-/* Material Icons dans boutons flottants */
 .mobile-btn .material-icons {
     font-size: 28px;
-    color: #4285f4; /* bleu Google Maps */
+    color: #4285f4;
 }
 
-/* ====================== MINI FEN TRE ITIN…RAIRE ====================== */
+#locateBtn { bottom: 65px; }
+#nearestStopBtn { bottom: 135px; }
+
+
+/* =========================================================
+   ü™ü MINI FEN√äTRE ITIN√âRAIRE
+========================================================= */
+
 .route-modal {
-    display: none; /* cachÈe par dÈfaut */
+    display: none;
     position: fixed;
-    top: 70px; /* sous header */
+    top: 70px;
     right: 20px;
     width: 320px;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
+    background: #ffffff;
     border-radius: 16px;
     padding: 20px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
     z-index: 1500;
-    animation: fadeIn 0.25s ease-in-out;
-    font-family: 'Arial', sans-serif;
+    animation: fadeIn 0.2s ease;
 }
 
-/* Animation d'apparition de la fenÍtre */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
+    from { opacity: 0; transform: translateY(-8px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Contenu de la fenÍtre */
 .route-modal-content h3 {
-    margin: 0 0 12px 0;
+    margin: 0 0 12px;
     font-size: 1.2rem;
     color: #4285f4;
-    font-weight: 600;
 }
 
-/* Labels */
-.route-modal-content label {
-    display: block;
-    font-size: 0.85rem;
-    color: #555;
-    margin-top: 10px;
-    margin-bottom: 4px;
-}
+/* Champs */
 
-/* Champs input avec icÙne */
-.route-modal-content .input-wrapper {
+.input-wrapper {
     position: relative;
     margin-bottom: 10px;
 }
 
-.route-modal-content .input-wrapper input {
+.input-wrapper input {
     width: 100%;
-    padding: 10px 12px 10px 36px; /* padding gauche pour icÙne */
+    padding: 10px 12px 10px 36px;
     font-size: 0.95rem;
     border: 1px solid #ccc;
     border-radius: 12px;
-    box-sizing: border-box;
-    transition: all 0.2s ease-in-out;
+    transition: all 0.2s ease;
 }
 
-.route-modal-content .input-wrapper input:focus {
+.input-wrapper input:focus {
     border-color: #4285f4;
-    box-shadow: 0 0 8px rgba(66, 133, 244,0.3);
+    box-shadow: 0 0 6px rgba(66,133,244,0.3);
     outline: none;
 }
 
-.route-modal-content .input-wrapper input[readonly] {
+.input-wrapper input[readonly] {
     background-color: #f1f3f4;
     color: #555;
-    cursor: default;
 }
 
-/* IcÙnes dans les inputs */
-.route-modal-content .input-wrapper .material-icons {
+.input-wrapper .material-icons {
     position: absolute;
     left: 10px;
     top: 50%;
@@ -254,237 +214,40 @@ header .search-wrapper {
     color: #4285f4;
 }
 
-/* Bouton de fermeture de la mini fenÍtre */
-.close-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    border: none;
-    background: rgba(200,200,200,0.3);
-    border-radius: 50%;
-    width: 28px;
-    height: 28px;
-    font-size: 16px;
-    cursor: pointer;
-    color: #333;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease-in-out;
-}
+/* Boutons itin√©raire */
 
-.close-btn:hover {
-    background: rgba(200,200,200,0.6);
-    color: #4285f4;
-}
-
-/* Responsive mobile */
-@media (max-width: 400px) {
-    .route-modal {
-        width: 90%;
-        right: 5%;
-        top: 60px;
-        padding: 15px;
-    }
-}
-
-/* ====================== BOUTON TRACER ====================== */
-.trace-btn {
+.trace-btn,
+.clear-btn {
     width: 100%;
     padding: 10px;
-    margin-top: 10px;
-    background-color: #4285f4; /* bleu Google Maps */
-    color: #ffffff;
+    margin-top: 8px;
     border: none;
     border-radius: 12px;
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 500;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
     cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* Tracer */
+.trace-btn {
+    background-color: #4285f4;
+    color: #ffffff;
     box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-    transition: all 0.2s ease-in-out;
 }
 
 .trace-btn:hover {
     background-color: #3367d6;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.25);
-    transform: scale(1.02);
 }
 
-.trace-btn .material-icons {
-    font-size: 20px;
-}
-
-
-/* ====================== POPUPS STYLE GOOGLE MAPS ====================== */
-.leaflet-popup-content-wrapper {
-    background: rgba(255, 255, 255, 0.97); /* fond blanc lÈgËrement translucide */
-    border-radius: 14px; /* coins arrondis plus doux */
-    box-shadow: 0 6px 20px rgba(0,0,0,0.25); /* ombre plus rÈaliste */
-    padding: 12px 16px; /* espace confortable autour du texte */
-    font-family: 'Arial', sans-serif;
-    min-width: 160px;
-    max-width: 280px;
-}
-
-.leaflet-popup-content {
-    margin: 0;
-    font-size: 0.95rem;
-    color: #333;
-    line-height: 1.5;
-}
-
-.leaflet-popup-content b {
-    color: #4285F4; /* bleu Google Maps pour le titre ou nom de l'arrÍt */
-    font-size: 1rem;
-}
-
-.leaflet-popup-tip-container {
-    width: 30px; /* taille de la flËche */
-    height: 15px;
-}
-
-.leaflet-popup-tip {
-    background: rgba(255, 255, 255, 0.97); /* flËche assortie au popup */
-    box-shadow: 0 3px 8px rgba(0,0,0,0.15); /* petite ombre sur la flËche */
-    border: none;
-}
-
-/* Popups ìVous Ítes iciî ou arrÍt le plus proche */
-.popup-title {
-    font-weight: 600;
-    font-size: 1rem;
-    margin-bottom: 4px;
-}
-
-.popup-distance {
-    font-size: 0.9rem;
-    color: #666;
-}
-
-/* Pour que le texte ne touche pas les bords sur mobile */
-@media (max-width: 400px) {
-    .leaflet-popup-content-wrapper {
-        min-width: 140px;
-        max-width: 220px;
-        padding: 10px 12px;
-    }
-}
-
-
-/* ====================== POPUPS MODERNES ====================== */
-.leaflet-popup-content-wrapper {
-    background: #ffffff; /* fond blanc */
-    border-radius: 12px; /* coins arrondis */
-    box-shadow: 0 4px 15px rgba(0,0,0,0.25); /* ombre portÈe */
-    padding: 10px 15px;
-    font-family: 'Arial', sans-serif;
-}
-
-.leaflet-popup-content {
-    margin: 0;
-    line-height: 1.4;
-    font-size: 0.95rem;
-    color: #333333;
-}
-
-.leaflet-popup-content .popup-title {
-    font-weight: 600;
-    font-size: 1rem;
-    color: #4285F4; /* bleu Google Maps */
-    margin-bottom: 6px;
-}
-
-.leaflet-popup-content .popup-distance,
-.leaflet-popup-content .popup-duration {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.85rem;
-    margin-bottom: 3px;
-    color: #555555;
-}
-
-.leaflet-popup-content .popup-distance span,
-.leaflet-popup-content .popup-duration span {
-    background-color: #4285F4;
-    color: #ffffff;
-    font-size: 0.75rem;
-    padding: 2px 6px;
-    border-radius: 6px;
-}
-
-/* Modifier le triangle du popup */
-.leaflet-popup-tip {
-    background: #ffffff;
-}
-
-
-/* ====================== POPUP UTILISATEUR ====================== */
-
-.popup-user {
-    text-align: center;
-}
-
-.popup-user .popup-title {
-    font-weight: 600;
-    font-size: 1rem;
-    color: #1E90FF;
-    margin-bottom: 4px;
-}
-
-.popup-user-sub {
-    font-size: 0.8rem;
-    color: #777;
-}
-
-
-
-/* ===================== BOUTON EFFACER ===================== */
-
+/* Effacer */
 .clear-btn {
-    margin-top: 10px;
-    width: 100%;
-    padding: 10px;
-    border: none;
-    border-radius: 8px;
-    background-color: #d93025; /* rouge Google */
+    background-color: #d93025;
     color: #ffffff;
-    font-size: 0.9rem;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.1s ease;
-}
-
-.clear-btn:hover {
-    background-color: #b3261e;
-}
-
-/* ===================== BOUTON EFFACER ===================== */
-
-.clear-btn {
-    margin-top: 10px;
-    width: 100%;
-    padding: 10px;
-    border: none;
-    border-radius: 8px;
-    background-color: #d93025; /* rouge Google */
-    color: #ffffff;
-    font-size: 0.9rem;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
 .clear-btn:hover {
@@ -495,3 +258,94 @@ header .search-wrapper {
     transform: scale(0.98);
 }
 
+/* Bouton fermer */
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    border: none;
+    background: transparent;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   üßæ POPUPS MODERNES STYLE GOOGLE
+========================================================= */
+
+.leaflet-popup-content-wrapper {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+    padding: 10px 15px;
+}
+
+.leaflet-popup-content {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    color: #333;
+}
+
+.popup-title {
+    font-weight: 600;
+    color: #4285f4;
+    margin-bottom: 5px;
+}
+
+.popup-distance,
+.popup-duration {
+    font-size: 0.85rem;
+    color: #555;
+}
+
+.leaflet-popup-tip {
+    background: #ffffff;
+}
+
+
+/* =========================================================
+   üì± RESPONSIVE MOBILE
+========================================================= */
+
+@media (max-width: 768px) {
+
+    .search-bar-wrapper {
+        width: 100%;
+    }
+
+    .header-container {
+        flex-direction: column;
+        gap: 8px;
+        align-items: stretch;
+    }
+
+    .route-modal {
+        width: 90%;
+        right: 5%;
+    }
+}
+
+
+/* =========================================================
+   ü¶∂ FOOTER
+========================================================= */
+
+.footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    pointer-events: none;
+}
+
+.footer-title {
+    color: #ffffff;
+    font-size: 22px;
+    font-weight: 600;
+    text-shadow:
+        2px 2px 4px rgba(0,0,0,0.9),
+        -2px -2px 4px rgba(0,0,0,0.9),
+        0 0 6px rgba(0,0,0,0.7);
+}
