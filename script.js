@@ -259,7 +259,7 @@ async function animateBusSmooth(stops, speed, label, company, colorLayer) {
 /* ================================================================
    🎬 LANCEMENT DES BUS
 ================================================================ */
-
+/*
 const markerBus4 = animateBusSmooth(
     bus4Stops,
     20,               // plus petit = plus rapide
@@ -276,7 +276,7 @@ const markerBus8 = animateBusSmooth(
     bus8LineLayer
 );
 
-
+*/
 /* ================================================================
    9️⃣ PANNEAU DE CONTRÔLE STYLE GOOGLE MAPS
 ================================================================ */
@@ -462,9 +462,6 @@ document.addEventListener('click', (e) => {
 
 
 
-
-
-
 /**********************************************************
  * 📍 ARRÊT LE PLUS PROCHE
  **********************************************************/
@@ -573,7 +570,7 @@ nearestStopBtn.addEventListener("click", () => {
 // ==================== Variables globales ====================
 
 let routeLine = null;  // ligne OSRM / polyline tracée
- userCoords = null; // coordonnées actuelles
+
 
 // Fonction pour calculer la distance en mètres entre deux points (Leaflet)
 function calcDistance(latlng1, latlng2) {
@@ -770,6 +767,32 @@ function stopTracking() {
 }
 
 
+
+// ==================== ARRÊTER LE SUIVI (optionnel) ====================
+
+function stopTracking() {
+
+    if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+    }
+
+    if (userMarker) {
+        map.removeLayer(userMarker);
+        userMarker = null;
+    }
+
+    if (accuracyCircle) {
+        map.removeLayer(accuracyCircle);
+        accuracyCircle = null;
+    }
+
+    autoFollow = true;
+}
+
+
+
+
 // ==================== Bouton "Arrêt le plus proche" ====================
 document.getElementById('nearestStopBtn').addEventListener('click', () => {
     if (!userCoords) {
@@ -905,7 +928,5 @@ document.getElementById("traceBtn").addEventListener("click", () => {
         });
 
 });
-
-
 
 
