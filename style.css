@@ -245,6 +245,10 @@ body {
     background-color: #3367d6;
 }
 
+.trace-btn:active {
+    transform: scale(0.98);
+}
+
 /* Effacer */
 .clear-btn {
     background-color: #d93025;
@@ -388,4 +392,5 @@ main {
 #map {
     flex: 1;
 }
+
 
