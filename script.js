@@ -462,13 +462,14 @@ document.addEventListener('click', (e) => {
 
 
 /**********************************************************
- * 📍 BOUTON "MA POSITION" — VERSION STABLE
+ * 📍 SUIVI POSITION EN TEMPS RÉEL (MODE GOOGLE MAPS)
  **********************************************************/
 
-let userMarker = null;
-let userCoords = null;
+ userMarker = null;
+userCoords = null;
+let watchId = null; // pour arrêter le suivi si besoin
 
-const locateBtn = document.getElementById("locateBtn");
+
 
 locateBtn.addEventListener("click", () => {
 
@@ -477,9 +478,10 @@ locateBtn.addEventListener("click", () => {
         return;
     }
 
-    locateBtn.disabled = true; // évite les clics multiples rapides
+    // Si déjà actif → ne pas relancer
+    if (watchId !== null) return;
 
-    navigator.geolocation.getCurrentPosition(
+    watchId = navigator.geolocation.watchPosition(
 
         position => {
 
@@ -488,43 +490,42 @@ locateBtn.addEventListener("click", () => {
 
             userCoords = L.latLng(lat, lng);
 
-            // Supprimer ancien marker si existe
-            if (userMarker) {
-                map.removeLayer(userMarker);
+            if (!userMarker) {
+                // Création du point bleu
+                userMarker = L.circleMarker(userCoords, {
+                    radius: 8,
+                    fillColor: "#4285F4",
+                    color: "#ffffff",
+                    weight: 2,
+                    fillOpacity: 1
+                }).addTo(map);
+
+                userMarker.bindPopup(`
+                    <div class="popup-user">
+                        <div class="popup-title">📍 Vous êtes ici</div>
+                        <div class="popup-user-sub">
+                            Suivi en temps réel activé
+                        </div>
+                    </div>
+                `);
+            } else {
+                // Mise à jour fluide de la position
+                userMarker.setLatLng(userCoords);
             }
 
-            // Point bleu moderne
-            userMarker = L.circleMarker(userCoords, {
-                radius: 8,
-                fillColor: "#4285F4",
-                color: "#ffffff",
-                weight: 2,
-                fillOpacity: 1
-            }).addTo(map);
+            // Optionnel : recentrer automatiquement
+            map.setView(userCoords);
 
-            userMarker.bindPopup(`
-                <div class="popup-user">
-                    <div class="popup-title">📍 Vous êtes ici</div>
-                    <div class="popup-user-sub">
-                        Position actuelle détectée
-                    </div>
-                </div>
-            `).openPopup();
-
-            map.setView(userCoords, 18);
-
-            locateBtn.disabled = false;
         },
 
         error => {
             alert("Impossible d'obtenir votre position.");
-            locateBtn.disabled = false;
         },
 
         {
             enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 0
+            maximumAge: 0,
+            timeout: 10000
         }
     );
 });
@@ -824,5 +825,6 @@ document.getElementById("traceBtn").addEventListener("click", () => {
         });
 
 });
+
 
 
