@@ -393,4 +393,20 @@ main {
     flex: 1;
 }
 
+.direction-arrow {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.arrow {
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 20px solid #1a73e8;
+    opacity: 0.9;
+    transform-origin: 50% 75%;
+}
+
 
