@@ -461,95 +461,7 @@ document.addEventListener('click', (e) => {
 });
 
 
-/**********************************************************
- * 📍 SUIVI GPS PROFESSIONNEL (MODE UBER)
- **********************************************************/
 
-userMarker = null;
-let accuracyCircle = null;
-userCoords = null;
-let watchId = null;
-let autoFollow = true; // mode suivi activé par défaut
-
-
-
-// Activer le suivi
-locateBtn.addEventListener("click", () => {
-
-    if (!navigator.geolocation) {
-        alert("La géolocalisation n'est pas supportée.");
-        return;
-    }
-
-    if (watchId !== null) return; // déjà actif
-
-    watchId = navigator.geolocation.watchPosition(
-
-        position => {
-
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-            const accuracy = position.coords.accuracy; // précision en mètres
-
-            userCoords = L.latLng(lat, lng);
-
-            // 🟢 Création du point bleu si inexistant
-            if (!userMarker) {
-
-                userMarker = L.circleMarker(userCoords, {
-                    radius: 8,
-                    fillColor: "#4285F4",
-                    color: "#ffffff",
-                    weight: 2,
-                    fillOpacity: 1
-                }).addTo(map);
-
-                userMarker.bindPopup(`
-                    <div class="popup-user">
-                        <div class="popup-title">📍 Vous êtes ici</div>
-                        <div class="popup-user-sub">
-                            Suivi GPS actif
-                        </div>
-                    </div>
-                `);
-
-                // 🔵 Cercle de précision
-                accuracyCircle = L.circle(userCoords, {
-                    radius: accuracy,
-                    color: "#4285F4",
-                    fillColor: "#4285F4",
-                    fillOpacity: 0.15,
-                    weight: 1
-                }).addTo(map);
-
-            } else {
-                // Mise à jour fluide
-                userMarker.setLatLng(userCoords);
-                accuracyCircle.setLatLng(userCoords);
-                accuracyCircle.setRadius(accuracy);
-            }
-
-            // 🚗 MODE UBER → centre automatiquement
-            if (autoFollow) {
-                map.setView(userCoords, map.getZoom(), {
-                    animate: true,
-                    duration: 0.5
-                });
-            }
-
-        },
-
-        error => {
-            alert("Impossible d'obtenir votre position.");
-        },
-
-        {
-            enableHighAccuracy: true,
-            maximumAge: 0,
-            timeout: 10000
-        }
-    );
-});
 
 
 
@@ -674,42 +586,189 @@ function calcWalkingTime(distanceMeters) {
     return Math.round(minutes);
 }
 
-// ==================== Bouton "Ma position" ====================
-document.getElementById('locateBtn').addEventListener('click', () => {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(pos => {
-            const lat = pos.coords.latitude;
-            const lng = pos.coords.longitude;
+/**********************************************************
+ * 📍 GPS + ORIENTATION — VERSION ULTRA PRO
+ **********************************************************/
+
+let userMarker = null;
+let accuracyCircle = null;
+let directionMarker = null;
+let userCoords = null;
+let watchId = null;
+let autoFollow = true;
+
+// ==================== BOUTON ACTIVER GPS ====================
+
+const locateBtn = document.getElementById("locateBtn");
+
+locateBtn.addEventListener("click", () => {
+
+    if (!navigator.geolocation) {
+        alert("La géolocalisation n'est pas supportée.");
+        return;
+    }
+
+    if (watchId !== null) return;
+
+    watchId = navigator.geolocation.watchPosition(
+
+        position => {
+
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+
             userCoords = L.latLng(lat, lng);
 
-            // Supprimer ancien marker si existant
-            if (userMarker) map.removeLayer(userMarker);
+            if (!userMarker) {
 
-            // Marker bleu pour l'utilisateur
-            userMarker = L.circleMarker(userCoords, {
-                radius: 8,
-                color: '#4285F4',
-                fillColor: '#4285F4',
-                fillOpacity: 1
-            }).addTo(map)
-            .bindPopup(`
-    <div class="popup-user">
-        <div class="popup-title">
-            📍 Vous êtes ici
-        </div>
-        <div class="popup-user-sub">
-            Position actuelle détectée
-        </div>
-    </div>
-`)
-            .openPopup();
+                // 🔵 POINT BLEU CENTRAL
+                userMarker = L.circleMarker(userCoords, {
+                    radius: 8,
+                    fillColor: "#1a73e8",
+                    color: "#ffffff",
+                    weight: 3,
+                    fillOpacity: 1
+                }).addTo(map);
 
-            map.setView(userCoords, 18);
+                // 🔵 CERCLE STYLE GOOGLE
+                accuracyCircle = L.circle(userCoords, {
+                    radius: 40,
+                    color: "#1a73e8",
+                    fillColor: "#1a73e8",
+                    fillOpacity: 0.12,
+                    weight: 1
+                }).addTo(map);
+
+                // 🔺 CÔNE DIRECTION
+                directionMarker = L.marker(userCoords, {
+                    icon: L.divIcon({
+                        className: "direction-arrow",
+                        html: `<div class="arrow"></div>`,
+                        iconSize: [40, 40],
+                        iconAnchor: [20, 20]
+                    })
+                }).addTo(map);
+
+            } else {
+
+                userMarker.setLatLng(userCoords);
+                accuracyCircle.setLatLng(userCoords);
+                directionMarker.setLatLng(userCoords);
+            }
+
+            // 🚗 MODE UBER (centrage auto)
+            if (autoFollow) {
+                map.setView(userCoords, map.getZoom(), {
+                    animate: true,
+                    duration: 0.5
+                });
+            }
+
+        },
+
+        error => {
+            alert("Impossible d'obtenir votre position.");
+        },
+
+        {
+            enableHighAccuracy: true,
+            maximumAge: 0,
+            timeout: 10000
+        }
+    );
+
+    enableOrientation(); // Active rotation
+});
+
+
+// ==================== ORIENTATION TÉLÉPHONE ====================
+
+function enableOrientation() {
+
+    function handleOrientation(event) {
+
+        if (!directionMarker) return;
+
+        let heading = event.alpha;
+
+        if (heading === null) return;
+
+        const arrow = document.querySelector(".arrow");
+
+        if (arrow) {
+            arrow.style.transform = `rotate(${heading}deg)`;
+        }
+    }
+
+    // Android
+    if (window.DeviceOrientationEvent && 
+        typeof DeviceOrientationEvent.requestPermission !== "function") {
+
+        window.addEventListener("deviceorientation", handleOrientation);
+    }
+
+    // iPhone
+    if (typeof DeviceOrientationEvent.requestPermission === "function") {
+
+        DeviceOrientationEvent.requestPermission()
+            .then(permissionState => {
+                if (permissionState === "granted") {
+                    window.addEventListener("deviceorientation", handleOrientation);
+                }
+            })
+            .catch(console.error);
+    }
+}
+
+
+// ==================== MODE UBER INTELLIGENT ====================
+
+// Si l'utilisateur déplace la carte → stop centrage
+map.on("dragstart", () => {
+    autoFollow = false;
+});
+
+// Double clic sur bouton → réactiver centrage
+locateBtn.addEventListener("dblclick", () => {
+
+    autoFollow = true;
+
+    if (userCoords) {
+        map.setView(userCoords, 18, {
+            animate: true,
+            duration: 0.5
         });
-    } else {
-        alert("Géolocalisation non disponible.");
     }
 });
+
+
+// ==================== ARRÊTER LE SUIVI ====================
+
+function stopTracking() {
+
+    if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+    }
+
+    if (userMarker) {
+        map.removeLayer(userMarker);
+        userMarker = null;
+    }
+
+    if (accuracyCircle) {
+        map.removeLayer(accuracyCircle);
+        accuracyCircle = null;
+    }
+
+    if (directionMarker) {
+        map.removeLayer(directionMarker);
+        directionMarker = null;
+    }
+
+    autoFollow = true;
+}
+
 
 // ==================== Bouton "Arrêt le plus proche" ====================
 document.getElementById('nearestStopBtn').addEventListener('click', () => {
