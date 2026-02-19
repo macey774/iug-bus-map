@@ -1,10 +1,10 @@
 /******************************************************************
- * ?? SYST»ME PROFESSIONNEL DE SUIVI DES BUS ñ VERSION OPTIMIS…E
- * Auteur : Mabel CÈdric Yvan
+ * üöå SYST√àME PROFESSIONNEL DE SUIVI DES BUS ‚Äì VERSION OPTIMIS√âE
+ * Auteur : Mabel C√©dric Yvan
  ******************************************************************/
 
 /* ================================================================
-   1?? INITIALISATION DE LA CARTE
+   1Ô∏è‚É£ INITIALISATION DE LA CARTE
 ================================================================ */
 
 const DEFAULT_CENTER = [4.040770, 9.752837];
@@ -18,7 +18,7 @@ const map = L.map("map", {
 
 const mapSatellite = L.tileLayer(
     "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-    { attribution: "© Mabel CÈdric Yvan" }
+    { attribution: "¬© Mabel C√©dric Yvan" }
 );
 
 const mapStandard = L.tileLayer(
@@ -34,11 +34,11 @@ mapSatellite.addTo(map);
 mapLabels.addTo(map);
 
 /* ================================================================
-   2?? D…FINITION DES IC‘NES
+   2Ô∏è‚É£ D√âFINITION DES IC√îNES
 ================================================================ */
 
 const carIcon = L.icon({
-    iconUrl: "car.png",
+    iconUrl: "https://cdn-icons-png.flaticon.com/512/744/744465.png",
     iconSize: [40, 40],
     iconAnchor: [20, 20]
 });
@@ -62,7 +62,7 @@ const bus8StopIcon = L.icon({
 });
 
 /* ================================================================
-   3?? LAYERS
+   3Ô∏è‚É£ LAYERS
 ================================================================ */
 
 const bus4Layer = L.layerGroup().addTo(map);
@@ -76,7 +76,7 @@ const followBus4Layer = L.layerGroup();
 const followBus8Layer = L.layerGroup();
 
 /* ================================================================
-   4?? DONN…ES
+   4Ô∏è‚É£ DONN√âES
 ================================================================ */
 
 const bus4Stops = [
@@ -88,10 +88,10 @@ const bus4Stops = [
     { name: "Tradex Borne 10", coords: [3.998247, 9.768313] },
     { name: "Carrefour Ari", coords: [3.995235, 9.782917] },
     { name: "Tradex Yassa", coords: [4.001153, 9.805164] },
-    { name: "EntrÈe MAETUR Yassa", coords: [4.009370, 9.800646] },
+    { name: "Entr√©e MAETUR Yassa", coords: [4.009370, 9.800646] },
     { name: "Total Nkolmbong", coords: [4.018734, 9.795956] },
     { name: "Carrefour Nyalla Pariso", coords: [4.024639, 9.793029] },
-    { name: "Ch‚teau Nyalla", coords: [4.033330, 9.786290] },
+    { name: "Ch√¢teau Nyalla", coords: [4.033330, 9.786290] },
     { name: "Rails Nyalla", coords: [4.034902, 9.777759] },
     { name: "Campus C", coords: [4.039735, 9.751857] }
 ];
@@ -115,7 +115,7 @@ const parkings = [
 ];
 
 /* ================================================================
-   5?? FONCTION OSRM AVEC CACHE (OPTIMISATION PERFORMANCE)
+   5Ô∏è‚É£ FONCTION OSRM AVEC CACHE (OPTIMISATION PERFORMANCE)
 ================================================================ */
 
 const routeCache = {};
@@ -147,7 +147,7 @@ async function getOSRMRoute(coords) {
 }
 
 /* ================================================================
-   6?? TRAC… DES LIGNES
+   6Ô∏è‚É£ TRAC√â DES LIGNES
 ================================================================ */
 
 async function drawRoutes() {
@@ -166,7 +166,7 @@ async function drawRoutes() {
 drawRoutes();
 
 /* ================================================================
-   7?? AJOUT DES MARKERS
+   7Ô∏è‚É£ AJOUT DES MARKERS
 ================================================================ */
 
 function addMarkers() {
@@ -175,9 +175,9 @@ function addMarkers() {
         L.marker(stop.coords, { icon: bus4StopIcon })
             .addTo(bus4Layer)
             .bindPopup(`
-                ?? BUS 4<br>
+                üõë BUS 4<br>
                 <b>${stop.name}</b><br>
-                <button onclick="addFavorite('${stop.name}')">? Favori</button>
+                <button onclick="addFavorite('${stop.name}')">‚≠ê Favori</button>
             `);
     });
 
@@ -185,32 +185,32 @@ function addMarkers() {
         L.marker(stop.coords, { icon: bus8StopIcon })
             .addTo(bus8Layer)
             .bindPopup(`
-                ?? BUS 8<br>
+                üõë BUS 8<br>
                 <b>${stop.name}</b><br>
-                <button onclick="addFavorite('${stop.name}')">? Favori</button>
+                <button onclick="addFavorite('${stop.name}')">‚≠ê Favori</button>
             `);
     });
 
     campuses.forEach(c =>
-        L.marker(c.coords).addTo(campusLayer).bindPopup("?? " + c.name)
+        L.marker(c.coords).addTo(campusLayer).bindPopup("üéì " + c.name)
     );
 
     parkings.forEach(p =>
-        L.marker(p.coords).addTo(parkingLayer).bindPopup("??? " + p.name)
+        L.marker(p.coords).addTo(parkingLayer).bindPopup("üÖøÔ∏è " + p.name)
     );
 }
 
 addMarkers();
 
 /* ================================================================
-   ?? ANIMATION ULTRA FLUIDE (SANS PAUSE OSRM)
+   üöÄ ANIMATION ULTRA FLUIDE (SANS PAUSE OSRM)
    - 1 seul calcul OSRM
    - Mouvement continu
 ================================================================ */
 
 async function animateBusSmooth(stops, speed, label, company, colorLayer) {
 
-    // 1?? On calcule UNE SEULE FOIS toute la route complËte
+    // 1Ô∏è‚É£ On calcule UNE SEULE FOIS toute la route compl√®te
     const fullRoute = await getOSRMRoute(stops.map(s => s.coords));
 
     let index = 0;
@@ -221,7 +221,7 @@ async function animateBusSmooth(stops, speed, label, company, colorLayer) {
 
         marker.setLatLng(fullRoute[index]);
 
-        // ?? DÈtection arrÍt le plus proche
+        // üîç D√©tection arr√™t le plus proche
         let closestStop = null;
         let minDistance = Infinity;
 
@@ -234,10 +234,10 @@ async function animateBusSmooth(stops, speed, label, company, colorLayer) {
         });
 
         marker.bindPopup(`
-            ?? ${label}<br>
+            üöå ${label}<br>
             <b>Compagnie :</b> ${company}<br>
             <b>Position :</b> En circulation<br>
-            <b>ArrÍt proche :</b> ${closestStop?.name || "ó"}
+            <b>Arr√™t proche :</b> ${closestStop?.name || "‚Äî"}
         `);
 
         index++;
@@ -257,7 +257,7 @@ async function animateBusSmooth(stops, speed, label, company, colorLayer) {
 }
 
 /* ================================================================
-   ?? LANCEMENT DES BUS
+   üé¨ LANCEMENT DES BUS
 ================================================================ */
 
 const markerBus4 = animateBusSmooth(
@@ -278,34 +278,34 @@ const markerBus8 = animateBusSmooth(
 
 
 /* ================================================================
-   9?? PANNEAU DE CONTR‘LE STYLE GOOGLE MAPS
+   9Ô∏è‚É£ PANNEAU DE CONTR√îLE STYLE GOOGLE MAPS
 ================================================================ */
 
 const titleLayer = L.layerGroup();
 
 const baseMaps = {
     "<b>TYPES DE CARTE</b>": titleLayer,
-    "??? Standard": mapStandard,
-    "??? Satellite": mapSatellite
+    "üó∫Ô∏è Standard": mapStandard,
+    "üõ∞Ô∏è Satellite": mapSatellite
 };
 
 const overlayMaps = {
-    "<b>D…TAILS</b>": titleLayer,
-    "??? LibellÈs": mapLabels,
-    "?? Ligne BUS 4": bus4LineLayer,
-    "?? Ligne BUS 8": bus8LineLayer,
-    "?? ArrÍts BUS 4": bus4Layer,
-    "?? ArrÍts BUS 8": bus8Layer,
-    "?? Campus": campusLayer,
-    "??? Parkings": parkingLayer,
-    "?? Suivre BUS 4 uniquement": followBus4Layer,
-    "?? Suivre BUS 8 uniquement": followBus8Layer
+    "<b>D√âTAILS</b>": titleLayer,
+    "üè∑Ô∏è Libell√©s": mapLabels,
+    "üü° Ligne BUS 4": bus4LineLayer,
+    "üü¢ Ligne BUS 8": bus8LineLayer,
+    "üõë Arr√™ts BUS 4": bus4Layer,
+    "üõë Arr√™ts BUS 8": bus8Layer,
+    "üéì Campus": campusLayer,
+    "üÖøÔ∏è Parkings": parkingLayer,
+    "üöç Suivre BUS 4 uniquement": followBus4Layer,
+    "üöç Suivre BUS 8 uniquement": followBus8Layer
 };
 
 L.control.layers(baseMaps, overlayMaps, { collapsed: true }).addTo(map);
 
 /* ================================================================
-   ?? FAVORIS (LocalStorage)
+   üîü FAVORIS (LocalStorage)
 ================================================================ */
 
 function addFavorite(stopName) {
@@ -317,7 +317,7 @@ function addFavorite(stopName) {
         favorites.push(stopName);
         localStorage.setItem("favorites", JSON.stringify(favorites));
 
-        alert("? ArrÍt ajoutÈ aux favoris");
+        alert("‚≠ê Arr√™t ajout√© aux favoris");
     }
 }
 
@@ -337,7 +337,7 @@ function addFavorite(stopName) {
 
 
 /**********************************************************
- * ?? BOUTON EFFACER ITIN…RAIRE
+ * üóë BOUTON EFFACER ITIN√âRAIRE
  **********************************************************/
 
 document.getElementById("clearRouteBtn").addEventListener("click", () => {
@@ -433,7 +433,7 @@ document.getElementById("clearRouteBtn").addEventListener("click", () => {
 
 
 
-// RÈcupÈration des ÈlÈments
+// R√©cup√©ration des √©l√©ments
 const routeBtn = document.getElementById('routeBtn');
 const routeModal = document.getElementById('routeModal');
 const closeRouteModal = document.getElementById('closeRouteModal');
@@ -441,19 +441,19 @@ const endInput = document.getElementById('endInput');
 
 
 
-// Ouvrir la mini fenÍtre quand on clique sur le bouton ItinÈraire
+// Ouvrir la mini fen√™tre quand on clique sur le bouton Itin√©raire
 routeBtn.addEventListener('click', (e) => {
-    e.stopPropagation(); // empÍche la fermeture immÈdiate
+    e.stopPropagation(); // emp√™che la fermeture imm√©diate
     
     routeModal.style.display = 'block';
 });
 
-// Fermer la fenÍtre quand on clique sur le bouton ?
+// Fermer la fen√™tre quand on clique sur le bouton ‚úñ
 closeRouteModal.addEventListener('click', () => {
     routeModal.style.display = 'none';
 });
 
-// Fermer la fenÍtre si on clique n'importe o˘ en dehors
+// Fermer la fen√™tre si on clique n'importe o√π en dehors
 document.addEventListener('click', (e) => {
     if (!routeModal.contains(e.target) && e.target !== routeBtn) {
         routeModal.style.display = 'none';
@@ -462,67 +462,77 @@ document.addEventListener('click', (e) => {
 
 
 /**********************************************************
- * ?? BOUTON "MA POSITION" ó POINT BLEU
+ * üìç BOUTON "MA POSITION" ‚Äî VERSION STABLE
  **********************************************************/
 
 let userMarker = null;
-let userPosition = null;
+let userCoords = null;
 
 const locateBtn = document.getElementById("locateBtn");
 
 locateBtn.addEventListener("click", () => {
 
     if (!navigator.geolocation) {
-        alert("La gÈolocalisation n'est pas supportÈe.");
+        alert("La g√©olocalisation n'est pas support√©e.");
         return;
     }
 
-    navigator.geolocation.getCurrentPosition(position => {
+    locateBtn.disabled = true; // √©vite les clics multiples rapides
 
-        userPosition = [
-            position.coords.latitude,
-            position.coords.longitude
-        ];
+    navigator.geolocation.getCurrentPosition(
 
-        // Supprimer ancien point si existe
-        if (userMarker) {
-            map.removeLayer(userMarker);
+        position => {
+
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+
+            userCoords = L.latLng(lat, lng);
+
+            // Supprimer ancien marker si existe
+            if (userMarker) {
+                map.removeLayer(userMarker);
+            }
+
+            // Point bleu moderne
+            userMarker = L.circleMarker(userCoords, {
+                radius: 8,
+                fillColor: "#4285F4",
+                color: "#ffffff",
+                weight: 2,
+                fillOpacity: 1
+            }).addTo(map);
+
+            userMarker.bindPopup(`
+                <div class="popup-user">
+                    <div class="popup-title">üìç Vous √™tes ici</div>
+                    <div class="popup-user-sub">
+                        Position actuelle d√©tect√©e
+                    </div>
+                </div>
+            `).openPopup();
+
+            map.setView(userCoords, 18);
+
+            locateBtn.disabled = false;
+        },
+
+        error => {
+            alert("Impossible d'obtenir votre position.");
+            locateBtn.disabled = false;
+        },
+
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
         }
-
-        // CrÈation du POINT bleu
-        userMarker = L.circleMarker(userPosition, {
-            radius: 8,              // taille du point
-            fillColor: "#1E90FF",   // bleu
-            color: "#ffffff",       // contour blanc
-            weight: 2,
-            opacity: 1,
-            fillOpacity: 1
-        }).addTo(map);
-
-        userMarker.bindPopup(`
-    <div class="popup-user">
-        <div class="popup-title">
-            ?? Vous Ítes ici
-        </div>
-        <div class="popup-user-sub">
-            Position actuelle dÈtectÈe
-        </div>
-    </div>
-`);
-
-
-        // Centrer la carte
-        map.setView(userPosition, 18);
-
-    }, () => {
-        alert("Impossible d'obtenir votre position.");
-    });
-
+    );
 });
 
 
+
 /**********************************************************
- * ?? ARR T LE PLUS PROCHE
+ * üìç ARR√äT LE PLUS PROCHE
  **********************************************************/
 
 const nearestStopBtn = document.getElementById("nearestStopBtn");
@@ -530,7 +540,7 @@ const nearestStopBtn = document.getElementById("nearestStopBtn");
 nearestStopBtn.addEventListener("click", () => {
 
     if (!navigator.geolocation) {
-        alert("La gÈolocalisation n'est pas supportÈe.");
+        alert("La g√©olocalisation n'est pas support√©e.");
         return;
     }
 
@@ -541,7 +551,7 @@ nearestStopBtn.addEventListener("click", () => {
             position.coords.longitude
         );
 
-        // Fusionner tous les arrÍts
+        // Fusionner tous les arr√™ts
         const allStops = [...bus4Stops, ...bus8Stops];
 
         let nearestStop = null;
@@ -551,7 +561,7 @@ nearestStopBtn.addEventListener("click", () => {
 
             const stopLatLng = L.latLng(stop.coords[0], stop.coords[1]);
 
-            // Distance en mËtres (fonction native Leaflet)
+            // Distance en m√®tres (fonction native Leaflet)
             const distance = userLatLng.distanceTo(stopLatLng);
 
             if (distance < minDistance) {
@@ -577,7 +587,7 @@ nearestStopBtn.addEventListener("click", () => {
                     color: #1E90FF;
                     margin-bottom: 4px;
                 ">
-                    ArrÍt le plus proche
+                    Arr√™t le plus proche
                 </div>
                 <div style="font-size: 14px;">
                    <b> ${nearestStop.name}</b>
@@ -628,15 +638,15 @@ nearestStopBtn.addEventListener("click", () => {
 
 // ==================== Variables globales ====================
 
-let routeLine = null;  // ligne OSRM / polyline tracÈe
-let userCoords = null; // coordonnÈes actuelles
+let routeLine = null;  // ligne OSRM / polyline trac√©e
+ userCoords = null; // coordonn√©es actuelles
 
-// Fonction pour calculer la distance en mËtres entre deux points (Leaflet)
+// Fonction pour calculer la distance en m√®tres entre deux points (Leaflet)
 function calcDistance(latlng1, latlng2) {
-    return latlng1.distanceTo(latlng2); // renvoie la distance en mËtres
+    return latlng1.distanceTo(latlng2); // renvoie la distance en m√®tres
 }
 
-// Fonction pour calculer durÈe approximative ‡ pied (5 km/h = 83.33 m/min)
+// Fonction pour calculer dur√©e approximative √† pied (5 km/h = 83.33 m/min)
 function calcWalkingTime(distanceMeters) {
     const minutes = distanceMeters / 83.33;
     return Math.round(minutes);
@@ -663,10 +673,10 @@ document.getElementById('locateBtn').addEventListener('click', () => {
             .bindPopup(`
     <div class="popup-user">
         <div class="popup-title">
-            ?? Vous Ítes ici
+            üìç Vous √™tes ici
         </div>
         <div class="popup-user-sub">
-            Position actuelle dÈtectÈe
+            Position actuelle d√©tect√©e
         </div>
     </div>
 `)
@@ -675,18 +685,18 @@ document.getElementById('locateBtn').addEventListener('click', () => {
             map.setView(userCoords, 18);
         });
     } else {
-        alert("GÈolocalisation non disponible.");
+        alert("G√©olocalisation non disponible.");
     }
 });
 
-// ==================== Bouton "ArrÍt le plus proche" ====================
+// ==================== Bouton "Arr√™t le plus proche" ====================
 document.getElementById('nearestStopBtn').addEventListener('click', () => {
     if (!userCoords) {
         alert("Cliquez d'abord sur 'Ma position'.");
         return;
     }
 
-    // Calculer l'arrÍt le plus proche parmi bus4Stops et bus8Stops
+    // Calculer l'arr√™t le plus proche parmi bus4Stops et bus8Stops
     const allStops = bus4Stops.concat(bus8Stops);
     let nearest = allStops[0];
     let minDist = userCoords.distanceTo(L.latLng(nearest.coords));
@@ -699,7 +709,7 @@ document.getElementById('nearestStopBtn').addEventListener('click', () => {
         }
     });
 
-    // CrÈer un popup moderne sur le marker de l'arrÍt
+    // Cr√©er un popup moderne sur le marker de l'arr√™t
     const stopLatLng = L.latLng(nearest.coords);
     const walkingTime = calcWalkingTime(minDist);
 
@@ -707,18 +717,18 @@ document.getElementById('nearestStopBtn').addEventListener('click', () => {
         .setLatLng(stopLatLng)
         .setContent(`
             <div class="popup-title">${nearest.name}</div>
-            <div class="popup-distance">ArrÍt le plus proche de vous</div>
+            <div class="popup-distance">Arr√™t le plus proche de vous</div>
             <div class="popup-distance">Distance : ${minDist.toFixed(0)} m</div>
-            <div class="popup-distance">DurÈe ‡ pied : ~${walkingTime} min</div>
+            <div class="popup-distance">Dur√©e √† pied : ~${walkingTime} min</div>
         `)
         .openOn(map);
 
-    // Recentre la carte sur l'arrÍt
+    // Recentre la carte sur l'arr√™t
     map.setView(stopLatLng, 18);
 });
 
 /**********************************************************
- * ?? BOUTON TRACER ó VRAIE ROUTE (OSRM)
+ * üß≠ BOUTON TRACER ‚Äî VRAIE ROUTE (OSRM)
  **********************************************************/
 
 
@@ -732,7 +742,7 @@ document.getElementById("traceBtn").addEventListener("click", () => {
 
     const destinationText = document.getElementById("endInput").value.trim().toLowerCase();
     if (!destinationText) {
-        alert("Veuillez entrer un arrÍt.");
+        alert("Veuillez entrer un arr√™t.");
         return;
     }
 
@@ -743,7 +753,7 @@ document.getElementById("traceBtn").addEventListener("click", () => {
     );
 
     if (!matchedStop) {
-        alert("ArrÍt introuvable.");
+        alert("Arr√™t introuvable.");
         return;
     }
 
@@ -758,7 +768,7 @@ document.getElementById("traceBtn").addEventListener("click", () => {
         .then(data => {
 
             if (!data.routes || data.routes.length === 0) {
-                alert("ItinÈraire non disponible.");
+                alert("Itin√©raire non disponible.");
                 return;
             }
 
@@ -773,7 +783,7 @@ document.getElementById("traceBtn").addEventListener("click", () => {
                 map.removeLayer(routeLine);
             }
 
-            // TracÈ rÈel suivant la route
+            // Trac√© r√©el suivant la route
             routeLine = L.polyline(routeCoords, {
                 color: "#4285F4",
                 weight: 6,
@@ -787,14 +797,14 @@ document.getElementById("traceBtn").addEventListener("click", () => {
                 padding: [60, 60]
             });
 
-            // Distance et durÈe rÈelles (OSRM)
-            const distance = route.distance; // en mËtres
+            // Distance et dur√©e r√©elles (OSRM)
+            const distance = route.distance; // en m√®tres
             const duration = route.duration; // en secondes
 
             const distanceMeters = Math.round(distance);
             const durationMinutes = Math.round(duration / 60);
 
-            // Popup moderne sur l'arrÍt
+            // Popup moderne sur l'arr√™t
             L.popup()
                 .setLatLng([destLat, destLng])
                 .setContent(`
@@ -803,14 +813,14 @@ document.getElementById("traceBtn").addEventListener("click", () => {
                         <span>Distance</span> : ${distanceMeters} m
                     </div>
                     <div class="popup-duration">
-                        <span>DurÈe</span> : ~${durationMinutes} min ‡ pied
+                        <span>Dur√©e</span> : ~${durationMinutes} min √† pied
                     </div>
                 `)
                 .openOn(map);
 
         })
         .catch(() => {
-            alert("Erreur lors du calcul de l'itinÈraire.");
+            alert("Erreur lors du calcul de l'itin√©raire.");
         });
 
 });
