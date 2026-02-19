@@ -462,15 +462,18 @@ document.addEventListener('click', (e) => {
 
 
 /**********************************************************
- * 📍 SUIVI POSITION EN TEMPS RÉEL (MODE GOOGLE MAPS)
+ * 📍 SUIVI GPS PROFESSIONNEL (MODE UBER)
  **********************************************************/
 
- userMarker = null;
+userMarker = null;
+let accuracyCircle = null;
 userCoords = null;
-let watchId = null; // pour arrêter le suivi si besoin
+let watchId = null;
+let autoFollow = true; // mode suivi activé par défaut
 
 
 
+// Activer le suivi
 locateBtn.addEventListener("click", () => {
 
     if (!navigator.geolocation) {
@@ -478,8 +481,7 @@ locateBtn.addEventListener("click", () => {
         return;
     }
 
-    // Si déjà actif → ne pas relancer
-    if (watchId !== null) return;
+    if (watchId !== null) return; // déjà actif
 
     watchId = navigator.geolocation.watchPosition(
 
@@ -487,11 +489,13 @@ locateBtn.addEventListener("click", () => {
 
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
+            const accuracy = position.coords.accuracy; // précision en mètres
 
             userCoords = L.latLng(lat, lng);
 
+            // 🟢 Création du point bleu si inexistant
             if (!userMarker) {
-                // Création du point bleu
+
                 userMarker = L.circleMarker(userCoords, {
                     radius: 8,
                     fillColor: "#4285F4",
@@ -504,17 +508,34 @@ locateBtn.addEventListener("click", () => {
                     <div class="popup-user">
                         <div class="popup-title">📍 Vous êtes ici</div>
                         <div class="popup-user-sub">
-                            Suivi en temps réel activé
+                            Suivi GPS actif
                         </div>
                     </div>
                 `);
+
+                // 🔵 Cercle de précision
+                accuracyCircle = L.circle(userCoords, {
+                    radius: accuracy,
+                    color: "#4285F4",
+                    fillColor: "#4285F4",
+                    fillOpacity: 0.15,
+                    weight: 1
+                }).addTo(map);
+
             } else {
-                // Mise à jour fluide de la position
+                // Mise à jour fluide
                 userMarker.setLatLng(userCoords);
+                accuracyCircle.setLatLng(userCoords);
+                accuracyCircle.setRadius(accuracy);
             }
 
-            // Optionnel : recentrer automatiquement
-            map.setView(userCoords);
+            // 🚗 MODE UBER → centre automatiquement
+            if (autoFollow) {
+                map.setView(userCoords, map.getZoom(), {
+                    animate: true,
+                    duration: 0.5
+                });
+            }
 
         },
 
@@ -825,6 +846,7 @@ document.getElementById("traceBtn").addEventListener("click", () => {
         });
 
 });
+
 
 
 
