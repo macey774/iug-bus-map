@@ -356,13 +356,13 @@ body {
 
     box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
     z-index: 9999;          /* 🔥 au-dessus de Leaflet */
-   pointer-events: none; /* 🔥 ne bloque pas les interactions de la carte */
+  pointer-events: none; /* 🔥 ne bloque pas les interactions de la carte */
 }
 
 
 .footer-title {
     color: #ffffff;
-    font-size: 14px;
+    font-size: 18px;
     font-weight: 600;
     text-shadow:
         2px 2px 4px rgba(0,0,0,0.9),
@@ -393,20 +393,687 @@ main {
     flex: 1;
 }
 
-.direction-arrow {
+
+
+
+  
+  .popup-container {
+      font-family: Arial, sans-serif;
+      padding: 8px;
+  }
+  
+  .popup-title {
+      font-size: 15px;
+      font-weight: bold;
+      color: #1E90FF;
+      margin-bottom: 4px;
+  }
+  
+  .popup-content {
+      font-size: 13px;
+      color: #555;
+      margin: 2px 0;
+  }
+  
+ .popup-btn {
+      background: #4285F4;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 8px;
+      font-size: 12px;
+  }
+  
+  .popup-btn:hover {
+      background: #3367D6;
+  }
+ 
+/* Styles pour les popups de bus */
+  .bus-popup {
+      font-family: Arial, sans-serif;
+      border-radius: 8px;
+      overflow: hidden;
+      width: 260px;
+  }
+  
+  .bus-popup-header {
+      padding: 10px;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+  }
+  
+  .bus-popup-icon {
+      font-size: 20px;
+  }
+  
+  .bus-popup-title {
+      font-size: 16px;
+      font-weight: bold;
+  }
+  
+  .bus-popup-content {
+      padding: 12px;
+      background: white;
+  }
+  
+  .bus-popup-row {
+      margin: 6px 0;
+      display: flex;
+      align-items: baseline;
+  }
+  
+  .bus-popup-label {
+      font-size: 12px;
+      color: #666;
+      width: 95px;
+      flex-shrink: 0;
+  }
+  
+  .bus-popup-value {
+      font-size: 13px;
+      color: #333;
+      font-weight: 500;
+      flex: 1;
+  }
+  
+  .bus-popup-stop {
+      color: #1E90FF;
+      font-weight: bold;
+  }
+  
+  .bus-popup-next {
+      color: #34A853;
+      font-weight: bold;
+  }
+  
+  .bus-popup-divider {
+      height: 1px;
+      background: #eee;
+      margin: 8px 0;
+  }
+  
+  .bus-popup-footer {
+      margin-top: 8px;
+      text-align: right;
+  }
+  
+  .bus-popup-time {
+      font-size: 11px;
+      color: #999;
+  }
+ 
+
+
+
+/* ===================================================== */
+/* INDICATEUR DE CHARGEMENT
+/* ===================================================== */
+
+#loading-message {
+    animation: fadeIn 0.3s ease;
+}
+
+#loading-message::after {
+    content: '';
+    display: block;
+    width: 30px;
+    height: 30px;
+    margin: 10px auto 0;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -60%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
+/* ===================================================== */
+/* RESTRICTIONS DE ZOOM
+/* ===================================================== */
+
+/* Indicateur visuel quand le zoom minimum est atteint */
+.leaflet-zoom-min {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Style pour le contrôle de zoom */
+.leaflet-control-zoom {
+    border: none !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important;
+}
+
+.leaflet-control-zoom a {
+    background-color: white !important;
+    color: #667eea !important;
+    border: none !important;
+    transition: background-color 0.2s ease;
+}
+
+.leaflet-control-zoom a:hover {
+    background-color: #f5f5f5 !important;
+}
+
+.leaflet-control-zoom a.leaflet-disabled {
+    color: #ccc !important;
+    cursor: not-allowed;
+}
+
+/* ===================================================== */
+/* AMÉLIORATIONS POUR LA GÉOLOCALISATION
+/* ===================================================== */
+
+/* Animation pour le point de position utilisateur */
+@keyframes pulse-ring {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.2;
+    }
+    100% {
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+}
+
+.user-location-pulse::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: rgba(66, 133, 244, 0.3);
+    border-radius: 50%;
+    animation: pulse-ring 2s infinite;
+}
+
+/* Bouton de localisation actif */
+#locateBtn.active {
+    background: #667eea;
+    color: white;
+}
+
+#locateBtn.active .material-icons {
+    animation: pulse 2s infinite;
+}
+
+/* ===================================================== */
+/* BOUTON MA POSITION AMÉLIORÉ
+/* ===================================================== */
+
+#locateBtn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#locateBtn.active {
+    background: #667eea;
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+#locateBtn.active .material-icons {
+    animation: pulse 1s ease;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* ===================================================== */
+/* MARQUEUR DE POSITION UTILISATEUR AMÉLIORÉ
+/* ===================================================== */
+
+.user-location-marker {
+    transition: all 0.3s ease;
+}
+
+.user-location-marker::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: -6px;
+    left: -6px;
+    background: rgba(66, 133, 244, 0.3);
+    border-radius: 50%;
+    animation: radar-pulse 2s infinite;
+}
+
+@keyframes radar-pulse {
+    0% {
+        transform: scale(0.5);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1.5);
+        opacity: 0.2;
+    }
+    100% {
+        transform: scale(0.5);
+        opacity: 0.8;
+    }
+}
+
+.accuracy-circle {
+    transition: all 0.3s ease;
+    animation: fade-in 0.5s ease;
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* ===================================================== */
+/* NOTIFICATIONS
+/* ===================================================== */
+
+@keyframes slideDown {
+    from {
+        transform: translate(-50%, -20px);
+        opacity: 0;
+    }
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+}
+
+.notification {
+    font-family: Arial, sans-serif;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.notification-error {
+    background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+}
+
+.notification-info {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+
+
+/* ===================================================== */
+/* ÉTAT DE CHARGEMENT POUR LE BOUTON
+/* ===================================================== */
+
+#locateBtn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+#locateBtn.loading .material-icons {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+
+/* ===================================================== */
+/* POPUP DÉTAILLÉ POUR ARRÊT LE PLUS PROCHE
+/* ===================================================== */
+
+.detailed-popup .leaflet-popup-content-wrapper {
+    border-radius: 16px !important;
+    padding: 0 !important;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2) !important;
+}
+
+.detailed-popup-container {
+    width: 320px;
+    max-width: 100%;
+    font-family: Arial, sans-serif;
+}
+
+/* En-tête */
+.popup-header {
+    padding: 16px;
+    color: white;
     display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.popup-header-icon {
+    font-size: 28px;
+    background: rgba(255,255,255,0.2);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
     justify-content: center;
+}
+
+.popup-header-title {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* Corps */
+.popup-body {
+    padding: 20px;
+    background: white;
+}
+
+/* Section nom */
+.stop-name-section {
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.stop-name {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.stop-type {
+    font-size: 13px;
+    color: #667eea;
+    font-weight: 500;
+}
+
+/* Section distance */
+.distance-section {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.distance-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.distance-item:last-child {
+    margin-bottom: 0;
+}
+
+.distance-icon {
+    color: #667eea;
+    font-size: 20px;
+    width: 24px;
+}
+
+.distance-info {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
     align-items: center;
 }
 
-.arrow {
-    width: 0;
-    height: 0;
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
-    border-bottom: 20px solid #1a73e8;
-    opacity: 0.9;
-    transform-origin: 50% 75%;
+.distance-label {
+    font-size: 13px;
+    color: #666;
 }
 
+.distance-value {
+    font-size: 15px;
+    font-weight: bold;
+    color: #333;
+}
 
+/* Section lignes de bus */
+.bus-lines-section,
+.nearby-stops-section {
+    margin-bottom: 20px;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+.section-title .material-icons {
+    font-size: 18px;
+    color: #667eea;
+}
+
+.bus-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.bus-line-item {
+    background: #f8f9fa;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.bus-line-name {
+    color: #333;
+}
+
+/* Arrêts à proximité */
+.nearby-stops {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.nearby-stop-item {
+    background: #f8f9fa;
+    padding: 10px 15px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.nearby-stop-item:hover {
+    background: #e8eef7;
+    transform: translateX(5px);
+}
+
+.nearby-stop-name {
+    font-size: 13px;
+    color: #333;
+    font-weight: 500;
+}
+
+.nearby-stop-distance {
+    font-size: 12px;
+    color: #667eea;
+    font-weight: bold;
+}
+
+/* Boutons d'action */
+.popup-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.action-btn.primary {
+    background: #667eea;
+    color: white;
+}
+
+.action-btn.primary:hover {
+    background: #5a6fd8;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.action-btn.secondary {
+    background: #f8f9fa;
+    color: #666;
+    border: 1px solid #e0e0e0;
+}
+
+.action-btn.secondary:hover {
+    background: #e8eef7;
+    transform: translateY(-2px);
+}
+
+/* Note */
+.popup-note {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #999;
+    padding-top: 10px;
+    border-top: 1px dashed #eee;
+}
+
+.popup-note .material-icons {
+    font-size: 14px;
+}
+
+/* ===================================================== */
+/* MARQUEUR DE DISTANCE
+/* ===================================================== */
+
+.distance-marker {
+    background: white;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #667eea;
+    border: 2px solid #667eea;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    white-space: nowrap;
+}
+
+/* ===================================================== */
+/* CERCLE PULSANT POUR SURBRILLANCE
+/* ===================================================== */
+
+.pulse-circle {
+    animation: circle-pulse 1.5s ease-out infinite;
+}
+
+@keyframes circle-pulse {
+    0% {
+        opacity: 0.8;
+        transform: scale(0.8);
+    }
+    50% {
+        opacity: 0.4;
+        transform: scale(1.5);
+    }
+    100% {
+        opacity: 0.8;
+        transform: scale(0.8);
+    }
+}
+
+/* ===================================================== */
+/* NOTIFICATIONS AMÉLIORÉES
+/* ===================================================== */
+
+.notification {
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.notification-title {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.notification-message {
+    font-size: 13px;
+    opacity: 0.9;
+}
+
+/* ===================================================== */
+/* ÉTAT DE CHARGEMENT POUR LE BOUTON
+/* ===================================================== */
+
+#nearestStopBtn.loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+#nearestStopBtn.loading .material-icons {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
