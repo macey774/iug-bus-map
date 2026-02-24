@@ -1640,3 +1640,524 @@ main {
     white-space: nowrap;
     border: 0;
 }
+
+
+/* Version compacte */
+.stop-popup-container.compact {
+    width: 220px;
+    padding: 12px;
+}
+
+.stop-popup-container.compact .stop-popup-name {
+    font-size: 14px;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.stop-popup-container.compact .stop-popup-lines {
+    font-size: 10px;
+    padding: 2px 8px;
+    margin-bottom: 12px;
+    display: inline-block;
+    width: auto;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.stop-popup-container.compact .stop-popup-actions {
+    margin-bottom: 0;
+    gap: 8px;
+}
+
+.stop-popup-container.compact .stop-popup-btn {
+    width: 44px;
+    height: 44px;
+}
+
+.stop-popup-container.compact .stop-popup-btn .material-icons {
+    font-size: 22px;
+}
+
+/* ===================================================== */
+/* POPUP POUR ARRÊTS DE BUS
+/* ===================================================== */
+
+.stop-popup .leaflet-popup-content-wrapper {
+    border-radius: 20px !important;
+    padding: 0 !important;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2) !important;
+}
+
+.stop-popup-container {
+    width: 300px;
+    max-width: 100%;
+    font-family: Arial, sans-serif;
+}
+
+/* En-tête */
+.stop-popup-header {
+    padding: 16px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(135deg, #FFD700 0%, #34A853 100%);
+}
+
+.stop-popup-icon {
+    font-size: 28px;
+    background: rgba(255,255,255,0.2);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stop-popup-title {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* Corps */
+.stop-popup-body {
+    padding: 20px;
+    background: white;
+}
+
+/* Section nom */
+.stop-popup-name-section {
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.stop-popup-name {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.stop-popup-lines {
+    display: inline-block;
+    padding: 4px 15px;
+    background: #f0f0f0;
+    border-radius: 30px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Boutons d'action */
+.stop-popup-actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.stop-popup-btn {
+    flex: 1;
+    padding: 14px 8px;
+    border: none;
+    border-radius: 14px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #f8f9fa;
+    color: #555;
+    border: 1px solid #e0e0e0;
+}
+
+.stop-popup-btn .material-icons {
+    font-size: 20px;
+}
+
+.stop-popup-btn .btn-text {
+    white-space: nowrap;
+}
+
+/* Bouton favori */
+.stop-popup-btn.favorite-btn {
+    background: #fff9e6;
+    border-color: #FFD700;
+    color: #B8860B;
+}
+
+.stop-popup-btn.favorite-btn.active {
+    background: #FFD700;
+    color: white;
+    border-color: #FFD700;
+}
+
+.stop-popup-btn.favorite-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(255, 215, 0, 0.3);
+}
+
+/* Bouton itinéraire */
+.stop-popup-btn.route-btn {
+    background: #e8f0fe;
+    border-color: #4285f4;
+    color: #4285f4;
+}
+
+.stop-popup-btn.route-btn:hover {
+    background: #4285f4;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(66, 133, 244, 0.3);
+}
+
+/* Pied de page */
+.stop-popup-footer {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #999;
+    padding-top: 12px;
+    border-top: 1px dashed #e0e0e0;
+    justify-content: center;
+}
+
+.stop-popup-footer .material-icons {
+    font-size: 14px;
+    color: #4285f4;
+}
+
+/* ===================================================== */
+/* RESPONSIVE POUR LES POPUPS D'ARRÊTS
+/* ===================================================== */
+
+@media (max-width: 480px) {
+    .stop-popup-container {
+        width: 260px;
+    }
+
+    .stop-popup-header {
+        padding: 14px;
+    }
+
+    .stop-popup-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 24px;
+    }
+
+    .stop-popup-title {
+        font-size: 16px;
+    }
+
+    .stop-popup-body {
+        padding: 16px;
+    }
+
+    .stop-popup-name {
+        font-size: 16px;
+    }
+
+    .stop-popup-btn {
+        padding: 12px 6px;
+        font-size: 12px;
+    }
+
+    .stop-popup-btn .material-icons {
+        font-size: 18px;
+    }
+
+    .stop-popup-btn .btn-text {
+        display: none; /* Cache le texte sur mobile, garde juste l'icône */
+    }
+
+    .stop-popup-footer {
+        font-size: 10px;
+    }
+}
+
+/* Pour les écrans très petits */
+@media (max-width: 360px) {
+    .stop-popup-container {
+        width: 220px;
+    }
+
+    .stop-popup-name {
+        font-size: 14px;
+    }
+
+    .stop-popup-lines {
+        font-size: 10px;
+        padding: 3px 10px;
+    }
+}
+
+/* Version compacte */
+.stop-popup-container.compact {
+    width: 220px;
+    padding: 12px;
+}
+
+.stop-popup-container.compact .stop-popup-name {
+    font-size: 14px;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.stop-popup-container.compact .stop-popup-lines {
+    font-size: 10px;
+    padding: 2px 8px;
+    margin-bottom: 12px;
+    display: inline-block;
+    width: auto;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.stop-popup-container.compact .stop-popup-actions {
+    margin-bottom: 0;
+    gap: 8px;
+}
+
+.stop-popup-container.compact .stop-popup-btn {
+    width: 44px;
+    height: 44px;
+}
+
+.stop-popup-container.compact .stop-popup-btn .material-icons {
+    font-size: 22px;
+}
+
+
+
+/* ===================================================== */
+/* ICÔNES DE BUS PERSONNALISÉES
+/* ===================================================== */
+
+.custom-bus-icon {
+    background: transparent;
+    border: none;
+}
+
+.bus-icon-container {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    transition: all 0.3s ease;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
+}
+
+.bus-icon-container:hover {
+    transform: scale(1.1);
+    filter: drop-shadow(0 6px 8px rgba(0,0,0,0.3));
+}
+
+.bus-icon-container svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.bus-label {
+    position: absolute;
+    bottom: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.7);
+    color: white;
+    font-size: 9px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 10px;
+    white-space: nowrap;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.2);
+    letter-spacing: 0.5px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.bus-icon-container:hover .bus-label {
+    opacity: 1;
+}
+
+/* Couleurs spécifiques pour les bus */
+.bus-icon-container.bus4 svg rect:first-of-type {
+    fill: #FFD700;
+}
+
+.bus-icon-container.bus8 svg rect:first-of-type {
+    fill: #34A853;
+}
+
+/* Animation pour bus en mouvement */
+.bus-icon-container.moving {
+    animation: busMove 0.5s infinite alternate;
+}
+
+@keyframes busMove {
+    from {
+        transform: translateY(0);
+    }
+    to {
+        transform: translateY(-2px);
+    }
+}
+
+/* Effet de vibration pour bus en mouvement */
+.bus-icon-container.moving svg {
+    animation: busShake 0.2s infinite;
+}
+
+@keyframes busShake {
+    0% { transform: rotate(0deg); }
+    25% { transform: rotate(1deg); }
+    75% { transform: rotate(-1deg); }
+    100% { transform: rotate(0deg); }
+}
+
+/* Style pour les icônes PNG */
+.leaflet-marker-icon[src*="bus"] {
+    transition: transform 0.2s ease;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
+}
+
+.leaflet-marker-icon[src*="bus"]:hover {
+    transform: scale(1.1);
+    filter: drop-shadow(0 6px 8px rgba(0,0,0,0.3));
+}
+
+/* ===================================================== */
+/* ANIMATIONS POUR LES BUS
+/* ===================================================== */
+
+/* Bus qui arrive */
+@keyframes busArrival {
+    0% {
+        transform: scale(0.8) translateX(-20px);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.1) translateX(5px);
+    }
+    100% {
+        transform: scale(1) translateX(0);
+        opacity: 1;
+    }
+}
+
+.bus-arrival {
+    animation: busArrival 0.5s ease-out;
+}
+
+/* Bus qui part */
+@keyframes busDeparture {
+    0% {
+        transform: scale(1) translateX(0);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(0.8) translateX(20px);
+        opacity: 0;
+    }
+}
+
+.bus-departure {
+    animation: busDeparture 0.5s ease-in forwards;
+}
+
+/* Pulsation pour attirer l'attention */
+@keyframes busPulse {
+    0% {
+        transform: scale(1);
+        filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
+    }
+    50% {
+        transform: scale(1.15);
+        filter: drop-shadow(0 8px 12px rgba(66, 133, 244, 0.5));
+    }
+    100% {
+        transform: scale(1);
+        filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
+    }
+}
+
+.bus-highlight {
+    animation: busPulse 1s ease 3;
+}
+
+/* ===================================================== */
+/* MARQUEURS DE BUS SPÉCIFIQUES
+/* ===================================================== */
+
+/* Pour BUS 4 */
+.bus-marker-bus4 .bus-icon-container svg rect:first-of-type {
+    fill: #FFD700;
+}
+
+.bus-marker-bus4 .bus-label {
+    background: #FFD700;
+    color: #333;
+}
+
+/* Pour BUS 8 */
+.bus-marker-bus8 .bus-icon-container svg rect:first-of-type {
+    fill: #34A853;
+}
+
+.bus-marker-bus8 .bus-label {
+    background: #34A853;
+    color: white;
+}
+
+/* Bus en stationnement */
+.bus-parked .bus-icon-container {
+    opacity: 0.7;
+    filter: grayscale(0.3);
+}
+
+.bus-parked:hover {
+    opacity: 1;
+    filter: grayscale(0);
+}
+
+/* Bus en mouvement rapide */
+.bus-fast .bus-icon-container svg {
+    animation: fastMove 0.3s infinite;
+}
+
+@keyframes fastMove {
+    0% { transform: translateX(0); }
+    50% { transform: translateX(3px); }
+    100% { transform: translateX(0); }
+}
+
+/* ===================================================== */
+/* ADAPTATION POUR MOBILE
+/* ===================================================== */
+
+@media (max-width: 768px) {
+    .custom-bus-icon {
+        transform: scale(0.9);
+    }
+    
+    .bus-label {
+        font-size: 8px;
+        padding: 1px 4px;
+        bottom: -16px;
+    }
+    
+    .bus-icon-container.moving {
+        animation: none; /* Désactiver animations sur mobile pour performance */
+    }
+}
