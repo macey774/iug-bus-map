@@ -1,7 +1,7 @@
 /**
  * ======================================================================
  * SYSTÈME DE SUIVI DE BUS - APPLICATION DE TRANSPORT EN COMMUN
- * Version professionnelle 2.0
+ * Version professionnelle 3.0
  * Auteur : Mabel Cédric Yvan
  * Description : Application de suivi en temps réel des bus avec
  *              calcul d'itinéraires, géolocalisation et interface moderne
@@ -18,8 +18,8 @@ const CONFIG = {
     map: {
         defaultCenter: [4.040770, 9.752837],
         defaultZoom: 18,
-        minZoom: 12,           // Zoom minimum ajouté
-        maxZoom: 18,           // Zoom maximum
+        minZoom: 12,
+        maxZoom: 18,
         zoomControl: true
     },
     bus: {
@@ -44,8 +44,8 @@ const COLORS = {
     success: '#34A853',
     warning: '#FBBC05',
     danger: '#EA4335',
-    bus4: '#FFD700', // Jaune
-    bus8: '#34A853', // Vert
+    bus4: '#FFD700',
+    bus8: '#34A853',
     white: '#FFFFFF',
     black: '#000000'
 };
@@ -104,46 +104,30 @@ const POINTS_OF_INTEREST = {
 
 /**
  * ======================================================================
- * SECTION 2 : ICÔNES ET STYLES (VERSION AMÉLIORÉE AVEC VRAIES ICÔNES DE BUS)
+ * SECTION 2 : ICÔNES ET STYLES
  * ======================================================================
  */
 
 const Icons = {
-    // Icône de bus moderne et réaliste (SVG personnalisé via Data URL)
     bus: L.divIcon({
         className: 'custom-bus-icon',
         html: `
             <div class="bus-icon-container">
                 <svg width="42" height="42" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <!-- Ombre portée -->
                     <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
                         <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.3"/>
                     </filter>
-                    
-                    <!-- Corps principal du bus -->
                     <rect x="4" y="10" width="34" height="20" rx="4" fill="#4285F4" filter="url(#shadow)"/>
-                    
-                    <!-- Fenêtres avant -->
                     <rect x="8" y="13" width="8" height="6" rx="1" fill="#E1F5FE" stroke="white" stroke-width="0.5"/>
                     <rect x="18" y="13" width="8" height="6" rx="1" fill="#E1F5FE" stroke="white" stroke-width="0.5"/>
                     <rect x="28" y="13" width="6" height="6" rx="1" fill="#E1F5FE" stroke="white" stroke-width="0.5"/>
-                    
-                    <!-- Phares avant -->
                     <circle cx="6" cy="18" r="2" fill="#FFD700"/>
                     <circle cx="36" cy="18" r="2" fill="#FFD700"/>
-                    
-                    <!-- Roues -->
                     <circle cx="12" cy="30" r="5" fill="#333" stroke="#666" stroke-width="1.5"/>
                     <circle cx="30" cy="30" r="5" fill="#333" stroke="#666" stroke-width="1.5"/>
-                    
-                    <!-- Jantes -->
                     <circle cx="12" cy="30" r="2.5" fill="#AAA"/>
                     <circle cx="30" cy="30" r="2.5" fill="#AAA"/>
-                    
-                    <!-- Ligne décorative -->
                     <rect x="4" y="10" width="34" height="4" fill="rgba(255,255,255,0.3)"/>
-                    
-                    <!-- Toit -->
                     <rect x="8" y="6" width="26" height="4" rx="1" fill="#2C3E50"/>
                 </svg>
                 <div class="bus-label">BUS</div>
@@ -154,7 +138,6 @@ const Icons = {
         popupAnchor: [0, -36]
     }),
 
-    // Icône de bus avec couleur personnalisable pour BUS 4 (jaune)
     bus4: L.divIcon({
         className: 'custom-bus-icon',
         html: `
@@ -184,7 +167,6 @@ const Icons = {
         popupAnchor: [0, -36]
     }),
 
-    // Icône de bus avec couleur personnalisable pour BUS 8 (vert)
     bus8: L.divIcon({
         className: 'custom-bus-icon',
         html: `
@@ -214,35 +196,6 @@ const Icons = {
         popupAnchor: [0, -36]
     }),
 
-    // Icône de bus en mouvement (avec effet de vitesse)
-    busMoving: L.divIcon({
-        className: 'custom-bus-icon moving',
-        html: `
-            <div class="bus-icon-container moving">
-                <svg width="46" height="46" viewBox="0 0 46 46" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <filter id="movingShadow" x="-20%" y="-20%" width="140%" height="140%">
-                        <feDropShadow dx="3" dy="3" stdDeviation="4" flood-opacity="0.4"/>
-                    </filter>
-                    <rect x="6" y="12" width="34" height="20" rx="4" fill="#4285F4" filter="url(#movingShadow)"/>
-                    <rect x="10" y="15" width="8" height="6" rx="1" fill="#E1F5FE" stroke="white" stroke-width="0.5"/>
-                    <rect x="20" y="15" width="8" height="6" rx="1" fill="#E1F5FE" stroke="white" stroke-width="0.5"/>
-                    <rect x="30" y="15" width="6" height="6" rx="1" fill="#E1F5FE" stroke="white" stroke-width="0.5"/>
-                    <circle cx="8" cy="20" r="2" fill="#FFD700"/>
-                    <circle cx="38" cy="20" r="2" fill="#FFD700"/>
-                    <circle cx="14" cy="32" r="5" fill="#333" stroke="#666" stroke-width="1.5"/>
-                    <circle cx="32" cy="32" r="5" fill="#333" stroke="#666" stroke-width="1.5"/>
-                    <!-- Lignes de vitesse -->
-                    <line x1="42" y1="18" x2="46" y2="14" stroke="white" stroke-width="2" stroke-dasharray="2 2"/>
-                    <line x1="42" y1="22" x2="46" y2="18" stroke="white" stroke-width="2" stroke-dasharray="2 2"/>
-                    <line x1="42" y1="26" x2="46" y2="22" stroke="white" stroke-width="2" stroke-dasharray="2 2"/>
-                </svg>
-            </div>
-        `,
-        iconSize: [46, 46],
-        iconAnchor: [23, 40],
-        popupAnchor: [0, -40]
-    }),
-
     busStop: {
         bus4: L.icon({
             iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-yellow.png",
@@ -254,28 +207,12 @@ const Icons = {
             iconSize: [25, 41],
             iconAnchor: [12, 41]
         })
-    },
-    
-    // Icône de bus avec image PNG (alternative si vous préférez une image)
-    busPng: L.icon({
-        iconUrl: "https://cdn-icons-png.flaticon.com/512/3774/3774277.png", // Bus moderne
-        iconSize: [48, 48],
-        iconAnchor: [24, 42],
-        popupAnchor: [0, -42]
-    }),
-    
-    // Icône de bus scolaire
-    schoolBus: L.icon({
-        iconUrl: "https://cdn-icons-png.flaticon.com/512/3064/3064885.png", // Bus scolaire
-        iconSize: [48, 48],
-        iconAnchor: [24, 42],
-        popupAnchor: [0, -42]
-    })
+    }
 };
 
 /**
  * ======================================================================
- * SECTION 3 : INITIALISATION DE LA CARTE (MODIFIÉE)
+ * SECTION 3 : INITIALISATION DE LA CARTE
  * ======================================================================
  */
 
@@ -284,19 +221,17 @@ class MapService {
         this.map = null;
         this.layers = {};
         this.routeCache = new Map();
-        this.userLocationSet = false; // Flag pour savoir si la position utilisateur a été définie
+        this.userLocationSet = false;
         this.init();
     }
 
     init() {
-        // Initialisation de la carte avec minZoom et maxZoom
         this.map = L.map("map", {
             zoomControl: true,
             minZoom: CONFIG.map.minZoom,
             maxZoom: CONFIG.map.maxZoom
         }).setView(CONFIG.map.defaultCenter, CONFIG.map.defaultZoom);
 
-        // Fonds de carte
         const mapSatellite = L.tileLayer(
             "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
             { attribution: "© Mabel Cédric Yvan" }
@@ -314,7 +249,6 @@ class MapService {
         mapStandard.addTo(this.map);
         mapLabels.addTo(this.map);
 
-        // Initialisation des layers
         this.layers = {
             bus4: L.layerGroup().addTo(this.map),
             bus8: L.layerGroup().addTo(this.map),
@@ -329,9 +263,6 @@ class MapService {
         return this.map;
     }
 
-    /**
-     * Centre la carte sur la position de l'utilisateur au démarrage
-     */
     centerOnUserLocation(lat, lng) {
         if (!this.userLocationSet) {
             this.map.setView([lat, lng], CONFIG.map.defaultZoom, {
@@ -342,9 +273,6 @@ class MapService {
         }
     }
 
-    /**
-     * Service de routage OSRM avec cache
-     */
     async getRoute(coords) {
         const key = JSON.stringify(coords);
         
@@ -376,14 +304,13 @@ class MapService {
 
 /**
  * ======================================================================
- * SECTION 4 : GESTION DES BUS (MODIFIÉE POUR LES POPUPS D'ARRÊTS)
+ * SECTION 4 : GESTION DES BUS
  * ======================================================================
  */
 
 class BusManager {
     constructor(mapService) {
         this.mapService = mapService;
-        this.buses = [];
         this.busPositions = new Map();
         this.busRoutes = new Map();
         this.busMarkers = new Map();
@@ -391,105 +318,14 @@ class BusManager {
         this.initStops();
         this.initPOI();
     }
-  
-  /**
- * Anime un bus avec la nouvelle icône
- */
-async animateBus(busId, stops, busInfo, colorLayer) {
-    const fullRoute = await this.mapService.getRoute(stops.map(s => s.coords));
-    let index = 0;
-
-    // Choisir l'icône appropriée selon le bus
-    let busIcon;
-    if (busId === 'bus4') {
-        busIcon = Icons.bus4;
-    } else if (busId === 'bus8') {
-        busIcon = Icons.bus8;
-    } else {
-        busIcon = Icons.bus;
-    }
-
-    // Créer le marqueur avec l'icône de bus
-    const marker = L.marker(fullRoute[0], { 
-        icon: busIcon,
-        className: `bus-marker-${busId}`
-    }).addTo(this.mapService.map);
-
-    // Ajouter une classe pour animation d'arrivée
-    marker._icon.classList.add('bus-arrival');
-
-    // Stocker la référence du marqueur
-    this.busMarkers.set(busId, marker);
-
-    // Configuration du popup
-    marker.bindPopup('', {
-        autoClose: true,
-        closeOnClick: true,
-        autoPan: true
-    });
-
-    // Gestionnaire d'événements pour le clic
-    marker.on('click', () => {
-        // Ajouter un effet de highlight
-        marker._icon.classList.add('bus-highlight');
-        setTimeout(() => {
-            marker._icon.classList.remove('bus-highlight');
-        }, 3000);
-
-        const currentPos = this.busPositions.get(busId) || fullRoute[index];
-        const { stop: currentStop } = this.findClosestStop(stops, currentPos);
-        const nextStopInfo = this.findNextStop(stops, currentStop, currentPos, fullRoute);
-        
-        const popupContent = this.createBusPopup(busInfo, currentStop, nextStopInfo);
-        marker.setPopupContent(popupContent);
-        marker.openPopup();
-    });
-
-    // Gestionnaire pour fermer le popup
-    this.mapService.map.on('click', () => {
-        marker.closePopup();
-    });
-
-    const move = () => {
-        // Ajouter un effet de mouvement
-        marker._icon.classList.add('moving');
-        
-        // Mettre à jour la position
-        marker.setLatLng(fullRoute[index]);
-        
-        // Sauvegarder la position
-        this.busPositions.set(busId, fullRoute[index]);
-
-        // Trouver l'arrêt actuel et prochain
-        const { stop: currentStop } = this.findClosestStop(stops, fullRoute[index]);
-        const nextStopInfo = this.findNextStop(stops, currentStop, fullRoute[index], fullRoute);
-
-        // Mettre à jour le popup
-        const popupContent = this.createBusPopup(busInfo, currentStop, nextStopInfo);
-        marker.setPopupContent(popupContent);
-
-        // Passer à la position suivante
-        index = (index + 1) % fullRoute.length;
-
-        // Planifier la prochaine animation
-        requestAnimationFrame(() => {
-            setTimeout(move, CONFIG.bus.animationSpeed);
-        });
-    };
-
-    move();
-    return marker;
-}
 
     async initRoutes() {
-        // Bus 4
         const route4 = await this.mapService.getRoute(BUS_STOPS.bus4.map(s => s.coords));
         const line4 = L.polyline(route4, { color: COLORS.bus4, weight: 6 });
         this.mapService.layers.bus4Line.addLayer(line4);
         this.mapService.layers.followBus4.addLayer(line4);
         this.busRoutes.set('bus4', route4);
 
-        // Bus 8
         const route8 = await this.mapService.getRoute(BUS_STOPS.bus8.map(s => s.coords));
         const line8 = L.polyline(route8, { color: COLORS.bus8, weight: 6 });
         this.mapService.layers.bus8Line.addLayer(line8);
@@ -498,30 +334,20 @@ async animateBus(busId, stops, busInfo, colorLayer) {
     }
 
     initStops() {
-        // Arrêts Bus 4
         BUS_STOPS.bus4.forEach(stop => {
             const marker = L.marker(stop.coords, { icon: Icons.busStop.bus4 })
                 .addTo(this.mapService.layers.bus4);
-            
-            // Créer le popup avec étoile et bouton itinéraire
-            this.updateStopPopup(marker, stop, "BUS 4");
+            this.updateStopPopup(marker, stop);
         });
 
-        // Arrêts Bus 8
         BUS_STOPS.bus8.forEach(stop => {
             const marker = L.marker(stop.coords, { icon: Icons.busStop.bus8 })
                 .addTo(this.mapService.layers.bus8);
-            
-            // Créer le popup avec étoile et bouton itinéraire
-            this.updateStopPopup(marker, stop, "BUS 8");
+            this.updateStopPopup(marker, stop);
         });
     }
 
-    /**
-     * Met à jour le popup d'un arrêt avec les informations et boutons
-     */
-    updateStopPopup(marker, stop, busNumber) {
-        // Déterminer si l'arrêt est dans les deux lignes
+    updateStopPopup(marker, stop) {
         const isInBus4 = BUS_STOPS.bus4.some(s => s.name === stop.name);
         const isInBus8 = BUS_STOPS.bus8.some(s => s.name === stop.name);
         
@@ -530,30 +356,19 @@ async animateBus(busId, stops, busInfo, colorLayer) {
         if (isInBus8) busLines.push('BUS 8');
         
         const linesText = busLines.join(' • ');
-
-        // Vérifier si l'arrêt est en favori
         const favorites = JSON.parse(localStorage.getItem('bus_favorites')) || [];
         const isFavorite = favorites.includes(stop.name);
 
-        // Créer le contenu du popup
-        const popupContent = this.createStopPopup(
-            stop.name, 
-            busLines, 
-            linesText, 
-            isFavorite
-        );
+        const popupContent = this.createStopPopup(stop.name, busLines, linesText, isFavorite);
 
-        // Configurer le popup
         marker.bindPopup(popupContent, {
             autoClose: true,
             closeOnClick: true,
-            maxWidth: 320,
+            maxWidth: 280,
             className: 'stop-popup'
         });
 
-        // Mettre à jour le popup quand il s'ouvre
         marker.on('click', () => {
-            // Re-vérifier le statut favori au moment du clic
             const currentFavorites = JSON.parse(localStorage.getItem('bus_favorites')) || [];
             const currentIsFavorite = currentFavorites.includes(stop.name);
             
@@ -568,35 +383,29 @@ async animateBus(busId, stops, busInfo, colorLayer) {
         });
     }
 
-   /**
- * Version ultra-compacte du popup (uniquement l'essentiel)
- */
-createStopPopup(stopName, busLines, linesText, isFavorite) {
-    const favoriteIcon = isFavorite ? 'star' : 'star_border';
-    
-    return `
-        <div class="stop-popup-container compact">
-            <div class="stop-popup-name">${stopName}</div>
-            <div class="stop-popup-lines">${linesText}</div>
-            <div class="stop-popup-actions">
-                <button class="stop-popup-btn favorite-btn ${isFavorite ? 'active' : ''}" 
-                        onclick="window.busManager.toggleFavorite('${stopName}')"
-                        title="${isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}">
-                    <span class="material-icons">${favoriteIcon}</span>
-                </button>
-                <button class="stop-popup-btn route-btn" 
-                        onclick="window.busManager.openRouteToStop('${stopName}')"
-                        title="Calculer l'itinéraire">
-                    <span class="material-icons">directions</span>
-                </button>
+    createStopPopup(stopName, busLines, linesText, isFavorite) {
+        const favoriteIcon = isFavorite ? 'star' : 'star_border';
+        
+        return `
+            <div class="stop-popup-container compact">
+                <div class="stop-popup-name">${stopName}</div>
+                <div class="stop-popup-lines">${linesText}</div>
+                <div class="stop-popup-actions">
+                    <button class="stop-popup-btn favorite-btn ${isFavorite ? 'active' : ''}" 
+                            onclick="window.busManager.toggleFavorite('${stopName}')"
+                            title="${isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}">
+                        <span class="material-icons">${favoriteIcon}</span>
+                    </button>
+                    <button class="stop-popup-btn route-btn" 
+                            onclick="window.busManager.openRouteToStop('${stopName}')"
+                            title="Calculer l'itinéraire">
+                        <span class="material-icons">directions</span>
+                    </button>
+                </div>
             </div>
-        </div>
-    `;
-}
+        `;
+    }
 
-    /**
-     * Gère le toggle des favoris
-     */
     toggleFavorite(stopName) {
         const favoritesManager = window.favoritesManager;
         if (!favoritesManager) return;
@@ -609,32 +418,19 @@ createStopPopup(stopName, busLines, linesText, isFavorite) {
             favoritesManager.add(stopName);
         }
 
-        // Mettre à jour le popup actuellement ouvert
         this.updateCurrentPopup(stopName);
-        
-        // Afficher une notification
-        this.showNotification(
-            isFavorite ? '⭐ Retiré des favoris' : '⭐ Ajouté aux favoris',
-            stopName,
-            isFavorite ? 'info' : 'success'
-        );
     }
 
-    /**
-     * Ouvre le modal d'itinéraire pour un arrêt
-     */
     openRouteToStop(stopName) {
         const endInput = document.getElementById('endInput');
         if (endInput) {
             endInput.value = stopName;
             
-            // Ouvrir le modal
             const routeModal = document.getElementById('routeModal');
             if (routeModal) {
                 routeModal.style.display = 'block';
             }
             
-            // Optionnel : déclencher automatiquement le calcul
             setTimeout(() => {
                 const traceBtn = document.getElementById('traceBtn');
                 if (traceBtn) {
@@ -644,22 +440,15 @@ createStopPopup(stopName, busLines, linesText, isFavorite) {
         }
     }
 
-    /**
-     * Met à jour le popup actuellement ouvert
-     */
     updateCurrentPopup(stopName) {
-        // Parcourir tous les marqueurs d'arrêts
-        this.mapService.layers.bus4.eachLayer(layer => {
-            if (layer instanceof L.Marker && layer.isPopupOpen()) {
-                const popup = layer.getPopup();
-                if (popup) {
-                    const content = popup.getContent();
-                    if (content && content.includes(stopName)) {
-                        // Mettre à jour le contenu
+        const updateLayers = (layerGroup) => {
+            layerGroup.eachLayer(layer => {
+                if (layer instanceof L.Marker && layer.isPopupOpen()) {
+                    const popup = layer.getPopup();
+                    if (popup && popup.getContent().includes(stopName)) {
                         const favorites = JSON.parse(localStorage.getItem('bus_favorites')) || [];
                         const isFavorite = favorites.includes(stopName);
                         
-                        // Déterminer les lignes de l'arrêt
                         const isInBus4 = BUS_STOPS.bus4.some(s => s.name === stopName);
                         const isInBus8 = BUS_STOPS.bus8.some(s => s.name === stopName);
                         const busLines = [];
@@ -671,86 +460,29 @@ createStopPopup(stopName, busLines, linesText, isFavorite) {
                         layer.setPopupContent(newContent);
                     }
                 }
-            }
-        });
+            });
+        };
 
-        this.mapService.layers.bus8.eachLayer(layer => {
-            if (layer instanceof L.Marker && layer.isPopupOpen()) {
-                const popup = layer.getPopup();
-                if (popup && popup.getContent().includes(stopName)) {
-                    const favorites = JSON.parse(localStorage.getItem('bus_favorites')) || [];
-                    const isFavorite = favorites.includes(stopName);
-                    
-                    const isInBus4 = BUS_STOPS.bus4.some(s => s.name === stopName);
-                    const isInBus8 = BUS_STOPS.bus8.some(s => s.name === stopName);
-                    const busLines = [];
-                    if (isInBus4) busLines.push('BUS 4');
-                    if (isInBus8) busLines.push('BUS 8');
-                    const linesText = busLines.join(' • ');
-                    
-                    const newContent = this.createStopPopup(stopName, busLines, linesText, isFavorite);
-                    layer.setPopupContent(newContent);
-                }
-            }
-        });
-    }
-
-    /**
-     * Affiche une notification
-     */
-    showNotification(title, message, type = 'info') {
-        const notification = document.createElement('div');
-        notification.className = `notification notification-${type}`;
-        notification.innerHTML = `
-            <div class="notification-title">${title}</div>
-            <div class="notification-message">${message}</div>
-        `;
-        
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-            notification.style.opacity = '0';
-            notification.style.transform = 'translateX(-50%) translateY(-20px)';
-            notification.style.transition = 'all 0.3s ease';
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }, 2000);
+        updateLayers(this.mapService.layers.bus4);
+        updateLayers(this.mapService.layers.bus8);
     }
 
     initPOI() {
-        // Campus
         POINTS_OF_INTEREST.campuses.forEach(c =>
             L.marker(c.coords).addTo(this.mapService.layers.campus).bindPopup(`🎓 ${c.name}`)
         );
 
-        // Parkings
         POINTS_OF_INTEREST.parkings.forEach(p =>
             L.marker(p.coords).addTo(this.mapService.layers.parking).bindPopup(`🅿️ ${p.name}`)
         );
     }
 
-    // ... (le reste des méthodes existantes : findClosestStop, findNextStop, 
-    // calculateDistanceAlongRoute, calculateEstimatedTime, createBusPopup, 
-    // animateBus, getAllStops, etc.)
-
-
-    /**
-     * Trouve l'arrêt le plus proche d'une position donnée
-     */
-    findClosestStop(stops, position, excludeStop = null) {
+    findClosestStop(stops, position) {
         let closest = null;
         let minDistance = Infinity;
         let closestIndex = -1;
 
         stops.forEach((stop, index) => {
-            // Si on veut exclure un arrêt spécifique (pour trouver le prochain)
-            if (excludeStop && stop.name === excludeStop.name) {
-                return;
-            }
-            
             const distance = this.mapService.map.distance(position, stop.coords);
             if (distance < minDistance) {
                 minDistance = distance;
@@ -762,27 +494,19 @@ createStopPopup(stopName, busLines, linesText, isFavorite) {
         return { stop: closest, distance: minDistance, index: closestIndex };
     }
 
-    /**
-     * Trouve le prochain arrêt sur le trajet
-     */
     findNextStop(stops, currentStop, currentPosition, route) {
         if (!currentStop) return null;
 
-        // Trouver l'index de l'arrêt actuel dans la liste
         const currentIndex = stops.findIndex(s => s.name === currentStop.name);
-        
-        // Si c'est le dernier arrêt, le prochain est le premier (boucle)
         const nextIndex = (currentIndex + 1) % stops.length;
         const nextStop = stops[nextIndex];
 
-        // Calculer la distance restante jusqu'au prochain arrêt
         const distanceToNext = this.calculateDistanceAlongRoute(
             currentPosition,
             nextStop.coords,
             route
         );
 
-        // Calculer le temps estimé
         const timeMinutes = this.calculateEstimatedTime(distanceToNext);
 
         return {
@@ -792,17 +516,12 @@ createStopPopup(stopName, busLines, linesText, isFavorite) {
         };
     }
 
-    /**
-     * Calcule la distance entre deux points le long de la route
-     */
     calculateDistanceAlongRoute(currentPos, nextStopCoords, route) {
-        // Trouver les segments les plus proches
         let minDistToCurrent = Infinity;
         let minDistToNext = Infinity;
         let currentSegmentIndex = -1;
         let nextSegmentIndex = -1;
 
-        // Parcourir la route pour trouver les points les plus proches
         for (let i = 0; i < route.length; i++) {
             const distToCurrent = this.mapService.map.distance(currentPos, route[i]);
             const distToNext = this.mapService.map.distance(nextStopCoords, route[i]);
@@ -818,47 +537,34 @@ createStopPopup(stopName, busLines, linesText, isFavorite) {
             }
         }
 
-        // Si on a trouvé les indices, calculer la distance le long de la route
         if (currentSegmentIndex !== -1 && nextSegmentIndex !== -1) {
             let distance = 0;
             
-            // Si l'index du prochain arrêt est après l'index actuel
             if (nextSegmentIndex > currentSegmentIndex) {
                 for (let i = currentSegmentIndex; i < nextSegmentIndex; i++) {
                     distance += this.mapService.map.distance(route[i], route[i + 1]);
                 }
-            } 
-            // Si on est à la fin du trajet (retour au début)
-            else {
+            } else {
                 for (let i = currentSegmentIndex; i < route.length - 1; i++) {
                     distance += this.mapService.map.distance(route[i], route[i + 1]);
                 }
-                // Ajouter la distance du dernier au premier point
                 distance += this.mapService.map.distance(route[route.length - 1], route[0]);
             }
 
             return distance;
         }
 
-        // Fallback: distance directe
         return this.mapService.map.distance(currentPos, nextStopCoords);
     }
 
-    /**
-     * Calcule le temps estimé en minutes basé sur la distance
-     */
     calculateEstimatedTime(distanceMeters) {
         const timeSeconds = distanceMeters / CONFIG.bus.averageSpeedMps;
-        const timeMinutes = Math.ceil(timeSeconds / 60);
-        return timeMinutes;
+        return Math.ceil(timeSeconds / 60);
     }
 
-    /**
-     * Crée le contenu du popup pour un bus
-     */
     createBusPopup(busInfo, currentStop, nextStopInfo) {
         const nextStopText = nextStopInfo ? 
-            `${nextStopInfo.stop.name} (Dans environ ${nextStopInfo.timeMinutes} min)` : 
+            `${nextStopInfo.stop.name} (${nextStopInfo.timeMinutes} min)` : 
             "Terminus";
 
         return `
@@ -869,103 +575,64 @@ createStopPopup(stopName, busLines, linesText, isFavorite) {
                 </div>
                 <div class="bus-popup-content">
                     <div class="bus-popup-row">
-                        <span class="bus-popup-label">Type :</span>
-                        <span class="bus-popup-value">${busInfo.type}</span>
-                    </div>
-                    <div class="bus-popup-row">
-                        <span class="bus-popup-label">Compagnie :</span>
+                        <span class="bus-popup-label">Compagnie:</span>
                         <span class="bus-popup-value">${busInfo.company}</span>
                     </div>
                     <div class="bus-popup-divider"></div>
                     <div class="bus-popup-row">
-                        <span class="bus-popup-label">📍 Arrêt actuel :</span>
+                        <span class="bus-popup-label">🚏 Arrêt actuel:</span>
                         <span class="bus-popup-value bus-popup-stop">${currentStop?.name || "En circulation"}</span>
                     </div>
                     <div class="bus-popup-row">
-                        <span class="bus-popup-label">⏭️ Prochain arrêt :</span>
+                        <span class="bus-popup-label">⏭️ Prochain:</span>
                         <span class="bus-popup-value bus-popup-next">${nextStopText}</span>
-                    </div>
-                    <div class="bus-popup-footer">
-                        <span class="bus-popup-time">
-                            <span class="material-icons" style="font-size: 12px;">schedule</span>
-                            Mis à jour en temps réel
-                        </span>
                     </div>
                 </div>
             </div>
         `;
     }
 
-    /**
-     * Met à jour le contenu du popup sans l'ouvrir automatiquement
-     */
-    updateBusPopup(busId, busInfo, currentStop, nextStopInfo) {
-        const marker = this.busMarkers.get(busId);
-        if (marker) {
-            const popupContent = this.createBusPopup(busInfo, currentStop, nextStopInfo);
-            marker.setPopupContent(popupContent);
-        }
-    }
-
-    async animateBus(busId, stops, busInfo, colorLayer) {
+    async animateBus(busId, stops, busInfo) {
         const fullRoute = await this.mapService.getRoute(stops.map(s => s.coords));
         let index = 0;
 
-        // Créer le marqueur sans popup ouvert
+        const busIcon = busId === 'bus4' ? Icons.bus4 : Icons.bus8;
+        
         const marker = L.marker(fullRoute[0], { 
-            icon: Icons.bus 
+            icon: busIcon,
+            className: `bus-marker-${busId}`
         }).addTo(this.mapService.map);
 
-        // Stocker la référence du marqueur
         this.busMarkers.set(busId, marker);
 
-        // Configuration du popup - ne s'ouvre que sur clic
         marker.bindPopup('', {
-            autoClose: true,      // Ferme automatiquement les autres popups
-            closeOnClick: true,   // Ferme quand on clique ailleurs
-            autoPan: true         // Ajuste la carte si nécessaire
+            autoClose: true,
+            closeOnClick: true,
+            autoPan: true
         });
 
-        // Gestionnaire d'événements pour le clic sur le marqueur
         marker.on('click', () => {
-            // Mettre à jour le contenu du popup avec les dernières informations
             const currentPos = this.busPositions.get(busId) || fullRoute[index];
             const { stop: currentStop } = this.findClosestStop(stops, currentPos);
             const nextStopInfo = this.findNextStop(stops, currentStop, currentPos, fullRoute);
             
             const popupContent = this.createBusPopup(busInfo, currentStop, nextStopInfo);
             marker.setPopupContent(popupContent);
-            
-            // Ouvrir le popup
             marker.openPopup();
         });
 
-        // Gestionnaire pour fermer le popup quand on clique ailleurs sur la carte
-        this.mapService.map.on('click', () => {
-            marker.closePopup();
-        });
-
         const move = () => {
-            // Mettre à jour la position
             marker.setLatLng(fullRoute[index]);
-            
-            // Sauvegarder la position actuelle
             this.busPositions.set(busId, fullRoute[index]);
 
-            // Trouver l'arrêt le plus proche (arrêt actuel)
             const { stop: currentStop } = this.findClosestStop(stops, fullRoute[index]);
-
-            // Trouver le prochain arrêt
             const nextStopInfo = this.findNextStop(stops, currentStop, fullRoute[index], fullRoute);
 
-            // Mettre à jour le contenu du popup pour quand il sera ouvert
             const popupContent = this.createBusPopup(busInfo, currentStop, nextStopInfo);
             marker.setPopupContent(popupContent);
 
-            // Passer à la position suivante
             index = (index + 1) % fullRoute.length;
 
-            // Planifier la prochaine animation
             requestAnimationFrame(() => {
                 setTimeout(move, CONFIG.bus.animationSpeed);
             });
@@ -982,7 +649,7 @@ createStopPopup(stopName, busLines, linesText, isFavorite) {
 
 /**
  * ======================================================================
- * SECTION 5 : GESTION DE LA GÉOLOCALISATION (VERSION CORRIGÉE)
+ * SECTION 5 : GESTION DE LA GÉOLOCALISATION
  * ======================================================================
  */
 
@@ -996,7 +663,6 @@ class GeolocationManager {
         this.autoFollow = true;
         this.initialLocationSet = false;
         this.init();
-        // Démarrer automatiquement la géolocalisation au chargement
         this.startTracking(true);
     }
 
@@ -1006,9 +672,7 @@ class GeolocationManager {
     }
 
     setupLocateButton() {
-        const locateBtn = document.getElementById("locateBtn");
-        
-        locateBtn.addEventListener("click", (e) => {
+        document.getElementById("locateBtn").addEventListener("click", (e) => {
             e.preventDefault();
             e.stopPropagation();
             
@@ -1021,9 +685,7 @@ class GeolocationManager {
     }
 
     setupNearestStopButton() {
-        const nearestStopBtn = document.getElementById('nearestStopBtn');
-        
-        nearestStopBtn.addEventListener('click', (e) => {
+        document.getElementById('nearestStopBtn').addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             this.findNearestStop();
@@ -1035,8 +697,7 @@ class GeolocationManager {
 
         this.mapService.map.setView(this.userCoords, 19, {
             animate: true,
-            duration: 1,
-            easeLinearity: 0.5
+            duration: 1
         });
 
         if (this.userMarker) {
@@ -1044,302 +705,125 @@ class GeolocationManager {
                 <div class="popup-container">
                     <div class="popup-title">📍 Ma position</div>
                     <div class="popup-content">Vous êtes ici</div>
-                    <div class="popup-content" style="font-size: 11px; color: #999;">
-                        ${new Date().toLocaleTimeString()}
-                    </div>
                 </div>
             `);
             
             this.userMarker.openPopup();
         }
 
-        const locateBtn = document.getElementById("locateBtn");
-        locateBtn.classList.add('active');
-        
+        document.getElementById("locateBtn").classList.add('active');
         setTimeout(() => {
-            locateBtn.classList.remove('active');
+            document.getElementById("locateBtn").classList.remove('active');
         }, 1000);
     }
 
-    /**
-     * Trouve et affiche l'arrêt le plus proche avec un popup détaillé
-     * SANS TRACER DE LIGNE
-     */
     findNearestStop() {
-        // Vérifier si la position utilisateur est disponible
         if (!this.userCoords) {
             this.showNotification(
                 "📍 Position requise", 
-                "Cliquez d'abord sur 'Ma position' pour activer la géolocalisation",
+                "Cliquez d'abord sur 'Ma position'",
                 'warning'
             );
             return;
         }
 
-        // Afficher un indicateur de recherche
         this.showSearchIndicator();
 
         const busManager = window.busManager;
         const allStops = busManager.getAllStops();
         
-        // Calculer l'arrêt le plus proche
         let nearestStop = null;
         let minDistance = Infinity;
-        let secondNearest = null;
-        let secondMinDistance = Infinity;
 
         allStops.forEach(stop => {
             const stopLatLng = L.latLng(stop.coords[0], stop.coords[1]);
             const distance = this.userCoords.distanceTo(stopLatLng);
             
             if (distance < minDistance) {
-                secondNearest = nearestStop;
-                secondMinDistance = minDistance;
                 nearestStop = stop;
                 minDistance = distance;
-            } else if (distance < secondMinDistance) {
-                secondNearest = stop;
-                secondMinDistance = distance;
             }
         });
 
         if (!nearestStop) {
             this.hideSearchIndicator();
-            this.showNotification(
-                "Aucun arrêt trouvé", 
-                "Aucun arrêt n'est disponible dans votre zone",
-                'error'
-            );
+            this.showNotification("Aucun arrêt trouvé", "", 'error');
             return;
         }
 
-        // Calculer les informations détaillées
         const stopLatLng = L.latLng(nearestStop.coords[0], nearestStop.coords[1]);
         const walkingTime = Math.round(minDistance / CONFIG.walking.speedMpm);
-        const walkingTimeSeconds = Math.round(minDistance / CONFIG.walking.speedMps);
-        
-        // Déterminer la ligne de bus
-        const isBus4 = BUS_STOPS.bus4.some(s => s.name === nearestStop.name);
-        const isBus8 = BUS_STOPS.bus8.some(s => s.name === nearestStop.name);
-        const busLines = [];
-        if (isBus4) busLines.push('BUS 4 (Jaune)');
-        if (isBus8) busLines.push('BUS 8 (Verte)');
-        
-        // Trouver les arrêts à proximité (dans un rayon de 200m)
-        const nearbyStops = allStops.filter(stop => {
-            if (stop.name === nearestStop.name) return false;
-            const dist = this.userCoords.distanceTo(L.latLng(stop.coords[0], stop.coords[1]));
-            return dist <= 300; // Rayon de 300m
-        }).slice(0, 3); // Maximum 3 arrêts
 
-        // Créer le contenu du popup détaillé
-        const popupContent = this.createDetailedStopPopup(
-            nearestStop, 
-            minDistance, 
-            walkingTime, 
-            walkingTimeSeconds,
-            busLines,
-            nearbyStops,
-            secondNearest,
-            secondMinDistance
-        );
-
-        // Fermer tous les popups existants
-        this.mapService.map.closePopup();
-
-        // Ouvrir le popup sur l'arrêt
-        L.popup({
-            autoClose: true,
-            closeOnClick: true,
-            maxWidth: 350,
-            className: 'detailed-popup'
-        })
-            .setLatLng(stopLatLng)
-            .setContent(popupContent)
-            .openOn(this.mapService.map);
-
-        // Centrer la carte sur l'arrêt (optionnel - vous pouvez commenter si vous préférez)
-        this.mapService.map.setView(stopLatLng, 17, {
-            animate: true,
-            duration: 1
-        });
-
-        // Ajouter un effet de surbrillance subtil sur l'arrêt (optionnel)
-        this.highlightStop(nearestStop);
-
-        // Cacher l'indicateur de recherche
-        this.hideSearchIndicator();
-
-        // Afficher une notification de confirmation
-        this.showNotification(
-            "✅ Arrêt trouvé", 
-            `${nearestStop.name} est à ${Math.round(minDistance)} mètres`,
-            'success'
-        );
-    }
-
-    /**
-     * Crée un popup détaillé pour l'arrêt le plus proche
-     */
-    createDetailedStopPopup(stop, distance, walkingTime, walkingTimeSeconds, busLines, nearbyStops, secondNearest, secondMinDistance) {
-        const distanceFormatted = distance < 1000 
-            ? `${Math.round(distance)} m` 
-            : `${(distance / 1000).toFixed(1)} km`;
-        
-        const walkingTimeFormatted = walkingTime < 60 
-            ? `${walkingTime} min` 
-            : `${Math.floor(walkingTime / 60)}h ${walkingTime % 60}min`;
-
-        // Calculer l'heure d'arrivée estimée
-        const now = new Date();
-        const arrivalTime = new Date(now.getTime() + walkingTimeSeconds * 1000);
-        const arrivalTimeFormatted = arrivalTime.toLocaleTimeString('fr-FR', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-
-        // Déterminer le type d'arrêt
-        let stopType = "Arrêt standard";
-        let stopIcon = "🛑";
-        if (busLines.length === 2) {
-            stopType = "Arrêt principal (correspondance)";
-            stopIcon = "🔄";
-        } else if (busLines.includes('BUS 4 (Jaune)')) {
-            stopType = "Arrêt BUS 4";
-        } else if (busLines.includes('BUS 8 (Verte)')) {
-            stopType = "Arrêt BUS 8";
-        }
-
-        return `
+        const popupContent = `
             <div class="detailed-popup-container">
-                <!-- En-tête -->
                 <div class="popup-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                    <div class="popup-header-icon">${stopIcon}</div>
+                    <div class="popup-header-icon">🛑</div>
                     <div class="popup-header-title">Arrêt le plus proche</div>
                 </div>
-                
-                <!-- Corps principal -->
                 <div class="popup-body">
-                    <!-- Nom et type -->
                     <div class="stop-name-section">
-                        <div class="stop-name">${stop.name}</div>
-                        <div class="stop-type">${stopType}</div>
+                        <div class="stop-name">${nearestStop.name}</div>
                     </div>
-                    
-                    <!-- Distance et temps -->
                     <div class="distance-section">
                         <div class="distance-item">
                             <span class="material-icons distance-icon">straighten</span>
                             <div class="distance-info">
                                 <span class="distance-label">Distance</span>
-                                <span class="distance-value">${distanceFormatted}</span>
+                                <span class="distance-value">${Math.round(minDistance)} m</span>
                             </div>
                         </div>
                         <div class="distance-item">
                             <span class="material-icons distance-icon">directions_walk</span>
                             <div class="distance-info">
                                 <span class="distance-label">À pied</span>
-                                <span class="distance-value">~${walkingTimeFormatted}</span>
-                            </div>
-                        </div>
-                        <div class="distance-item">
-                            <span class="material-icons distance-icon">schedule</span>
-                            <div class="distance-info">
-                                <span class="distance-label">Arrivée estimée</span>
-                                <span class="distance-value">${arrivalTimeFormatted}</span>
+                                <span class="distance-value">~${walkingTime} min</span>
                             </div>
                         </div>
                     </div>
-                    
-                 
-                    
-                    <!-- Autres arrêts à proximité -->
-                    ${nearbyStops.length > 0 ? `
-                        <div class="nearby-stops-section">
-                            <div class="section-title">
-                                <span class="material-icons">near_me</span>
-                                Arrêts à proximité
-                            </div>
-                            <div class="nearby-stops">
-                                ${nearbyStops.map(nearby => {
-                                    const nearbyDist = this.userCoords.distanceTo(L.latLng(nearby.coords[0], nearby.coords[1]));
-                                    return `
-                                        <div class="nearby-stop-item" onclick="window.geolocationManager.goToStop('${nearby.name}')">
-                                            <span class="nearby-stop-name">${nearby.name}</span>
-                                            <span class="nearby-stop-distance">${Math.round(nearbyDist)} m</span>
-                                        </div>
-                                    `;
-                                }).join('')}
-                            </div>
-                        </div>
-                    ` : ''}
-                    
-                    <!-- Boutons d'action -->
                     <div class="popup-actions">
-                        <button class="action-btn primary" onclick="window.geolocationManager.calculateRouteToStop('${stop.name}')">
+                        <button class="action-btn primary" onclick="window.geolocationManager.calculateRouteToStop('${nearestStop.name}')">
                             <span class="material-icons">directions</span>
-                            Itinéraire
                         </button>
-                        <button class="action-btn secondary" onclick="window.favoritesManager.add('${stop.name}')">
+                        <button class="action-btn secondary" onclick="window.favoritesManager.add('${nearestStop.name}')">
                             <span class="material-icons">star_border</span>
-                            Favori
                         </button>
-                    </div>
-                    
-                    <!-- Note d'information -->
-                    <div class="popup-note">
-                        <span class="material-icons">info</span>
-                        Les temps sont estimés à 5km/h (vitesse moyenne de marche)
                     </div>
                 </div>
             </div>
         `;
+
+        this.mapService.map.closePopup();
+
+        L.popup({
+            autoClose: true,
+            closeOnClick: true,
+            maxWidth: 320,
+            className: 'detailed-popup'
+        })
+            .setLatLng(stopLatLng)
+            .setContent(popupContent)
+            .openOn(this.mapService.map);
+
+        this.mapService.map.setView(stopLatLng, 17, {
+            animate: true,
+            duration: 1
+        });
+
+        this.hideSearchIndicator();
     }
 
-    /**
-     * Met en surbrillance un arrêt (optionnel - version subtile)
-     */
-    highlightStop(stop) {
-        const stopLatLng = L.latLng(stop.coords[0], stop.coords[1]);
-        
-        // Ajouter un cercle très subtil
-        const highlightCircle = L.circle(stopLatLng, {
-            radius: 15,
-            color: '#667eea',
-            fillColor: '#667eea',
-            fillOpacity: 0.1,
-            weight: 2,
-            opacity: 0.3,
-            className: 'subtle-highlight'
-        }).addTo(this.mapService.map);
-
-        // Supprimer après 2 secondes
-        setTimeout(() => {
-            this.mapService.map.removeLayer(highlightCircle);
-        }, 2000);
-    }
-
-    /**
-     * Affiche un indicateur de recherche
-     */
     showSearchIndicator() {
         const btn = document.getElementById('nearestStopBtn');
         btn.classList.add('loading');
         btn.disabled = true;
     }
 
-    /**
-     * Cache l'indicateur de recherche
-     */
     hideSearchIndicator() {
         const btn = document.getElementById('nearestStopBtn');
         btn.classList.remove('loading');
         btn.disabled = false;
     }
 
-    /**
-     * Affiche une notification
-     */
     showNotification(title, message, type = 'info') {
         const notification = document.createElement('div');
         notification.className = `notification notification-${type}`;
@@ -1376,24 +860,19 @@ class GeolocationManager {
                     notification.parentNode.removeChild(notification);
                 }
             }, 300);
-        }, 3000);
+        }, 2000);
     }
 
-    /**
-     * Calcule l'itinéraire vers un arrêt
-     */
     calculateRouteToStop(stopName) {
         const endInput = document.getElementById('endInput');
         if (endInput) {
             endInput.value = stopName;
             
-            // Ouvrir le modal et déclencher le calcul
             const routeModal = document.getElementById('routeModal');
             if (routeModal) {
                 routeModal.style.display = 'block';
             }
             
-            // Déclencher le calcul d'itinéraire
             setTimeout(() => {
                 const traceBtn = document.getElementById('traceBtn');
                 if (traceBtn) {
@@ -1403,42 +882,9 @@ class GeolocationManager {
         }
     }
 
-    /**
-     * Va directement à un arrêt
-     */
-    goToStop(stopName) {
-        const busManager = window.busManager;
-        const allStops = busManager.getAllStops();
-        const stop = allStops.find(s => s.name === stopName);
-        
-        if (stop) {
-            this.mapService.map.setView([stop.coords[0], stop.coords[1]], 18, {
-                animate: true,
-                duration: 1
-            });
-            
-            // Ouvrir le popup de l'arrêt
-            setTimeout(() => {
-                L.popup()
-                    .setLatLng([stop.coords[0], stop.coords[1]])
-                    .setContent(`
-                        <div class="popup-container">
-                            <div class="popup-title">🛑 ${stop.name}</div>
-                            <div class="popup-content">Arrêt sélectionné</div>
-                        </div>
-                    `)
-                    .openOn(this.mapService.map);
-            }, 500);
-        }
-    }
-
     startTracking(initialLoad = false, centerImmediately = false) {
         if (!navigator.geolocation) {
-            this.showNotification(
-                "Géolocalisation non supportée", 
-                "Votre navigateur ne supporte pas la géolocalisation",
-                'error'
-            );
+            this.showNotification("Géolocalisation non supportée", "", 'error');
             return;
         }
 
@@ -1466,8 +912,7 @@ class GeolocationManager {
                 },
                 CONFIG.geolocation
             );
-        } 
-        else if (this.watchId === null) {
+        } else if (this.watchId === null) {
             this.watchId = navigator.geolocation.watchPosition(
                 position => this.onPositionUpdate(position, false),
                 error => this.onPositionError(error),
@@ -1509,14 +954,10 @@ class GeolocationManager {
             <div class="popup-container">
                 <div class="popup-title">📍 Ma position</div>
                 <div class="popup-content">Vous êtes ici</div>
-                <div class="popup-content" style="font-size: 11px; color: #999;">
-                    ${new Date().toLocaleTimeString()}
-                </div>
             </div>
         `, {
             autoClose: true,
-            closeOnClick: true,
-            autoPan: true
+            closeOnClick: true
         });
 
         this.userMarker.on('click', () => {
@@ -1528,8 +969,7 @@ class GeolocationManager {
             color: COLORS.primary,
             fillColor: COLORS.primary,
             fillOpacity: 0.15,
-            weight: 1,
-            className: 'accuracy-circle'
+            weight: 1
         }).addTo(this.mapService.map);
     }
 
@@ -1537,36 +977,25 @@ class GeolocationManager {
         this.userMarker.setLatLng(this.userCoords);
         this.accuracyCircle.setLatLng(this.userCoords);
         this.accuracyCircle.setRadius(accuracy);
-        
-        this.userMarker.setPopupContent(`
-            <div class="popup-container">
-                <div class="popup-title">📍 Ma position</div>
-                <div class="popup-content">Vous êtes ici</div>
-                <div class="popup-content" style="font-size: 11px; color: #999;">
-                    ${new Date().toLocaleTimeString()}
-                </div>
-            </div>
-        `);
     }
 
     onPositionError(error) {
         console.warn("Erreur de géolocalisation:", error.message);
         
         let errorMessage = "Impossible d'obtenir votre position.";
-        
         switch(error.code) {
             case 1:
-                errorMessage = "Accès à la position refusé. Veuillez autoriser la géolocalisation.";
+                errorMessage = "Accès à la position refusé.";
                 break;
             case 2:
-                errorMessage = "Position indisponible. Vérifiez votre connexion GPS.";
+                errorMessage = "Position indisponible.";
                 break;
             case 3:
-                errorMessage = "Délai d'attente dépassé. Réessayez.";
+                errorMessage = "Délai d'attente dépassé.";
                 break;
         }
         
-        this.showNotification("Erreur de localisation", errorMessage, 'error');
+        this.showNotification("Erreur", errorMessage, 'error');
     }
 
     getCurrentCoords() {
@@ -1674,9 +1103,7 @@ class RouteManager {
             this.routeLine = L.polyline(routeCoords, {
                 color: COLORS.primary,
                 weight: 6,
-                opacity: 0.9,
-                lineJoin: "round",
-                lineCap: "round"
+                opacity: 0.9
             }).addTo(this.mapService.map);
 
             this.mapService.map.fitBounds(this.routeLine.getBounds(), {
@@ -1692,7 +1119,7 @@ class RouteManager {
                     <div class="popup-container">
                         <div class="popup-title">${matchedStop.name}</div>
                         <div class="popup-content">Distance : ${distance} m</div>
-                        <div class="popup-content">Durée : ~${duration} min à pied</div>
+                        <div class="popup-content">Durée : ~${duration} min</div>
                     </div>
                 `)
                 .openOn(this.mapService.map);
@@ -1713,7 +1140,7 @@ class RouteManager {
 
 /**
  * ======================================================================
- * SECTION 7 : GESTION DES FAVORIS (AMÉLIORÉE)
+ * SECTION 7 : GESTION DES FAVORIS
  * ======================================================================
  */
 
@@ -1728,12 +1155,8 @@ class FavoritesManager {
         if (!favorites.includes(stopName)) {
             favorites.push(stopName);
             localStorage.setItem(this.storageKey, JSON.stringify(favorites));
-            
-            // Déclencher un événement personnalisé
             this.triggerFavoritesUpdated();
-            
-            // Afficher une notification
-            this.showNotification('⭐ Favori ajouté', stopName, 'success');
+            this.showNotification('⭐ Favori ajouté', stopName);
         }
     }
 
@@ -1741,12 +1164,8 @@ class FavoritesManager {
         let favorites = this.getAll();
         favorites = favorites.filter(f => f !== stopName);
         localStorage.setItem(this.storageKey, JSON.stringify(favorites));
-        
-        // Déclencher un événement personnalisé
         this.triggerFavoritesUpdated();
-        
-        // Afficher une notification
-        this.showNotification('⭐ Favori retiré', stopName, 'info');
+        this.showNotification('⭐ Favori retiré', stopName);
     }
 
     getAll() {
@@ -1757,9 +1176,6 @@ class FavoritesManager {
         return this.getAll().includes(stopName);
     }
 
-    /**
-     * Déclenche un événement pour notifier les changements de favoris
-     */
     triggerFavoritesUpdated() {
         const event = new CustomEvent('favoritesUpdated', {
             detail: { favorites: this.getAll() }
@@ -1767,12 +1183,9 @@ class FavoritesManager {
         window.dispatchEvent(event);
     }
 
-    /**
-     * Affiche une notification
-     */
-    showNotification(title, message, type = 'info') {
+    showNotification(title, message) {
         const notification = document.createElement('div');
-        notification.className = `notification notification-${type}`;
+        notification.className = 'notification notification-info';
         notification.innerHTML = `
             <div class="notification-title">${title}</div>
             <div class="notification-message">${message}</div>
@@ -1795,7 +1208,7 @@ class FavoritesManager {
 
 /**
  * ======================================================================
- * SECTION 8 : CONTRÔLES DE LA CARTE (MODIFIÉ POUR GÉRER LES POPUPS)
+ * SECTION 8 : CONTRÔLES DE LA CARTE
  * ======================================================================
  */
 
@@ -1828,149 +1241,24 @@ class MapControls {
             "🛑 Arrêts BUS 4": this.mapService.layers.bus4,
             "🛑 Arrêts BUS 8": this.mapService.layers.bus8,
             "🎓 Campus": this.mapService.layers.campus,
-            "🅿️ Parkings": this.mapService.layers.parking,
-            "🚍 Suivre BUS 4 uniquement": this.mapService.layers.followBus4,
-            "🚍 Suivre BUS 8 uniquement": this.mapService.layers.followBus8
+            "🅿️ Parkings": this.mapService.layers.parking
         };
 
         L.control.layers(baseMaps, overlayMaps, { collapsed: true }).addTo(this.mapService.map);
     }
 
-    /**
-     * Configure un gestionnaire global pour fermer tous les popups
-     */
     setupGlobalClickHandler() {
-        // Fermer tous les popups quand on clique sur la carte (en dehors des marqueurs)
         this.mapService.map.on('click', (e) => {
-            // Vérifier si le clic n'est pas sur un marqueur
             if (!e.originalEvent.target.classList.contains('leaflet-marker-icon')) {
                 this.mapService.map.closePopup();
             }
         });
-
-        // Fermer les popups quand on change de couche
-        this.mapService.map.on('overlayadd overlayremove', () => {
-            this.mapService.map.closePopup();
-        });
     }
 }
 
 /**
  * ======================================================================
- * SECTION 9 : INITIALISATION DE L'APPLICATION (MODIFIÉE)
- * ======================================================================
- */
-
-class Application {
-    async init() {
-        console.log("🚀 Initialisation de l'application...");
-
-        this.showLoadingMessage();
-
-        this.mapService = new MapService();
-        this.favoritesManager = new FavoritesManager();
-        this.busManager = new BusManager(this.mapService);
-        
-        this.geolocationManager = new GeolocationManager(this.mapService);
-        window.geolocationManager = this.geolocationManager;
-        
-        this.routeManager = new RouteManager(this.mapService, this.geolocationManager);
-        this.mapControls = new MapControls(this.mapService);
-        
-        // Initialiser le SearchManager
-        this.searchManager = new SearchManager(this.mapService, this.geolocationManager);
-        window.searchManager = this.searchManager;
-
-        window.busManager = this.busManager;
-        window.favoritesManager = this.favoritesManager;
-
-        setTimeout(() => {
-            this.startBusAnimations();
-            this.hideLoadingMessage();
-        }, 2000);
-
-        console.log("✅ Application initialisée avec succès");
-    }
-    // ... reste du code
-
-
-    showLoadingMessage() {
-        // Créer un indicateur de chargement
-        const loadingDiv = document.createElement('div');
-        loadingDiv.id = 'loading-message';
-        loadingDiv.style.cssText = `
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 20px 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            z-index: 2000;
-            text-align: center;
-            font-family: Arial, sans-serif;
-        `;
-        loadingDiv.innerHTML = `
-            <div style="margin-bottom: 10px;">
-                <span class="material-icons" style="color: #667eea; font-size: 40px;">my_location</span>
-            </div>
-            <div style="font-weight: bold; margin-bottom: 5px;">Recherche de votre position...</div>
-            <div style="font-size: 12px; color: #666;">Veuillez patienter</div>
-        `;
-        document.body.appendChild(loadingDiv);
-    }
-
-    hideLoadingMessage() {
-        const loadingDiv = document.getElementById('loading-message');
-        if (loadingDiv) {
-            loadingDiv.style.opacity = '0';
-            loadingDiv.style.transition = 'opacity 0.5s ease';
-            setTimeout(() => {
-                if (loadingDiv.parentNode) {
-                    loadingDiv.parentNode.removeChild(loadingDiv);
-                }
-            }, 500);
-        }
-    }
-
-    startBusAnimations() {
-        // Bus 4
-        this.busManager.animateBus(
-            'bus4',
-            BUS_STOPS.bus4,
-            BUS_TYPES.bus4,
-            this.mapService.layers.bus4Line
-        );
-
-        // Bus 8
-        this.busManager.animateBus(
-            'bus8',
-            BUS_STOPS.bus8,
-            BUS_TYPES.bus8,
-            this.mapService.layers.bus8Line
-        );
-    }
-}
-
-/**
- * ======================================================================
- * SECTION 10 : DÉMARRAGE DE L'APPLICATION
- * ======================================================================
- */
-
-// Attendre que le DOM soit chargé
-document.addEventListener('DOMContentLoaded', () => {
-    const app = new Application();
-    app.init().catch(error => {
-        console.error("❌ Erreur lors de l'initialisation:", error);
-    });
-});
-
-
- /**
- * ======================================================================
- * SECTION 10 : GESTIONNAIRE DE RECHERCHE ET LISTE DES ARRÊTS
+ * SECTION 9 : GESTIONNAIRE DE RECHERCHE
  * ======================================================================
  */
 
@@ -1990,10 +1278,14 @@ class SearchManager {
         this.loadFavorites();
         this.setupEventListeners();
         this.renderStopsList();
+        
+        window.addEventListener('favoritesUpdated', () => {
+            this.loadFavorites();
+            this.renderStopsList();
+        });
     }
 
     getAllStops() {
-        // Récupérer tous les arrêts avec leurs lignes
         const bus4Stops = BUS_STOPS.bus4.map(stop => ({
             ...stop,
             lines: ['BUS 4']
@@ -2004,12 +1296,10 @@ class SearchManager {
             lines: ['BUS 8']
         }));
 
-        // Fusionner et éviter les doublons (arrêts communs aux deux lignes)
         const stopsMap = new Map();
         
         [...bus4Stops, ...bus8Stops].forEach(stop => {
             if (stopsMap.has(stop.name)) {
-                // Arrêt existant, ajouter la ligne
                 const existing = stopsMap.get(stop.name);
                 existing.lines = [...new Set([...existing.lines, ...stop.lines])];
             } else {
@@ -2025,12 +1315,10 @@ class SearchManager {
     }
 
     setupEventListeners() {
-        // Bouton menu pour ouvrir le drawer
         document.getElementById('menuToggle').addEventListener('click', () => {
             this.openDrawer();
         });
 
-        // Fermer le drawer
         document.getElementById('closeDrawer').addEventListener('click', () => {
             this.closeDrawer();
         });
@@ -2039,13 +1327,11 @@ class SearchManager {
             this.closeDrawer();
         });
 
-        // Recherche dans le drawer
         document.getElementById('drawerSearchInput').addEventListener('input', (e) => {
             this.searchTerm = e.target.value.toLowerCase();
             this.renderStopsList();
         });
 
-        // Tabs du drawer
         document.querySelectorAll('.drawer-tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 document.querySelectorAll('.drawer-tab').forEach(t => t.classList.remove('active'));
@@ -2055,7 +1341,6 @@ class SearchManager {
             });
         });
 
-        // Recherche principale avec autocomplete
         const searchInput = document.getElementById('searchStop');
         const suggestionsList = document.getElementById('suggestionsList');
 
@@ -2073,14 +1358,12 @@ class SearchManager {
             this.showSuggestions(suggestions);
         });
 
-        // Cacher les suggestions quand on clique ailleurs
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.search-container')) {
                 suggestionsList.classList.remove('show');
             }
         });
 
-        // Bouton de recherche
         document.getElementById('searchBtn').addEventListener('click', () => {
             const searchTerm = document.getElementById('searchStop').value;
             if (searchTerm) {
@@ -2088,7 +1371,6 @@ class SearchManager {
             }
         });
 
-        // Recherche avec Entrée
         document.getElementById('searchStop').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 const searchTerm = e.target.value;
@@ -2133,8 +1415,6 @@ class SearchManager {
 
         if (stop) {
             this.goToStop(stop.name);
-        } else {
-            alert('Arrêt non trouvé. Veuillez réessayer.');
         }
     }
 
@@ -2142,23 +1422,20 @@ class SearchManager {
         const stop = this.allStops.find(s => s.name === stopName);
         if (!stop) return;
 
-        // Fermer les suggestions et le drawer
         document.getElementById('suggestionsList').classList.remove('show');
         this.closeDrawer();
 
-        // Centrer la carte sur l'arrêt
         this.mapService.map.setView(stop.coords, 18, {
             animate: true,
             duration: 1
         });
 
-        // Ouvrir un popup sur l'arrêt
         setTimeout(() => {
             const distance = this.geolocationManager.userCoords 
                 ? Math.round(this.geolocationManager.userCoords.distanceTo(L.latLng(stop.coords)))
                 : null;
 
-            const distanceText = distance ? `<div class="popup-content">Distance: ${distance} m</div>` : '';
+            const distanceText = distance ? `<div class="popup-content">${distance} m</div>` : '';
 
             L.popup({
                 autoClose: true,
@@ -2168,41 +1445,17 @@ class SearchManager {
                 .setContent(`
                     <div class="popup-container">
                         <div class="popup-title">🛑 ${stop.name}</div>
-                        <div class="popup-content">Lignes: ${stop.lines.join(' - ')}</div>
+                        <div class="popup-content">${stop.lines.join(' - ')}</div>
                         ${distanceText}
-                        <button class="popup-btn" onclick="searchManager.addToFavorites('${stop.name}')">
-                            ⭐ Ajouter aux favoris
-                        </button>
                     </div>
                 `)
                 .openOn(this.mapService.map);
         }, 500);
     }
 
-    addToFavorites(stopName) {
-        window.favoritesManager.add(stopName);
-        this.loadFavorites();
-        this.renderStopsList();
-    }
-
-    removeFromFavorites(stopName) {
-        window.favoritesManager.remove(stopName);
-        this.loadFavorites();
-        this.renderStopsList();
-    }
-
-    toggleFavorite(stopName) {
-        if (this.favorites.includes(stopName)) {
-            this.removeFromFavorites(stopName);
-        } else {
-            this.addToFavorites(stopName);
-        }
-    }
-
     getFilteredStops() {
         let stops = this.allStops;
 
-        // Filtrer par onglet
         if (this.currentTab === 'bus4') {
             stops = stops.filter(stop => stop.lines.includes('BUS 4'));
         } else if (this.currentTab === 'bus8') {
@@ -2211,7 +1464,6 @@ class SearchManager {
             stops = stops.filter(stop => this.favorites.includes(stop.name));
         }
 
-        // Filtrer par recherche
         if (this.searchTerm) {
             stops = stops.filter(stop => 
                 stop.name.toLowerCase().includes(this.searchTerm)
@@ -2242,7 +1494,6 @@ class SearchManager {
             const isFavorite = this.favorites.includes(stop.name);
             const busClass = stop.lines.includes('BUS 4') ? 'bus4' : 'bus8';
             
-            // Calculer la distance si la position utilisateur est disponible
             let distanceText = '';
             if (this.geolocationManager.userCoords) {
                 const distance = Math.round(this.geolocationManager.userCoords.distanceTo(
@@ -2277,10 +1528,18 @@ class SearchManager {
         drawerStats.textContent = `${filteredStops.length} arrêt${filteredStops.length > 1 ? 's' : ''}`;
     }
 
+    toggleFavorite(stopName) {
+        if (this.favorites.includes(stopName)) {
+            window.favoritesManager.remove(stopName);
+        } else {
+            window.favoritesManager.add(stopName);
+        }
+    }
+
     openDrawer() {
         document.getElementById('stopsDrawer').classList.add('open');
         document.getElementById('drawerOverlay').classList.add('active');
-        this.renderStopsList(); // Rafraîchir la liste
+        this.renderStopsList();
     }
 
     closeDrawer() {
@@ -2289,5 +1548,105 @@ class SearchManager {
     }
 }
 
-// Ajouter cette ligne à la fin du fichier pour rendre le searchManager accessible globalement
-window.searchManager = null;
+/**
+ * ======================================================================
+ * SECTION 10 : INITIALISATION DE L'APPLICATION
+ * ======================================================================
+ */
+
+class Application {
+    constructor() {
+        this.mapService = null;
+        this.busManager = null;
+        this.geolocationManager = null;
+        this.routeManager = null;
+        this.favoritesManager = null;
+        this.mapControls = null;
+        this.searchManager = null;
+    }
+
+    async init() {
+        console.log("🚀 Initialisation de l'application...");
+
+        this.showLoadingMessage();
+
+        this.mapService = new MapService();
+        this.favoritesManager = new FavoritesManager();
+        this.busManager = new BusManager(this.mapService);
+        
+        this.geolocationManager = new GeolocationManager(this.mapService);
+        this.routeManager = new RouteManager(this.mapService, this.geolocationManager);
+        this.mapControls = new MapControls(this.mapService);
+        this.searchManager = new SearchManager(this.mapService, this.geolocationManager);
+
+        // Exposer les instances globalement
+        window.busManager = this.busManager;
+        window.favoritesManager = this.favoritesManager;
+        window.geolocationManager = this.geolocationManager;
+        window.searchManager = this.searchManager;
+
+        setTimeout(() => {
+            this.startBusAnimations();
+            this.hideLoadingMessage();
+        }, 2000);
+
+        console.log("✅ Application initialisée avec succès");
+    }
+
+    showLoadingMessage() {
+        const loadingDiv = document.createElement('div');
+        loadingDiv.id = 'loading-message';
+        loadingDiv.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            z-index: 2000;
+            text-align: center;
+            font-family: Arial, sans-serif;
+        `;
+        loadingDiv.innerHTML = `
+            <div style="margin-bottom: 10px;">
+                <span class="material-icons" style="color: #667eea; font-size: 40px;">directions_bus</span>
+            </div>
+            <div style="font-weight: bold; margin-bottom: 5px;">Chargement de l'application...</div>
+            <div style="font-size: 12px; color: #666;">Veuillez patienter</div>
+        `;
+        document.body.appendChild(loadingDiv);
+    }
+
+    hideLoadingMessage() {
+        const loadingDiv = document.getElementById('loading-message');
+        if (loadingDiv) {
+            loadingDiv.style.opacity = '0';
+            loadingDiv.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => {
+                if (loadingDiv.parentNode) {
+                    loadingDiv.parentNode.removeChild(loadingDiv);
+                }
+            }, 500);
+        }
+    }
+
+    startBusAnimations() {
+        this.busManager.animateBus('bus4', BUS_STOPS.bus4, BUS_TYPES.bus4);
+        this.busManager.animateBus('bus8', BUS_STOPS.bus8, BUS_TYPES.bus8);
+    }
+}
+
+/**
+ * ======================================================================
+ * SECTION 11 : DÉMARRAGE
+ * ======================================================================
+ */
+
+document.addEventListener('DOMContentLoaded', () => {
+    const app = new Application();
+    app.init().catch(error => {
+        console.error("❌ Erreur lors de l'initialisation:", error);
+    });
+});
