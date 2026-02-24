@@ -104,16 +104,145 @@ const POINTS_OF_INTEREST = {
 
 /**
  * ======================================================================
- * SECTION 2 : ICÔNES ET STYLES
+ * SECTION 2 : ICÔNES ET STYLES (VERSION AMÉLIORÉE AVEC VRAIES ICÔNES DE BUS)
  * ======================================================================
  */
 
 const Icons = {
-    bus: L.icon({
-        iconUrl: "https://cdn-icons-png.flaticon.com/512/61/61231.png",
-        iconSize: [36, 36],
-        iconAnchor: [18, 18]
+    // Icône de bus moderne et réaliste (SVG personnalisé via Data URL)
+    bus: L.divIcon({
+        className: 'custom-bus-icon',
+        html: `
+            <div class="bus-icon-container">
+                <svg width="42" height="42" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Ombre portée -->
+                    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+                    </filter>
+                    
+                    <!-- Corps principal du bus -->
+                    <rect x="4" y="10" width="34" height="20" rx="4" fill="#4285F4" filter="url(#shadow)"/>
+                    
+                    <!-- Fenêtres avant -->
+                    <rect x="8" y="13" width="8" height="6" rx="1" fill="#E1F5FE" stroke="white" stroke-width="0.5"/>
+                    <rect x="18" y="13" width="8" height="6" rx="1" fill="#E1F5FE" stroke="white" stroke-width="0.5"/>
+                    <rect x="28" y="13" width="6" height="6" rx="1" fill="#E1F5FE" stroke="white" stroke-width="0.5"/>
+                    
+                    <!-- Phares avant -->
+                    <circle cx="6" cy="18" r="2" fill="#FFD700"/>
+                    <circle cx="36" cy="18" r="2" fill="#FFD700"/>
+                    
+                    <!-- Roues -->
+                    <circle cx="12" cy="30" r="5" fill="#333" stroke="#666" stroke-width="1.5"/>
+                    <circle cx="30" cy="30" r="5" fill="#333" stroke="#666" stroke-width="1.5"/>
+                    
+                    <!-- Jantes -->
+                    <circle cx="12" cy="30" r="2.5" fill="#AAA"/>
+                    <circle cx="30" cy="30" r="2.5" fill="#AAA"/>
+                    
+                    <!-- Ligne décorative -->
+                    <rect x="4" y="10" width="34" height="4" fill="rgba(255,255,255,0.3)"/>
+                    
+                    <!-- Toit -->
+                    <rect x="8" y="6" width="26" height="4" rx="1" fill="#2C3E50"/>
+                </svg>
+                <div class="bus-label">BUS</div>
+            </div>
+        `,
+        iconSize: [42, 42],
+        iconAnchor: [21, 36],
+        popupAnchor: [0, -36]
     }),
+
+    // Icône de bus avec couleur personnalisable pour BUS 4 (jaune)
+    bus4: L.divIcon({
+        className: 'custom-bus-icon',
+        html: `
+            <div class="bus-icon-container bus4">
+                <svg width="42" height="42" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <filter id="shadow4" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+                    </filter>
+                    <rect x="4" y="10" width="34" height="20" rx="4" fill="#FFD700" filter="url(#shadow4)"/>
+                    <rect x="8" y="13" width="8" height="6" rx="1" fill="#E1F5FE" stroke="white" stroke-width="0.5"/>
+                    <rect x="18" y="13" width="8" height="6" rx="1" fill="#E1F5FE" stroke="white" stroke-width="0.5"/>
+                    <rect x="28" y="13" width="6" height="6" rx="1" fill="#E1F5FE" stroke="white" stroke-width="0.5"/>
+                    <circle cx="6" cy="18" r="2" fill="#FFD700"/>
+                    <circle cx="36" cy="18" r="2" fill="#FFD700"/>
+                    <circle cx="12" cy="30" r="5" fill="#333" stroke="#666" stroke-width="1.5"/>
+                    <circle cx="30" cy="30" r="5" fill="#333" stroke="#666" stroke-width="1.5"/>
+                    <circle cx="12" cy="30" r="2.5" fill="#AAA"/>
+                    <circle cx="30" cy="30" r="2.5" fill="#AAA"/>
+                    <rect x="4" y="10" width="34" height="4" fill="rgba(255,255,255,0.3)"/>
+                    <rect x="8" y="6" width="26" height="4" rx="1" fill="#2C3E50"/>
+                </svg>
+                <div class="bus-label">BUS 4</div>
+            </div>
+        `,
+        iconSize: [42, 42],
+        iconAnchor: [21, 36],
+        popupAnchor: [0, -36]
+    }),
+
+    // Icône de bus avec couleur personnalisable pour BUS 8 (vert)
+    bus8: L.divIcon({
+        className: 'custom-bus-icon',
+        html: `
+            <div class="bus-icon-container bus8">
+                <svg width="42" height="42" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <filter id="shadow8" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+                    </filter>
+                    <rect x="4" y="10" width="34" height="20" rx="4" fill="#34A853" filter="url(#shadow8)"/>
+                    <rect x="8" y="13" width="8" height="6" rx="1" fill="#E1F5FE" stroke="white" stroke-width="0.5"/>
+                    <rect x="18" y="13" width="8" height="6" rx="1" fill="#E1F5FE" stroke="white" stroke-width="0.5"/>
+                    <rect x="28" y="13" width="6" height="6" rx="1" fill="#E1F5FE" stroke="white" stroke-width="0.5"/>
+                    <circle cx="6" cy="18" r="2" fill="#FFD700"/>
+                    <circle cx="36" cy="18" r="2" fill="#FFD700"/>
+                    <circle cx="12" cy="30" r="5" fill="#333" stroke="#666" stroke-width="1.5"/>
+                    <circle cx="30" cy="30" r="5" fill="#333" stroke="#666" stroke-width="1.5"/>
+                    <circle cx="12" cy="30" r="2.5" fill="#AAA"/>
+                    <circle cx="30" cy="30" r="2.5" fill="#AAA"/>
+                    <rect x="4" y="10" width="34" height="4" fill="rgba(255,255,255,0.3)"/>
+                    <rect x="8" y="6" width="26" height="4" rx="1" fill="#2C3E50"/>
+                </svg>
+                <div class="bus-label">BUS 8</div>
+            </div>
+        `,
+        iconSize: [42, 42],
+        iconAnchor: [21, 36],
+        popupAnchor: [0, -36]
+    }),
+
+    // Icône de bus en mouvement (avec effet de vitesse)
+    busMoving: L.divIcon({
+        className: 'custom-bus-icon moving',
+        html: `
+            <div class="bus-icon-container moving">
+                <svg width="46" height="46" viewBox="0 0 46 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <filter id="movingShadow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="3" dy="3" stdDeviation="4" flood-opacity="0.4"/>
+                    </filter>
+                    <rect x="6" y="12" width="34" height="20" rx="4" fill="#4285F4" filter="url(#movingShadow)"/>
+                    <rect x="10" y="15" width="8" height="6" rx="1" fill="#E1F5FE" stroke="white" stroke-width="0.5"/>
+                    <rect x="20" y="15" width="8" height="6" rx="1" fill="#E1F5FE" stroke="white" stroke-width="0.5"/>
+                    <rect x="30" y="15" width="6" height="6" rx="1" fill="#E1F5FE" stroke="white" stroke-width="0.5"/>
+                    <circle cx="8" cy="20" r="2" fill="#FFD700"/>
+                    <circle cx="38" cy="20" r="2" fill="#FFD700"/>
+                    <circle cx="14" cy="32" r="5" fill="#333" stroke="#666" stroke-width="1.5"/>
+                    <circle cx="32" cy="32" r="5" fill="#333" stroke="#666" stroke-width="1.5"/>
+                    <!-- Lignes de vitesse -->
+                    <line x1="42" y1="18" x2="46" y2="14" stroke="white" stroke-width="2" stroke-dasharray="2 2"/>
+                    <line x1="42" y1="22" x2="46" y2="18" stroke="white" stroke-width="2" stroke-dasharray="2 2"/>
+                    <line x1="42" y1="26" x2="46" y2="22" stroke="white" stroke-width="2" stroke-dasharray="2 2"/>
+                </svg>
+            </div>
+        `,
+        iconSize: [46, 46],
+        iconAnchor: [23, 40],
+        popupAnchor: [0, -40]
+    }),
+
     busStop: {
         bus4: L.icon({
             iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-yellow.png",
@@ -126,10 +255,21 @@ const Icons = {
             iconAnchor: [12, 41]
         })
     },
-    car: L.icon({
-        iconUrl: "https://cdn-icons-png.flaticon.com/512/744/744465.png",
-        iconSize: [40, 40],
-        iconAnchor: [20, 20]
+    
+    // Icône de bus avec image PNG (alternative si vous préférez une image)
+    busPng: L.icon({
+        iconUrl: "https://cdn-icons-png.flaticon.com/512/3774/3774277.png", // Bus moderne
+        iconSize: [48, 48],
+        iconAnchor: [24, 42],
+        popupAnchor: [0, -42]
+    }),
+    
+    // Icône de bus scolaire
+    schoolBus: L.icon({
+        iconUrl: "https://cdn-icons-png.flaticon.com/512/3064/3064885.png", // Bus scolaire
+        iconSize: [48, 48],
+        iconAnchor: [24, 42],
+        popupAnchor: [0, -42]
     })
 };
 
@@ -236,7 +376,7 @@ class MapService {
 
 /**
  * ======================================================================
- * SECTION 4 : GESTION DES BUS (VERSION MODIFIÉE)
+ * SECTION 4 : GESTION DES BUS (MODIFIÉE POUR LES POPUPS D'ARRÊTS)
  * ======================================================================
  */
 
@@ -244,13 +384,102 @@ class BusManager {
     constructor(mapService) {
         this.mapService = mapService;
         this.buses = [];
-        this.busPositions = new Map(); // Stocke les positions actuelles des bus
-        this.busRoutes = new Map(); // Stocke les routes complètes
-        this.busMarkers = new Map(); // Stocke les références aux marqueurs
+        this.busPositions = new Map();
+        this.busRoutes = new Map();
+        this.busMarkers = new Map();
         this.initRoutes();
         this.initStops();
         this.initPOI();
     }
+  
+  /**
+ * Anime un bus avec la nouvelle icône
+ */
+async animateBus(busId, stops, busInfo, colorLayer) {
+    const fullRoute = await this.mapService.getRoute(stops.map(s => s.coords));
+    let index = 0;
+
+    // Choisir l'icône appropriée selon le bus
+    let busIcon;
+    if (busId === 'bus4') {
+        busIcon = Icons.bus4;
+    } else if (busId === 'bus8') {
+        busIcon = Icons.bus8;
+    } else {
+        busIcon = Icons.bus;
+    }
+
+    // Créer le marqueur avec l'icône de bus
+    const marker = L.marker(fullRoute[0], { 
+        icon: busIcon,
+        className: `bus-marker-${busId}`
+    }).addTo(this.mapService.map);
+
+    // Ajouter une classe pour animation d'arrivée
+    marker._icon.classList.add('bus-arrival');
+
+    // Stocker la référence du marqueur
+    this.busMarkers.set(busId, marker);
+
+    // Configuration du popup
+    marker.bindPopup('', {
+        autoClose: true,
+        closeOnClick: true,
+        autoPan: true
+    });
+
+    // Gestionnaire d'événements pour le clic
+    marker.on('click', () => {
+        // Ajouter un effet de highlight
+        marker._icon.classList.add('bus-highlight');
+        setTimeout(() => {
+            marker._icon.classList.remove('bus-highlight');
+        }, 3000);
+
+        const currentPos = this.busPositions.get(busId) || fullRoute[index];
+        const { stop: currentStop } = this.findClosestStop(stops, currentPos);
+        const nextStopInfo = this.findNextStop(stops, currentStop, currentPos, fullRoute);
+        
+        const popupContent = this.createBusPopup(busInfo, currentStop, nextStopInfo);
+        marker.setPopupContent(popupContent);
+        marker.openPopup();
+    });
+
+    // Gestionnaire pour fermer le popup
+    this.mapService.map.on('click', () => {
+        marker.closePopup();
+    });
+
+    const move = () => {
+        // Ajouter un effet de mouvement
+        marker._icon.classList.add('moving');
+        
+        // Mettre à jour la position
+        marker.setLatLng(fullRoute[index]);
+        
+        // Sauvegarder la position
+        this.busPositions.set(busId, fullRoute[index]);
+
+        // Trouver l'arrêt actuel et prochain
+        const { stop: currentStop } = this.findClosestStop(stops, fullRoute[index]);
+        const nextStopInfo = this.findNextStop(stops, currentStop, fullRoute[index], fullRoute);
+
+        // Mettre à jour le popup
+        const popupContent = this.createBusPopup(busInfo, currentStop, nextStopInfo);
+        marker.setPopupContent(popupContent);
+
+        // Passer à la position suivante
+        index = (index + 1) % fullRoute.length;
+
+        // Planifier la prochaine animation
+        requestAnimationFrame(() => {
+            setTimeout(move, CONFIG.bus.animationSpeed);
+        });
+    };
+
+    move();
+    return marker;
+}
 
     async initRoutes() {
         // Bus 4
@@ -271,29 +500,224 @@ class BusManager {
     initStops() {
         // Arrêts Bus 4
         BUS_STOPS.bus4.forEach(stop => {
-            L.marker(stop.coords, { icon: Icons.busStop.bus4 })
-                .addTo(this.mapService.layers.bus4)
-                .bindPopup(this.createStopPopup("BUS 4", stop.name));
+            const marker = L.marker(stop.coords, { icon: Icons.busStop.bus4 })
+                .addTo(this.mapService.layers.bus4);
+            
+            // Créer le popup avec étoile et bouton itinéraire
+            this.updateStopPopup(marker, stop, "BUS 4");
         });
 
         // Arrêts Bus 8
         BUS_STOPS.bus8.forEach(stop => {
-            L.marker(stop.coords, { icon: Icons.busStop.bus8 })
-                .addTo(this.mapService.layers.bus8)
-                .bindPopup(this.createStopPopup("BUS 8", stop.name));
+            const marker = L.marker(stop.coords, { icon: Icons.busStop.bus8 })
+                .addTo(this.mapService.layers.bus8);
+            
+            // Créer le popup avec étoile et bouton itinéraire
+            this.updateStopPopup(marker, stop, "BUS 8");
         });
     }
 
-    createStopPopup(busNumber, stopName) {
-        return `
-            <div class="popup-container">
-                <div class="popup-title">🛑 ${busNumber}</div>
-                <div class="popup-content"><b>${stopName}</b></div>
-                <button onclick="favoritesManager.add('${stopName}')" class="popup-btn">
-                    ⭐ Ajouter aux favoris
+    /**
+     * Met à jour le popup d'un arrêt avec les informations et boutons
+     */
+    updateStopPopup(marker, stop, busNumber) {
+        // Déterminer si l'arrêt est dans les deux lignes
+        const isInBus4 = BUS_STOPS.bus4.some(s => s.name === stop.name);
+        const isInBus8 = BUS_STOPS.bus8.some(s => s.name === stop.name);
+        
+        const busLines = [];
+        if (isInBus4) busLines.push('BUS 4');
+        if (isInBus8) busLines.push('BUS 8');
+        
+        const linesText = busLines.join(' • ');
+
+        // Vérifier si l'arrêt est en favori
+        const favorites = JSON.parse(localStorage.getItem('bus_favorites')) || [];
+        const isFavorite = favorites.includes(stop.name);
+
+        // Créer le contenu du popup
+        const popupContent = this.createStopPopup(
+            stop.name, 
+            busLines, 
+            linesText, 
+            isFavorite
+        );
+
+        // Configurer le popup
+        marker.bindPopup(popupContent, {
+            autoClose: true,
+            closeOnClick: true,
+            maxWidth: 320,
+            className: 'stop-popup'
+        });
+
+        // Mettre à jour le popup quand il s'ouvre
+        marker.on('click', () => {
+            // Re-vérifier le statut favori au moment du clic
+            const currentFavorites = JSON.parse(localStorage.getItem('bus_favorites')) || [];
+            const currentIsFavorite = currentFavorites.includes(stop.name);
+            
+            const updatedPopupContent = this.createStopPopup(
+                stop.name, 
+                busLines, 
+                linesText, 
+                currentIsFavorite
+            );
+            
+            marker.setPopupContent(updatedPopupContent);
+        });
+    }
+
+   /**
+ * Version ultra-compacte du popup (uniquement l'essentiel)
+ */
+createStopPopup(stopName, busLines, linesText, isFavorite) {
+    const favoriteIcon = isFavorite ? 'star' : 'star_border';
+    
+    return `
+        <div class="stop-popup-container compact">
+            <div class="stop-popup-name">${stopName}</div>
+            <div class="stop-popup-lines">${linesText}</div>
+            <div class="stop-popup-actions">
+                <button class="stop-popup-btn favorite-btn ${isFavorite ? 'active' : ''}" 
+                        onclick="window.busManager.toggleFavorite('${stopName}')"
+                        title="${isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}">
+                    <span class="material-icons">${favoriteIcon}</span>
+                </button>
+                <button class="stop-popup-btn route-btn" 
+                        onclick="window.busManager.openRouteToStop('${stopName}')"
+                        title="Calculer l'itinéraire">
+                    <span class="material-icons">directions</span>
                 </button>
             </div>
+        </div>
+    `;
+}
+
+    /**
+     * Gère le toggle des favoris
+     */
+    toggleFavorite(stopName) {
+        const favoritesManager = window.favoritesManager;
+        if (!favoritesManager) return;
+
+        const isFavorite = favoritesManager.isFavorite(stopName);
+        
+        if (isFavorite) {
+            favoritesManager.remove(stopName);
+        } else {
+            favoritesManager.add(stopName);
+        }
+
+        // Mettre à jour le popup actuellement ouvert
+        this.updateCurrentPopup(stopName);
+        
+        // Afficher une notification
+        this.showNotification(
+            isFavorite ? '⭐ Retiré des favoris' : '⭐ Ajouté aux favoris',
+            stopName,
+            isFavorite ? 'info' : 'success'
+        );
+    }
+
+    /**
+     * Ouvre le modal d'itinéraire pour un arrêt
+     */
+    openRouteToStop(stopName) {
+        const endInput = document.getElementById('endInput');
+        if (endInput) {
+            endInput.value = stopName;
+            
+            // Ouvrir le modal
+            const routeModal = document.getElementById('routeModal');
+            if (routeModal) {
+                routeModal.style.display = 'block';
+            }
+            
+            // Optionnel : déclencher automatiquement le calcul
+            setTimeout(() => {
+                const traceBtn = document.getElementById('traceBtn');
+                if (traceBtn) {
+                    traceBtn.click();
+                }
+            }, 500);
+        }
+    }
+
+    /**
+     * Met à jour le popup actuellement ouvert
+     */
+    updateCurrentPopup(stopName) {
+        // Parcourir tous les marqueurs d'arrêts
+        this.mapService.layers.bus4.eachLayer(layer => {
+            if (layer instanceof L.Marker && layer.isPopupOpen()) {
+                const popup = layer.getPopup();
+                if (popup) {
+                    const content = popup.getContent();
+                    if (content && content.includes(stopName)) {
+                        // Mettre à jour le contenu
+                        const favorites = JSON.parse(localStorage.getItem('bus_favorites')) || [];
+                        const isFavorite = favorites.includes(stopName);
+                        
+                        // Déterminer les lignes de l'arrêt
+                        const isInBus4 = BUS_STOPS.bus4.some(s => s.name === stopName);
+                        const isInBus8 = BUS_STOPS.bus8.some(s => s.name === stopName);
+                        const busLines = [];
+                        if (isInBus4) busLines.push('BUS 4');
+                        if (isInBus8) busLines.push('BUS 8');
+                        const linesText = busLines.join(' • ');
+                        
+                        const newContent = this.createStopPopup(stopName, busLines, linesText, isFavorite);
+                        layer.setPopupContent(newContent);
+                    }
+                }
+            }
+        });
+
+        this.mapService.layers.bus8.eachLayer(layer => {
+            if (layer instanceof L.Marker && layer.isPopupOpen()) {
+                const popup = layer.getPopup();
+                if (popup && popup.getContent().includes(stopName)) {
+                    const favorites = JSON.parse(localStorage.getItem('bus_favorites')) || [];
+                    const isFavorite = favorites.includes(stopName);
+                    
+                    const isInBus4 = BUS_STOPS.bus4.some(s => s.name === stopName);
+                    const isInBus8 = BUS_STOPS.bus8.some(s => s.name === stopName);
+                    const busLines = [];
+                    if (isInBus4) busLines.push('BUS 4');
+                    if (isInBus8) busLines.push('BUS 8');
+                    const linesText = busLines.join(' • ');
+                    
+                    const newContent = this.createStopPopup(stopName, busLines, linesText, isFavorite);
+                    layer.setPopupContent(newContent);
+                }
+            }
+        });
+    }
+
+    /**
+     * Affiche une notification
+     */
+    showNotification(title, message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.innerHTML = `
+            <div class="notification-title">${title}</div>
+            <div class="notification-message">${message}</div>
         `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateX(-50%) translateY(-20px)';
+            notification.style.transition = 'all 0.3s ease';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 2000);
     }
 
     initPOI() {
@@ -307,6 +731,11 @@ class BusManager {
             L.marker(p.coords).addTo(this.mapService.layers.parking).bindPopup(`🅿️ ${p.name}`)
         );
     }
+
+    // ... (le reste des méthodes existantes : findClosestStop, findNextStop, 
+    // calculateDistanceAlongRoute, calculateEstimatedTime, createBusPopup, 
+    // animateBus, getAllStops, etc.)
+
 
     /**
      * Trouve l'arrêt le plus proche d'une position donnée
@@ -1284,7 +1713,7 @@ class RouteManager {
 
 /**
  * ======================================================================
- * SECTION 7 : GESTION DES FAVORIS
+ * SECTION 7 : GESTION DES FAVORIS (AMÉLIORÉE)
  * ======================================================================
  */
 
@@ -1299,7 +1728,12 @@ class FavoritesManager {
         if (!favorites.includes(stopName)) {
             favorites.push(stopName);
             localStorage.setItem(this.storageKey, JSON.stringify(favorites));
-            alert("⭐ Arrêt ajouté aux favoris");
+            
+            // Déclencher un événement personnalisé
+            this.triggerFavoritesUpdated();
+            
+            // Afficher une notification
+            this.showNotification('⭐ Favori ajouté', stopName, 'success');
         }
     }
 
@@ -1307,6 +1741,12 @@ class FavoritesManager {
         let favorites = this.getAll();
         favorites = favorites.filter(f => f !== stopName);
         localStorage.setItem(this.storageKey, JSON.stringify(favorites));
+        
+        // Déclencher un événement personnalisé
+        this.triggerFavoritesUpdated();
+        
+        // Afficher une notification
+        this.showNotification('⭐ Favori retiré', stopName, 'info');
     }
 
     getAll() {
@@ -1315,6 +1755,41 @@ class FavoritesManager {
 
     isFavorite(stopName) {
         return this.getAll().includes(stopName);
+    }
+
+    /**
+     * Déclenche un événement pour notifier les changements de favoris
+     */
+    triggerFavoritesUpdated() {
+        const event = new CustomEvent('favoritesUpdated', {
+            detail: { favorites: this.getAll() }
+        });
+        window.dispatchEvent(event);
+    }
+
+    /**
+     * Affiche une notification
+     */
+    showNotification(title, message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.innerHTML = `
+            <div class="notification-title">${title}</div>
+            <div class="notification-message">${message}</div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateX(-50%) translateY(-20px)';
+            notification.style.transition = 'all 0.3s ease';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 2000);
     }
 }
 
