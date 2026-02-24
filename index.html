@@ -38,20 +38,30 @@
 <body>
 
     <!-- ===================================================== -->
-    <!-- HEADER PRINCIPAL -->
-    <!-- Contient : titre + barre de recherche -->
-    <!-- ===================================================== -->
-    <header class="header-container">
+<!-- HEADER PRINCIPAL -->
+<!-- Contient : titre + barre de recherche améliorée -->
+<!-- ===================================================== -->
+<header class="header-container">
 
-        <!-- Titre de l'application -->
-        <h1 class="header-title">Bus scolaires</h1>
+    <!-- Titre de l'application -->
+    <h1 class="header-title">Bus scolaires</h1>
 
-        <!-- ================= Recherche ================= -->
-        <div class="search-wrapper">
+    <!-- ================= Recherche améliorée ================= -->
+    <div class="search-wrapper">
 
-            <div class="search-bar-wrapper">
+        <div class="search-bar-wrapper">
 
-                <!-- Input recherche arrêt -->
+            <!-- Bouton hamburger pour afficher la liste des arrêts -->
+            <button 
+                id="menuToggle" 
+                class="menu-toggle" 
+                aria-label="Afficher la liste des arrêts"
+                title="Liste des arrêts">
+                <span class="material-icons">menu</span>
+            </button>
+
+            <!-- Input recherche arrêt avec autocomplete -->
+            <div class="search-container">
                 <input
                     id="searchStop"
                     class="search-bar"
@@ -60,39 +70,82 @@
                     autocomplete="off"
                     aria-label="Rechercher un arrêt"
                 />
+                
+                <!-- Liste déroulante des suggestions (autocomplete) -->
+                <div id="suggestionsList" class="suggestions-list"></div>
+            </div>
 
-                <!-- Boutons associés à la recherche -->
-                <div class="search-buttons">
+            <!-- Boutons associés à la recherche -->
+            <div class="search-buttons">
+                <!-- Bouton Rechercher -->
+                <button
+                    id="searchBtn"
+                    class="search-btn"
+                    title="Rechercher"
+                    aria-label="Rechercher un arrêt">
+                    <span class="material-icons">search</span>
+                </button>
 
-                    <!-- Bouton Rechercher -->
-                    <button
-                        id="searchBtn"
-                        class="search-btn"
-                        title="Rechercher"
-                        aria-label="Rechercher un arrêt">
-
-                        <span class="material-icons">search</span>
-                    </button>
-
-                    <!-- Bouton Itinéraire -->
-                    <button
-                        id="routeBtn"
-                        class="route-btn"
-                        title="Ouvrir l'itinéraire"
-                        aria-label="Ouvrir la fenêtre d'itinéraire">
-
-                        <span class="material-icons">directions</span>
-                    </button>
-
-                </div>
-
+                <!-- Bouton Itinéraire -->
+                <button
+                    id="routeBtn"
+                    class="route-btn"
+                    title="Ouvrir l'itinéraire"
+                    aria-label="Ouvrir la fenêtre d'itinéraire">
+                    <span class="material-icons">directions</span>
+                </button>
             </div>
 
         </div>
 
-    </header>
+    </div>
 
+</header>
 
+<!-- ===================================================== -->
+<!-- MENU LATÉRAL (DRAWER) POUR LA LISTE COMPLÈTE DES ARRÊTS -->
+<!-- ===================================================== -->
+<div id="stopsDrawer" class="stops-drawer">
+    <div class="drawer-header">
+        <h2 class="drawer-title">
+            <span class="material-icons">map</span>
+            Liste des arrêts
+        </h2>
+        <button id="closeDrawer" class="close-drawer" aria-label="Fermer">
+            <span class="material-icons">close</span>
+        </button>
+    </div>
+    
+    <div class="drawer-search">
+        <span class="material-icons">search</span>
+        <input 
+            type="text" 
+            id="drawerSearchInput" 
+            placeholder="Filtrer les arrêts..." 
+            class="drawer-search-input"
+        />
+    </div>
+    
+    <div class="drawer-tabs">
+        <button class="drawer-tab active" data-tab="all">Tous</button>
+        <button class="drawer-tab" data-tab="bus4">BUS 4</button>
+        <button class="drawer-tab" data-tab="bus8">BUS 8</button>
+        <button class="drawer-tab" data-tab="favorites">Favoris</button>
+    </div>
+    
+    <div id="stopsList" class="stops-list">
+        <!-- La liste des arrêts sera générée dynamiquement -->
+    </div>
+    
+    <div class="drawer-footer">
+        <div class="drawer-stats" id="drawerStats">
+            Chargement...
+        </div>
+    </div>
+</div>
+
+<!-- Overlay pour le drawer -->
+<div id="drawerOverlay" class="drawer-overlay"></div>
     <!-- ===================================================== -->
     <!-- MINI FENÊTRE ITINÉRAIRE (MODAL) -->
     <!-- ===================================================== -->
@@ -209,6 +262,8 @@
 
 </body>
 </html>
+
+
 
 
 
