@@ -1,1571 +1,1818 @@
-/* =========================================================
-   🌍 GLOBAL RESET
-========================================================= */
+/**
+ * ======================================================================
+ * SYSTÈME DE SUIVI DE BUS - APPLICATION DE TRANSPORT EN COMMUN
+ * Version professionnelle 2.0
+ * Auteur : Mabel Cédric Yvan
+ * Description : Application de suivi en temps réel des bus avec
+ *              calcul d'itinéraires, géolocalisation et interface moderne
+ * ======================================================================
+ */
 
-* {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent; /* Supprime flash bleu mobile */
-}
+/**
+ * ======================================================================
+ * SECTION 1 : CONFIGURATION ET CONSTANTES GLOBALES
+ * ======================================================================
+ */
 
-html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    font-family: 'Arial', sans-serif;
-}
+const CONFIG = {
+    map: {
+        defaultCenter: [4.040770, 9.752837],
+        defaultZoom: 18,
+        minZoom: 12,           // Zoom minimum ajouté
+        maxZoom: 18,           // Zoom maximum
+        zoomControl: true
+    },
+    bus: {
+        animationSpeed: 20,
+        averageSpeed: 30,
+        averageSpeedMps: 8.33,
+        updateInterval: 3000
+    },
+    geolocation: {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+    },
+    walking: {
+        speedMps: 1.4,
+        speedMpm: 83.33
+    }
+};
 
-body {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    overflow: hidden; /* Empêche scroll parasite mobile */
-}
+const COLORS = {
+    primary: '#4285F4',
+    success: '#34A853',
+    warning: '#FBBC05',
+    danger: '#EA4335',
+    bus4: '#FFD700', // Jaune
+    bus8: '#34A853', // Vert
+    white: '#FFFFFF',
+    black: '#000000'
+};
 
+const BUS_STOPS = {
+    bus4: [
+        { name: "Campus C", coords: [4.039735, 9.751857] },
+        { name: "Carrefour Chefferie", coords: [4.024806, 9.769245] },
+        { name: "Saint Nicolas", coords: [4.020080, 9.761518] },
+        { name: "Total Danger", coords: [4.012732, 9.757205] },
+        { name: "Village Ndogpassi (Station Bocom)", coords: [4.007123, 9.756094] },
+        { name: "Tradex Borne 10", coords: [3.998247, 9.768313] },
+        { name: "Carrefour Ari", coords: [3.995235, 9.782917] },
+        { name: "Tradex Yassa", coords: [4.001153, 9.805164] },
+        { name: "Entrée MAETUR Yassa", coords: [4.009370, 9.800646] },
+        { name: "Total Nkolmbong", coords: [4.018734, 9.795956] },
+        { name: "Carrefour Nyalla Pariso", coords: [4.024639, 9.793029] },
+        { name: "Château Nyalla", coords: [4.033330, 9.786290] },
+        { name: "Rails Nyalla", coords: [4.034902, 9.777759] },
+        { name: "Campus C", coords: [4.039735, 9.751857] }
+    ],
+    bus8: [
+        { name: "Village Ndogpassi (Station Bocom)", coords: [4.007123, 9.756094] },
+        { name: "Total Danger", coords: [4.012732, 9.757205] },
+        { name: "Saint Nicolas", coords: [4.020080, 9.761518] },
+        { name: "Carrefour Chefferie", coords: [4.024806, 9.769245] },
+        { name: "Campus C", coords: [4.039735, 9.751857] }
+    ]
+};
 
+const BUS_TYPES = {
+    bus4: {
+        name: "BUS 4",
+        company: "Socatur",
+        type: "Standard",
+        color: COLORS.bus4
+    },
+    bus8: {
+        name: "BUS 8",
+        company: "Coaster",
+        type: "Express",
+        color: COLORS.bus8
+    }
+};
 
-/* =========================================================
-   🧭 HEADER
-========================================================= */
+const POINTS_OF_INTEREST = {
+    campuses: [
+        { name: "Campus C", coords: [4.039735, 9.751857] },
+        { name: "Campus A et B", coords: [4.042103, 9.753392] }
+    ],
+    parkings: [
+        { name: "Parking bus IUG", coords: [4.040770, 9.752837] },
+        { name: "Parking Campus A", coords: [4.041985, 9.754494] }
+    ]
+};
 
-.header-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 15px;
-    background-color: #4285f4;
-    color: #ffffff;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-    z-index: 1000;
-}
+/**
+ * ======================================================================
+ * SECTION 2 : ICÔNES ET STYLES
+ * ======================================================================
+ */
 
-.header-title {
-    margin: 0;
-    font-size: 1.4rem;
-    font-weight: 600;
-}
+const Icons = {
+    bus: L.icon({
+        iconUrl: "https://cdn-icons-png.flaticon.com/512/61/61231.png",
+        iconSize: [36, 36],
+        iconAnchor: [18, 18]
+    }),
+    busStop: {
+        bus4: L.icon({
+            iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-yellow.png",
+            iconSize: [25, 41],
+            iconAnchor: [12, 41]
+        }),
+        bus8: L.icon({
+            iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
+            iconSize: [25, 41],
+            iconAnchor: [12, 41]
+        })
+    },
+    car: L.icon({
+        iconUrl: "https://cdn-icons-png.flaticon.com/512/744/744465.png",
+        iconSize: [40, 40],
+        iconAnchor: [20, 20]
+    })
+};
 
-/* ----------- Barre de recherche ----------- */
+/**
+ * ======================================================================
+ * SECTION 3 : INITIALISATION DE LA CARTE (MODIFIÉE)
+ * ======================================================================
+ */
 
-.search-wrapper {
-    display: flex;
-    align-items: center;
-}
-
-.search-bar-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-    width: 300px;
-}
-
-.search-bar {
-    width: 100%;
-    padding: 8px 110px 8px 12px;
-    font-size: 1rem;
-    border: 1px solid #ccc;
-    border-radius: 25px;
-    outline: none;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-    transition: all 0.2s ease;
-}
-
-.search-bar:focus {
-    border-color: #4285f4;
-    box-shadow: 0 0 8px rgba(66,133,244,0.3);
-}
-
-.search-buttons {
-    position: absolute;
-    right: 4px;
-    display: flex;
-    gap: 4px;
-}
-
-/* Boutons header */
-
-.search-btn,
-.route-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 6px 10px;
-    border: none;
-    border-radius: 20px;
-    background-color: #ffffff;
-    color: #4285f4;
-    cursor: pointer;
-    font-size: 0.9rem;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-    transition: all 0.2s ease;
-}
-
-.search-btn:hover,
-.route-btn:hover {
-    background-color: #f0f0f0;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-}
-
-
-/* =========================================================
-   🗺️ MAP
-========================================================= */
-
-#map {
-    flex: 1;
-    width: 100%;
-}
-
-
-/* =========================================================
-   📌 BOUTONS FLOTTANTS
-========================================================= */
-
-.mobile-btn {
-    position: fixed;
-    right: 20px;
-    width: 50px;
-    height: 50px;
-    background-color: #ffffff;
-    border-radius: 50%;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: transform 0.2s ease, background-color 0.2s ease;
-    z-index: 1000;
-}
-
-.mobile-btn:hover {
-    background-color: #f0f0f0;
-    transform: scale(1.1);
-}
-
-.mobile-btn .material-icons {
-    font-size: 28px;
-    color: #4285f4;
-}
-
-#locateBtn { bottom: 65px; }
-#nearestStopBtn { bottom: 135px; }
-
-
-/* =========================================================
-   🪟 MINI FENÊTRE ITINÉRAIRE
-========================================================= */
-
-.route-modal {
-    display: none;
-    position: fixed;
-    top: 70px;
-    right: 20px;
-    width: 320px;
-    background: #ffffff;
-    border-radius: 16px;
-    padding: 20px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-    z-index: 1500;
-    animation: fadeIn 0.2s ease;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-8px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.route-modal-content h3 {
-    margin: 0 0 12px;
-    font-size: 1.2rem;
-    color: #4285f4;
-}
-
-/* Champs */
-
-.input-wrapper {
-    position: relative;
-    margin-bottom: 10px;
-}
-
-.input-wrapper input {
-    width: 100%;
-    padding: 10px 12px 10px 36px;
-    font-size: 0.95rem;
-    border: 1px solid #ccc;
-    border-radius: 12px;
-    transition: all 0.2s ease;
-}
-
-.input-wrapper input:focus {
-    border-color: #4285f4;
-    box-shadow: 0 0 6px rgba(66,133,244,0.3);
-    outline: none;
-}
-
-.input-wrapper input[readonly] {
-    background-color: #f1f3f4;
-    color: #555;
-}
-
-.input-wrapper .material-icons {
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 20px;
-    color: #4285f4;
-}
-
-/* Boutons itinéraire */
-
-.trace-btn,
-.clear-btn {
-    width: 100%;
-    padding: 10px;
-    margin-top: 8px;
-    border: none;
-    border-radius: 12px;
-    font-size: 0.95rem;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-/* Tracer */
-.trace-btn {
-    background-color: #4285f4;
-    color: #ffffff;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-}
-
-.trace-btn:hover {
-    background-color: #3367d6;
-}
-
-.trace-btn:active {
-    transform: scale(0.98);
-}
-
-/* Effacer */
-.clear-btn {
-    background-color: #d93025;
-    color: #ffffff;
-}
-
-.clear-btn:hover {
-    background-color: #b3261e;
-}
-
-.clear-btn:active {
-    transform: scale(0.98);
-}
-
-/* Bouton fermer */
-.close-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    border: none;
-    background: transparent;
-    font-size: 18px;
-    cursor: pointer;
-}
-
-
-/* =========================================================
-   🧾 POPUPS MODERNES STYLE GOOGLE
-========================================================= */
-
-.leaflet-popup-content-wrapper {
-    background: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.25);
-    padding: 10px 15px;
-}
-
-.leaflet-popup-content {
-    margin: 0;
-    font-size: 0.95rem;
-    line-height: 1.4;
-    color: #333;
-}
-
-.popup-title {
-    font-weight: 600;
-    color: #4285f4;
-    margin-bottom: 5px;
-}
-
-.popup-distance,
-.popup-duration {
-    font-size: 0.85rem;
-    color: #555;
-}
-
-.leaflet-popup-tip {
-    background: #ffffff;
-}
-
-
-/* =========================================================
-   📱 RESPONSIVE MOBILE
-========================================================= */
-
-@media (max-width: 768px) {
-
-    .search-bar-wrapper {
-        width: 100%;
+class MapService {
+    constructor() {
+        this.map = null;
+        this.layers = {};
+        this.routeCache = new Map();
+        this.userLocationSet = false; // Flag pour savoir si la position utilisateur a été définie
+        this.init();
     }
 
-    .header-container {
-        flex-direction: column;
-        gap: 8px;
-        align-items: stretch;
+    init() {
+        // Initialisation de la carte avec minZoom et maxZoom
+        this.map = L.map("map", {
+            zoomControl: true,
+            minZoom: CONFIG.map.minZoom,
+            maxZoom: CONFIG.map.maxZoom
+        }).setView(CONFIG.map.defaultCenter, CONFIG.map.defaultZoom);
+
+        // Fonds de carte
+        const mapSatellite = L.tileLayer(
+            "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+            { attribution: "© Mabel Cédric Yvan" }
+        );
+
+        const mapStandard = L.tileLayer(
+            "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        );
+
+        const mapLabels = L.tileLayer(
+            "https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}.png",
+            { opacity: 0.9 }
+        );
+
+        mapStandard.addTo(this.map);
+        mapLabels.addTo(this.map);
+
+        // Initialisation des layers
+        this.layers = {
+            bus4: L.layerGroup().addTo(this.map),
+            bus8: L.layerGroup().addTo(this.map),
+            bus4Line: L.layerGroup().addTo(this.map),
+            bus8Line: L.layerGroup().addTo(this.map),
+            campus: L.layerGroup().addTo(this.map),
+            parking: L.layerGroup().addTo(this.map),
+            followBus4: L.layerGroup(),
+            followBus8: L.layerGroup()
+        };
+
+        return this.map;
     }
 
-    .route-modal {
-        width: 90%;
-        right: 5%;
+    /**
+     * Centre la carte sur la position de l'utilisateur au démarrage
+     */
+    centerOnUserLocation(lat, lng) {
+        if (!this.userLocationSet) {
+            this.map.setView([lat, lng], CONFIG.map.defaultZoom, {
+                animate: true,
+                duration: 1
+            });
+            this.userLocationSet = true;
+        }
+    }
+
+    /**
+     * Service de routage OSRM avec cache
+     */
+    async getRoute(coords) {
+        const key = JSON.stringify(coords);
+        
+        if (this.routeCache.has(key)) {
+            return this.routeCache.get(key);
+        }
+
+        try {
+            const points = coords.map(c => `${c[1]},${c[0]}`).join(";");
+            const url = `https://router.project-osrm.org/route/v1/driving/${points}?overview=full&geometries=geojson`;
+
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (!data.routes?.[0]) {
+                return coords;
+            }
+
+            const route = data.routes[0].geometry.coordinates.map(p => [p[1], p[0]]);
+            this.routeCache.set(key, route);
+            
+            return route;
+        } catch (error) {
+            console.error("Erreur OSRM :", error);
+            return coords;
+        }
     }
 }
 
+/**
+ * ======================================================================
+ * SECTION 4 : GESTION DES BUS (VERSION MODIFIÉE)
+ * ======================================================================
+ */
 
-/* =========================================================
-   FOOTER FIXE PROPRE
-========================================================= */
-
-.footer {
-    position: fixed;        /* 🔥 toujours visible */
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 50px;
-
-    background: none;
-    color: #333;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    font-size: 14px;
-    font-weight: 500;
-
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
-    z-index: 9999;          /* 🔥 au-dessus de Leaflet */
-  pointer-events: none; /* 🔥 ne bloque pas les interactions de la carte */
-}
-
-
-.footer-title {
-    color: #ffffff;
-    font-size: 18px;
-    font-weight: 600;
-    text-shadow:
-        2px 2px 4px rgba(0,0,0,0.9),
-        -2px -2px 4px rgba(0,0,0,0.9),
-        0 0 6px rgba(0,0,0,0.7);
-}
-
-
-
-
-html, body {
-    height: 100%;
-}
-
-body {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-}
-
-main {
-    flex: 1;
-    display: flex;
-    min-height: 0; /* 🔥 important pour flex overflow */
-}
-
-#map {
-    flex: 1;
-}
-
-
-
-
-  
-  .popup-container {
-      font-family: Arial, sans-serif;
-      padding: 8px;
-  }
-  
-  .popup-title {
-      font-size: 15px;
-      font-weight: bold;
-      color: #1E90FF;
-      margin-bottom: 4px;
-  }
-  
-  .popup-content {
-      font-size: 13px;
-      color: #555;
-      margin: 2px 0;
-  }
-  
- .popup-btn {
-      background: #4285F4;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-top: 8px;
-      font-size: 12px;
-  }
-  
-  .popup-btn:hover {
-      background: #3367D6;
-  }
- 
-/* Styles pour les popups de bus */
-  .bus-popup {
-      font-family: Arial, sans-serif;
-      border-radius: 8px;
-      overflow: hidden;
-      width: 260px;
-  }
-  
-  .bus-popup-header {
-      padding: 10px;
-      color: white;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-  }
-  
-  .bus-popup-icon {
-      font-size: 20px;
-  }
-  
-  .bus-popup-title {
-      font-size: 16px;
-      font-weight: bold;
-  }
-  
-  .bus-popup-content {
-      padding: 12px;
-      background: white;
-  }
-  
-  .bus-popup-row {
-      margin: 6px 0;
-      display: flex;
-      align-items: baseline;
-  }
-  
-  .bus-popup-label {
-      font-size: 12px;
-      color: #666;
-      width: 95px;
-      flex-shrink: 0;
-  }
-  
-  .bus-popup-value {
-      font-size: 13px;
-      color: #333;
-      font-weight: 500;
-      flex: 1;
-  }
-  
-  .bus-popup-stop {
-      color: #1E90FF;
-      font-weight: bold;
-  }
-  
-  .bus-popup-next {
-      color: #34A853;
-      font-weight: bold;
-  }
-  
-  .bus-popup-divider {
-      height: 1px;
-      background: #eee;
-      margin: 8px 0;
-  }
-  
-  .bus-popup-footer {
-      margin-top: 8px;
-      text-align: right;
-  }
-  
-  .bus-popup-time {
-      font-size: 11px;
-      color: #999;
-  }
- 
-
-
-
-/* ===================================================== */
-/* INDICATEUR DE CHARGEMENT
-/* ===================================================== */
-
-#loading-message {
-    animation: fadeIn 0.3s ease;
-}
-
-#loading-message::after {
-    content: '';
-    display: block;
-    width: 30px;
-    height: 30px;
-    margin: 10px auto 0;
-    border: 3px solid #f3f3f3;
-    border-top: 3px solid #667eea;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translate(-50%, -60%);
+class BusManager {
+    constructor(mapService) {
+        this.mapService = mapService;
+        this.buses = [];
+        this.busPositions = new Map(); // Stocke les positions actuelles des bus
+        this.busRoutes = new Map(); // Stocke les routes complètes
+        this.busMarkers = new Map(); // Stocke les références aux marqueurs
+        this.initRoutes();
+        this.initStops();
+        this.initPOI();
     }
-    to {
-        opacity: 1;
-        transform: translate(-50%, -50%);
+
+    async initRoutes() {
+        // Bus 4
+        const route4 = await this.mapService.getRoute(BUS_STOPS.bus4.map(s => s.coords));
+        const line4 = L.polyline(route4, { color: COLORS.bus4, weight: 6 });
+        this.mapService.layers.bus4Line.addLayer(line4);
+        this.mapService.layers.followBus4.addLayer(line4);
+        this.busRoutes.set('bus4', route4);
+
+        // Bus 8
+        const route8 = await this.mapService.getRoute(BUS_STOPS.bus8.map(s => s.coords));
+        const line8 = L.polyline(route8, { color: COLORS.bus8, weight: 6 });
+        this.mapService.layers.bus8Line.addLayer(line8);
+        this.mapService.layers.followBus8.addLayer(line8);
+        this.busRoutes.set('bus8', route8);
     }
-}
 
-/* ===================================================== */
-/* RESTRICTIONS DE ZOOM
-/* ===================================================== */
+    initStops() {
+        // Arrêts Bus 4
+        BUS_STOPS.bus4.forEach(stop => {
+            L.marker(stop.coords, { icon: Icons.busStop.bus4 })
+                .addTo(this.mapService.layers.bus4)
+                .bindPopup(this.createStopPopup("BUS 4", stop.name));
+        });
 
-/* Indicateur visuel quand le zoom minimum est atteint */
-.leaflet-zoom-min {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* Style pour le contrôle de zoom */
-.leaflet-control-zoom {
-    border: none !important;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important;
-}
-
-.leaflet-control-zoom a {
-    background-color: white !important;
-    color: #667eea !important;
-    border: none !important;
-    transition: background-color 0.2s ease;
-}
-
-.leaflet-control-zoom a:hover {
-    background-color: #f5f5f5 !important;
-}
-
-.leaflet-control-zoom a.leaflet-disabled {
-    color: #ccc !important;
-    cursor: not-allowed;
-}
-
-/* ===================================================== */
-/* AMÉLIORATIONS POUR LA GÉOLOCALISATION
-/* ===================================================== */
-
-/* Animation pour le point de position utilisateur */
-@keyframes pulse-ring {
-    0% {
-        transform: scale(0.8);
-        opacity: 0.5;
+        // Arrêts Bus 8
+        BUS_STOPS.bus8.forEach(stop => {
+            L.marker(stop.coords, { icon: Icons.busStop.bus8 })
+                .addTo(this.mapService.layers.bus8)
+                .bindPopup(this.createStopPopup("BUS 8", stop.name));
+        });
     }
-    50% {
-        transform: scale(1.2);
-        opacity: 0.2;
+
+    createStopPopup(busNumber, stopName) {
+        return `
+            <div class="popup-container">
+                <div class="popup-title">🛑 ${busNumber}</div>
+                <div class="popup-content"><b>${stopName}</b></div>
+                <button onclick="favoritesManager.add('${stopName}')" class="popup-btn">
+                    ⭐ Ajouter aux favoris
+                </button>
+            </div>
+        `;
     }
-    100% {
-        transform: scale(0.8);
-        opacity: 0.5;
+
+    initPOI() {
+        // Campus
+        POINTS_OF_INTEREST.campuses.forEach(c =>
+            L.marker(c.coords).addTo(this.mapService.layers.campus).bindPopup(`🎓 ${c.name}`)
+        );
+
+        // Parkings
+        POINTS_OF_INTEREST.parkings.forEach(p =>
+            L.marker(p.coords).addTo(this.mapService.layers.parking).bindPopup(`🅿️ ${p.name}`)
+        );
     }
-}
 
-.user-location-pulse::before {
-    content: '';
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    background: rgba(66, 133, 244, 0.3);
-    border-radius: 50%;
-    animation: pulse-ring 2s infinite;
-}
+    /**
+     * Trouve l'arrêt le plus proche d'une position donnée
+     */
+    findClosestStop(stops, position, excludeStop = null) {
+        let closest = null;
+        let minDistance = Infinity;
+        let closestIndex = -1;
 
-/* Bouton de localisation actif */
-#locateBtn.active {
-    background: #667eea;
-    color: white;
-}
+        stops.forEach((stop, index) => {
+            // Si on veut exclure un arrêt spécifique (pour trouver le prochain)
+            if (excludeStop && stop.name === excludeStop.name) {
+                return;
+            }
+            
+            const distance = this.mapService.map.distance(position, stop.coords);
+            if (distance < minDistance) {
+                minDistance = distance;
+                closest = stop;
+                closestIndex = index;
+            }
+        });
 
-#locateBtn.active .material-icons {
-    animation: pulse 2s infinite;
-}
-
-/* ===================================================== */
-/* BOUTON MA POSITION AMÉLIORÉ
-/* ===================================================== */
-
-#locateBtn {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-#locateBtn.active {
-    background: #667eea;
-    color: white;
-    transform: scale(1.1);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-}
-
-#locateBtn.active .material-icons {
-    animation: pulse 1s ease;
-}
-
-@keyframes pulse {
-    0% {
-        transform: scale(1);
+        return { stop: closest, distance: minDistance, index: closestIndex };
     }
-    50% {
-        transform: scale(1.2);
-    }
-    100% {
-        transform: scale(1);
-    }
-}
 
-/* ===================================================== */
-/* MARQUEUR DE POSITION UTILISATEUR AMÉLIORÉ
-/* ===================================================== */
+    /**
+     * Trouve le prochain arrêt sur le trajet
+     */
+    findNextStop(stops, currentStop, currentPosition, route) {
+        if (!currentStop) return null;
 
-.user-location-marker {
-    transition: all 0.3s ease;
-}
+        // Trouver l'index de l'arrêt actuel dans la liste
+        const currentIndex = stops.findIndex(s => s.name === currentStop.name);
+        
+        // Si c'est le dernier arrêt, le prochain est le premier (boucle)
+        const nextIndex = (currentIndex + 1) % stops.length;
+        const nextStop = stops[nextIndex];
 
-.user-location-marker::after {
-    content: '';
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    top: -6px;
-    left: -6px;
-    background: rgba(66, 133, 244, 0.3);
-    border-radius: 50%;
-    animation: radar-pulse 2s infinite;
-}
+        // Calculer la distance restante jusqu'au prochain arrêt
+        const distanceToNext = this.calculateDistanceAlongRoute(
+            currentPosition,
+            nextStop.coords,
+            route
+        );
 
-@keyframes radar-pulse {
-    0% {
-        transform: scale(0.5);
-        opacity: 0.8;
+        // Calculer le temps estimé
+        const timeMinutes = this.calculateEstimatedTime(distanceToNext);
+
+        return {
+            stop: nextStop,
+            distance: distanceToNext,
+            timeMinutes: timeMinutes
+        };
     }
-    50% {
-        transform: scale(1.5);
-        opacity: 0.2;
+
+    /**
+     * Calcule la distance entre deux points le long de la route
+     */
+    calculateDistanceAlongRoute(currentPos, nextStopCoords, route) {
+        // Trouver les segments les plus proches
+        let minDistToCurrent = Infinity;
+        let minDistToNext = Infinity;
+        let currentSegmentIndex = -1;
+        let nextSegmentIndex = -1;
+
+        // Parcourir la route pour trouver les points les plus proches
+        for (let i = 0; i < route.length; i++) {
+            const distToCurrent = this.mapService.map.distance(currentPos, route[i]);
+            const distToNext = this.mapService.map.distance(nextStopCoords, route[i]);
+
+            if (distToCurrent < minDistToCurrent) {
+                minDistToCurrent = distToCurrent;
+                currentSegmentIndex = i;
+            }
+
+            if (distToNext < minDistToNext) {
+                minDistToNext = distToNext;
+                nextSegmentIndex = i;
+            }
+        }
+
+        // Si on a trouvé les indices, calculer la distance le long de la route
+        if (currentSegmentIndex !== -1 && nextSegmentIndex !== -1) {
+            let distance = 0;
+            
+            // Si l'index du prochain arrêt est après l'index actuel
+            if (nextSegmentIndex > currentSegmentIndex) {
+                for (let i = currentSegmentIndex; i < nextSegmentIndex; i++) {
+                    distance += this.mapService.map.distance(route[i], route[i + 1]);
+                }
+            } 
+            // Si on est à la fin du trajet (retour au début)
+            else {
+                for (let i = currentSegmentIndex; i < route.length - 1; i++) {
+                    distance += this.mapService.map.distance(route[i], route[i + 1]);
+                }
+                // Ajouter la distance du dernier au premier point
+                distance += this.mapService.map.distance(route[route.length - 1], route[0]);
+            }
+
+            return distance;
+        }
+
+        // Fallback: distance directe
+        return this.mapService.map.distance(currentPos, nextStopCoords);
     }
-    100% {
-        transform: scale(0.5);
-        opacity: 0.8;
+
+    /**
+     * Calcule le temps estimé en minutes basé sur la distance
+     */
+    calculateEstimatedTime(distanceMeters) {
+        const timeSeconds = distanceMeters / CONFIG.bus.averageSpeedMps;
+        const timeMinutes = Math.ceil(timeSeconds / 60);
+        return timeMinutes;
+    }
+
+    /**
+     * Crée le contenu du popup pour un bus
+     */
+    createBusPopup(busInfo, currentStop, nextStopInfo) {
+        const nextStopText = nextStopInfo ? 
+            `${nextStopInfo.stop.name} (Dans environ ${nextStopInfo.timeMinutes} min)` : 
+            "Terminus";
+
+        return `
+            <div class="bus-popup">
+                <div class="bus-popup-header" style="background-color: ${busInfo.color};">
+                    <span class="bus-popup-icon">🚌</span>
+                    <span class="bus-popup-title">${busInfo.name}</span>
+                </div>
+                <div class="bus-popup-content">
+                    <div class="bus-popup-row">
+                        <span class="bus-popup-label">Type :</span>
+                        <span class="bus-popup-value">${busInfo.type}</span>
+                    </div>
+                    <div class="bus-popup-row">
+                        <span class="bus-popup-label">Compagnie :</span>
+                        <span class="bus-popup-value">${busInfo.company}</span>
+                    </div>
+                    <div class="bus-popup-divider"></div>
+                    <div class="bus-popup-row">
+                        <span class="bus-popup-label">📍 Arrêt actuel :</span>
+                        <span class="bus-popup-value bus-popup-stop">${currentStop?.name || "En circulation"}</span>
+                    </div>
+                    <div class="bus-popup-row">
+                        <span class="bus-popup-label">⏭️ Prochain arrêt :</span>
+                        <span class="bus-popup-value bus-popup-next">${nextStopText}</span>
+                    </div>
+                    <div class="bus-popup-footer">
+                        <span class="bus-popup-time">
+                            <span class="material-icons" style="font-size: 12px;">schedule</span>
+                            Mis à jour en temps réel
+                        </span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Met à jour le contenu du popup sans l'ouvrir automatiquement
+     */
+    updateBusPopup(busId, busInfo, currentStop, nextStopInfo) {
+        const marker = this.busMarkers.get(busId);
+        if (marker) {
+            const popupContent = this.createBusPopup(busInfo, currentStop, nextStopInfo);
+            marker.setPopupContent(popupContent);
+        }
+    }
+
+    async animateBus(busId, stops, busInfo, colorLayer) {
+        const fullRoute = await this.mapService.getRoute(stops.map(s => s.coords));
+        let index = 0;
+
+        // Créer le marqueur sans popup ouvert
+        const marker = L.marker(fullRoute[0], { 
+            icon: Icons.bus 
+        }).addTo(this.mapService.map);
+
+        // Stocker la référence du marqueur
+        this.busMarkers.set(busId, marker);
+
+        // Configuration du popup - ne s'ouvre que sur clic
+        marker.bindPopup('', {
+            autoClose: true,      // Ferme automatiquement les autres popups
+            closeOnClick: true,   // Ferme quand on clique ailleurs
+            autoPan: true         // Ajuste la carte si nécessaire
+        });
+
+        // Gestionnaire d'événements pour le clic sur le marqueur
+        marker.on('click', () => {
+            // Mettre à jour le contenu du popup avec les dernières informations
+            const currentPos = this.busPositions.get(busId) || fullRoute[index];
+            const { stop: currentStop } = this.findClosestStop(stops, currentPos);
+            const nextStopInfo = this.findNextStop(stops, currentStop, currentPos, fullRoute);
+            
+            const popupContent = this.createBusPopup(busInfo, currentStop, nextStopInfo);
+            marker.setPopupContent(popupContent);
+            
+            // Ouvrir le popup
+            marker.openPopup();
+        });
+
+        // Gestionnaire pour fermer le popup quand on clique ailleurs sur la carte
+        this.mapService.map.on('click', () => {
+            marker.closePopup();
+        });
+
+        const move = () => {
+            // Mettre à jour la position
+            marker.setLatLng(fullRoute[index]);
+            
+            // Sauvegarder la position actuelle
+            this.busPositions.set(busId, fullRoute[index]);
+
+            // Trouver l'arrêt le plus proche (arrêt actuel)
+            const { stop: currentStop } = this.findClosestStop(stops, fullRoute[index]);
+
+            // Trouver le prochain arrêt
+            const nextStopInfo = this.findNextStop(stops, currentStop, fullRoute[index], fullRoute);
+
+            // Mettre à jour le contenu du popup pour quand il sera ouvert
+            const popupContent = this.createBusPopup(busInfo, currentStop, nextStopInfo);
+            marker.setPopupContent(popupContent);
+
+            // Passer à la position suivante
+            index = (index + 1) % fullRoute.length;
+
+            // Planifier la prochaine animation
+            requestAnimationFrame(() => {
+                setTimeout(move, CONFIG.bus.animationSpeed);
+            });
+        };
+
+        move();
+        return marker;
+    }
+
+    getAllStops() {
+        return [...BUS_STOPS.bus4, ...BUS_STOPS.bus8];
     }
 }
 
-.accuracy-circle {
-    transition: all 0.3s ease;
-    animation: fade-in 0.5s ease;
-}
+/**
+ * ======================================================================
+ * SECTION 5 : GESTION DE LA GÉOLOCALISATION (VERSION CORRIGÉE)
+ * ======================================================================
+ */
 
-@keyframes fade-in {
-    from {
-        opacity: 0;
-        transform: scale(0.8);
+class GeolocationManager {
+    constructor(mapService) {
+        this.mapService = mapService;
+        this.userMarker = null;
+        this.accuracyCircle = null;
+        this.userCoords = null;
+        this.watchId = null;
+        this.autoFollow = true;
+        this.initialLocationSet = false;
+        this.init();
+        // Démarrer automatiquement la géolocalisation au chargement
+        this.startTracking(true);
     }
-    to {
-        opacity: 1;
-        transform: scale(1);
+
+    init() {
+        this.setupLocateButton();
+        this.setupNearestStopButton();
     }
-}
 
-/* ===================================================== */
-/* NOTIFICATIONS
-/* ===================================================== */
-
-@keyframes slideDown {
-    from {
-        transform: translate(-50%, -20px);
-        opacity: 0;
+    setupLocateButton() {
+        const locateBtn = document.getElementById("locateBtn");
+        
+        locateBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (this.userCoords) {
+                this.centerOnUserAndShowPopup();
+            } else {
+                this.startTracking(false, true);
+            }
+        });
     }
-    to {
-        transform: translate(-50%, 0);
-        opacity: 1;
+
+    setupNearestStopButton() {
+        const nearestStopBtn = document.getElementById('nearestStopBtn');
+        
+        nearestStopBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.findNearestStop();
+        });
     }
-}
 
-.notification {
-    font-family: Arial, sans-serif;
-    font-weight: 500;
-    letter-spacing: 0.3px;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.2);
-}
+    centerOnUserAndShowPopup() {
+        if (!this.userCoords) return;
 
-.notification-error {
-    background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
-}
+        this.mapService.map.setView(this.userCoords, 19, {
+            animate: true,
+            duration: 1,
+            easeLinearity: 0.5
+        });
 
-.notification-info {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
+        if (this.userMarker) {
+            this.userMarker.setPopupContent(`
+                <div class="popup-container">
+                    <div class="popup-title">📍 Ma position</div>
+                    <div class="popup-content">Vous êtes ici</div>
+                    <div class="popup-content" style="font-size: 11px; color: #999;">
+                        ${new Date().toLocaleTimeString()}
+                    </div>
+                </div>
+            `);
+            
+            this.userMarker.openPopup();
+        }
 
-
-
-/* ===================================================== */
-/* ÉTAT DE CHARGEMENT POUR LE BOUTON
-/* ===================================================== */
-
-#locateBtn.loading {
-    pointer-events: none;
-    opacity: 0.7;
-}
-
-#locateBtn.loading .material-icons {
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
+        const locateBtn = document.getElementById("locateBtn");
+        locateBtn.classList.add('active');
+        
+        setTimeout(() => {
+            locateBtn.classList.remove('active');
+        }, 1000);
     }
-    to {
-        transform: rotate(360deg);
+
+    /**
+     * Trouve et affiche l'arrêt le plus proche avec un popup détaillé
+     * SANS TRACER DE LIGNE
+     */
+    findNearestStop() {
+        // Vérifier si la position utilisateur est disponible
+        if (!this.userCoords) {
+            this.showNotification(
+                "📍 Position requise", 
+                "Cliquez d'abord sur 'Ma position' pour activer la géolocalisation",
+                'warning'
+            );
+            return;
+        }
+
+        // Afficher un indicateur de recherche
+        this.showSearchIndicator();
+
+        const busManager = window.busManager;
+        const allStops = busManager.getAllStops();
+        
+        // Calculer l'arrêt le plus proche
+        let nearestStop = null;
+        let minDistance = Infinity;
+        let secondNearest = null;
+        let secondMinDistance = Infinity;
+
+        allStops.forEach(stop => {
+            const stopLatLng = L.latLng(stop.coords[0], stop.coords[1]);
+            const distance = this.userCoords.distanceTo(stopLatLng);
+            
+            if (distance < minDistance) {
+                secondNearest = nearestStop;
+                secondMinDistance = minDistance;
+                nearestStop = stop;
+                minDistance = distance;
+            } else if (distance < secondMinDistance) {
+                secondNearest = stop;
+                secondMinDistance = distance;
+            }
+        });
+
+        if (!nearestStop) {
+            this.hideSearchIndicator();
+            this.showNotification(
+                "Aucun arrêt trouvé", 
+                "Aucun arrêt n'est disponible dans votre zone",
+                'error'
+            );
+            return;
+        }
+
+        // Calculer les informations détaillées
+        const stopLatLng = L.latLng(nearestStop.coords[0], nearestStop.coords[1]);
+        const walkingTime = Math.round(minDistance / CONFIG.walking.speedMpm);
+        const walkingTimeSeconds = Math.round(minDistance / CONFIG.walking.speedMps);
+        
+        // Déterminer la ligne de bus
+        const isBus4 = BUS_STOPS.bus4.some(s => s.name === nearestStop.name);
+        const isBus8 = BUS_STOPS.bus8.some(s => s.name === nearestStop.name);
+        const busLines = [];
+        if (isBus4) busLines.push('BUS 4 (Jaune)');
+        if (isBus8) busLines.push('BUS 8 (Verte)');
+        
+        // Trouver les arrêts à proximité (dans un rayon de 200m)
+        const nearbyStops = allStops.filter(stop => {
+            if (stop.name === nearestStop.name) return false;
+            const dist = this.userCoords.distanceTo(L.latLng(stop.coords[0], stop.coords[1]));
+            return dist <= 300; // Rayon de 300m
+        }).slice(0, 3); // Maximum 3 arrêts
+
+        // Créer le contenu du popup détaillé
+        const popupContent = this.createDetailedStopPopup(
+            nearestStop, 
+            minDistance, 
+            walkingTime, 
+            walkingTimeSeconds,
+            busLines,
+            nearbyStops,
+            secondNearest,
+            secondMinDistance
+        );
+
+        // Fermer tous les popups existants
+        this.mapService.map.closePopup();
+
+        // Ouvrir le popup sur l'arrêt
+        L.popup({
+            autoClose: true,
+            closeOnClick: true,
+            maxWidth: 350,
+            className: 'detailed-popup'
+        })
+            .setLatLng(stopLatLng)
+            .setContent(popupContent)
+            .openOn(this.mapService.map);
+
+        // Centrer la carte sur l'arrêt (optionnel - vous pouvez commenter si vous préférez)
+        this.mapService.map.setView(stopLatLng, 17, {
+            animate: true,
+            duration: 1
+        });
+
+        // Ajouter un effet de surbrillance subtil sur l'arrêt (optionnel)
+        this.highlightStop(nearestStop);
+
+        // Cacher l'indicateur de recherche
+        this.hideSearchIndicator();
+
+        // Afficher une notification de confirmation
+        this.showNotification(
+            "✅ Arrêt trouvé", 
+            `${nearestStop.name} est à ${Math.round(minDistance)} mètres`,
+            'success'
+        );
     }
-}
 
+    /**
+     * Crée un popup détaillé pour l'arrêt le plus proche
+     */
+    createDetailedStopPopup(stop, distance, walkingTime, walkingTimeSeconds, busLines, nearbyStops, secondNearest, secondMinDistance) {
+        const distanceFormatted = distance < 1000 
+            ? `${Math.round(distance)} m` 
+            : `${(distance / 1000).toFixed(1)} km`;
+        
+        const walkingTimeFormatted = walkingTime < 60 
+            ? `${walkingTime} min` 
+            : `${Math.floor(walkingTime / 60)}h ${walkingTime % 60}min`;
 
+        // Calculer l'heure d'arrivée estimée
+        const now = new Date();
+        const arrivalTime = new Date(now.getTime() + walkingTimeSeconds * 1000);
+        const arrivalTimeFormatted = arrivalTime.toLocaleTimeString('fr-FR', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
 
-/* ===================================================== */
-/* POPUP DÉTAILLÉ POUR ARRÊT LE PLUS PROCHE
-/* ===================================================== */
+        // Déterminer le type d'arrêt
+        let stopType = "Arrêt standard";
+        let stopIcon = "🛑";
+        if (busLines.length === 2) {
+            stopType = "Arrêt principal (correspondance)";
+            stopIcon = "🔄";
+        } else if (busLines.includes('BUS 4 (Jaune)')) {
+            stopType = "Arrêt BUS 4";
+        } else if (busLines.includes('BUS 8 (Verte)')) {
+            stopType = "Arrêt BUS 8";
+        }
 
-.detailed-popup .leaflet-popup-content-wrapper {
-    border-radius: 16px !important;
-    padding: 0 !important;
-    overflow: hidden;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.2) !important;
-}
-
-.detailed-popup-container {
-    width: 320px;
-    max-width: 100%;
-    font-family: Arial, sans-serif;
-}
-
-/* En-tête */
-.popup-header {
-    padding: 16px;
-    color: white;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.popup-header-icon {
-    font-size: 28px;
-    background: rgba(255,255,255,0.2);
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.popup-header-title {
-    font-size: 18px;
-    font-weight: bold;
-}
-
-/* Corps */
-.popup-body {
-    padding: 20px;
-    background: white;
-}
-
-/* Section nom */
-.stop-name-section {
-    text-align: center;
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #eee;
-}
-
-.stop-name {
-    font-size: 18px;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 5px;
-}
-
-.stop-type {
-    font-size: 13px;
-    color: #667eea;
-    font-weight: 500;
-}
-
-/* Section distance */
-.distance-section {
-    background: #f8f9fa;
-    border-radius: 12px;
-    padding: 15px;
-    margin-bottom: 20px;
-}
-
-.distance-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
-}
-
-.distance-item:last-child {
-    margin-bottom: 0;
-}
-
-.distance-icon {
-    color: #667eea;
-    font-size: 20px;
-    width: 24px;
-}
-
-.distance-info {
-    flex: 1;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.distance-label {
-    font-size: 13px;
-    color: #666;
-}
-
-.distance-value {
-    font-size: 15px;
-    font-weight: bold;
-    color: #333;
-}
-
-/* Section lignes de bus */
-.bus-lines-section,
-.nearby-stops-section {
-    margin-bottom: 20px;
-}
-
-.section-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    font-weight: bold;
-    color: #555;
-    margin-bottom: 10px;
-}
-
-.section-title .material-icons {
-    font-size: 18px;
-    color: #667eea;
-}
-
-.bus-lines {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.bus-line-item {
-    background: #f8f9fa;
-    padding: 10px 15px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-}
-
-.bus-line-name {
-    color: #333;
-}
-
-/* Arrêts à proximité */
-.nearby-stops {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.nearby-stop-item {
-    background: #f8f9fa;
-    padding: 10px 15px;
-    border-radius: 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.nearby-stop-item:hover {
-    background: #e8eef7;
-    transform: translateX(5px);
-}
-
-.nearby-stop-name {
-    font-size: 13px;
-    color: #333;
-    font-weight: 500;
-}
-
-.nearby-stop-distance {
-    font-size: 12px;
-    color: #667eea;
-    font-weight: bold;
-}
-
-/* Boutons d'action */
-.popup-actions {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-
-.action-btn {
-    flex: 1;
-    padding: 12px;
-    border: none;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.action-btn.primary {
-    background: #667eea;
-    color: white;
-}
-
-.action-btn.primary:hover {
-    background: #5a6fd8;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-}
-
-.action-btn.secondary {
-    background: #f8f9fa;
-    color: #666;
-    border: 1px solid #e0e0e0;
-}
-
-.action-btn.secondary:hover {
-    background: #e8eef7;
-    transform: translateY(-2px);
-}
-
-/* Note */
-.popup-note {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    color: #999;
-    padding-top: 10px;
-    border-top: 1px dashed #eee;
-}
-
-.popup-note .material-icons {
-    font-size: 14px;
-}
-
-/* ===================================================== */
-/* MARQUEUR DE DISTANCE
-/* ===================================================== */
-
-.distance-marker {
-    background: white;
-    border-radius: 20px;
-    padding: 4px 12px;
-    font-size: 12px;
-    font-weight: bold;
-    color: #667eea;
-    border: 2px solid #667eea;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    white-space: nowrap;
-}
-
-/* ===================================================== */
-/* CERCLE PULSANT POUR SURBRILLANCE
-/* ===================================================== */
-
-.pulse-circle {
-    animation: circle-pulse 1.5s ease-out infinite;
-}
-
-@keyframes circle-pulse {
-    0% {
-        opacity: 0.8;
-        transform: scale(0.8);
+        return `
+            <div class="detailed-popup-container">
+                <!-- En-tête -->
+                <div class="popup-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="popup-header-icon">${stopIcon}</div>
+                    <div class="popup-header-title">Arrêt le plus proche</div>
+                </div>
+                
+                <!-- Corps principal -->
+                <div class="popup-body">
+                    <!-- Nom et type -->
+                    <div class="stop-name-section">
+                        <div class="stop-name">${stop.name}</div>
+                        <div class="stop-type">${stopType}</div>
+                    </div>
+                    
+                    <!-- Distance et temps -->
+                    <div class="distance-section">
+                        <div class="distance-item">
+                            <span class="material-icons distance-icon">straighten</span>
+                            <div class="distance-info">
+                                <span class="distance-label">Distance</span>
+                                <span class="distance-value">${distanceFormatted}</span>
+                            </div>
+                        </div>
+                        <div class="distance-item">
+                            <span class="material-icons distance-icon">directions_walk</span>
+                            <div class="distance-info">
+                                <span class="distance-label">À pied</span>
+                                <span class="distance-value">~${walkingTimeFormatted}</span>
+                            </div>
+                        </div>
+                        <div class="distance-item">
+                            <span class="material-icons distance-icon">schedule</span>
+                            <div class="distance-info">
+                                <span class="distance-label">Arrivée estimée</span>
+                                <span class="distance-value">${arrivalTimeFormatted}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                 
+                    
+                    <!-- Autres arrêts à proximité -->
+                    ${nearbyStops.length > 0 ? `
+                        <div class="nearby-stops-section">
+                            <div class="section-title">
+                                <span class="material-icons">near_me</span>
+                                Arrêts à proximité
+                            </div>
+                            <div class="nearby-stops">
+                                ${nearbyStops.map(nearby => {
+                                    const nearbyDist = this.userCoords.distanceTo(L.latLng(nearby.coords[0], nearby.coords[1]));
+                                    return `
+                                        <div class="nearby-stop-item" onclick="window.geolocationManager.goToStop('${nearby.name}')">
+                                            <span class="nearby-stop-name">${nearby.name}</span>
+                                            <span class="nearby-stop-distance">${Math.round(nearbyDist)} m</span>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <!-- Boutons d'action -->
+                    <div class="popup-actions">
+                        <button class="action-btn primary" onclick="window.geolocationManager.calculateRouteToStop('${stop.name}')">
+                            <span class="material-icons">directions</span>
+                            Itinéraire
+                        </button>
+                        <button class="action-btn secondary" onclick="window.favoritesManager.add('${stop.name}')">
+                            <span class="material-icons">star_border</span>
+                            Favori
+                        </button>
+                    </div>
+                    
+                    <!-- Note d'information -->
+                    <div class="popup-note">
+                        <span class="material-icons">info</span>
+                        Les temps sont estimés à 5km/h (vitesse moyenne de marche)
+                    </div>
+                </div>
+            </div>
+        `;
     }
-    50% {
-        opacity: 0.4;
-        transform: scale(1.5);
+
+    /**
+     * Met en surbrillance un arrêt (optionnel - version subtile)
+     */
+    highlightStop(stop) {
+        const stopLatLng = L.latLng(stop.coords[0], stop.coords[1]);
+        
+        // Ajouter un cercle très subtil
+        const highlightCircle = L.circle(stopLatLng, {
+            radius: 15,
+            color: '#667eea',
+            fillColor: '#667eea',
+            fillOpacity: 0.1,
+            weight: 2,
+            opacity: 0.3,
+            className: 'subtle-highlight'
+        }).addTo(this.mapService.map);
+
+        // Supprimer après 2 secondes
+        setTimeout(() => {
+            this.mapService.map.removeLayer(highlightCircle);
+        }, 2000);
     }
-    100% {
-        opacity: 0.8;
-        transform: scale(0.8);
+
+    /**
+     * Affiche un indicateur de recherche
+     */
+    showSearchIndicator() {
+        const btn = document.getElementById('nearestStopBtn');
+        btn.classList.add('loading');
+        btn.disabled = true;
     }
-}
 
-/* ===================================================== */
-/* NOTIFICATIONS AMÉLIORÉES
-/* ===================================================== */
-
-.notification {
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.2);
-}
-
-.notification-title {
-    font-size: 16px;
-    font-weight: bold;
-    margin-bottom: 5px;
-}
-
-.notification-message {
-    font-size: 13px;
-    opacity: 0.9;
-}
-
-/* ===================================================== */
-/* ÉTAT DE CHARGEMENT POUR LE BOUTON
-/* ===================================================== */
-
-#nearestStopBtn.loading {
-    position: relative;
-    pointer-events: none;
-    opacity: 0.8;
-}
-
-#nearestStopBtn.loading .material-icons {
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
+    /**
+     * Cache l'indicateur de recherche
+     */
+    hideSearchIndicator() {
+        const btn = document.getElementById('nearestStopBtn');
+        btn.classList.remove('loading');
+        btn.disabled = false;
     }
-    to {
-        transform: rotate(360deg);
+
+    /**
+     * Affiche une notification
+     */
+    showNotification(title, message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.innerHTML = `
+            <div class="notification-title">${title}</div>
+            <div class="notification-message">${message}</div>
+        `;
+        
+        notification.style.cssText = `
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: ${type === 'error' ? '#f44336' : type === 'success' ? '#4CAF50' : '#667eea'};
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            z-index: 2000;
+            font-family: Arial, sans-serif;
+            animation: slideDown 0.3s ease;
+            min-width: 280px;
+            text-align: center;
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateX(-50%) translateY(-20px)';
+            notification.style.transition = 'all 0.3s ease';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 3000);
     }
-}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* ===================================================== */
-/* MENU HAMBURGER ET BARRE DE RECHERCHE AMÉLIORÉE
-/* ===================================================== */
-
-.menu-toggle {
-    background: rgba(255,255,255,0.25);
-    border: none;
-    border-radius: 10px 0 0 10px;
-    width: 48px;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    color: white;
-    margin-right: 2px;
-}
-
-.menu-toggle:hover {
-    background: rgba(255,255,255,0.35);
-    transform: scale(1.05);
-}
-
-.menu-toggle .material-icons {
-    font-size: 24px;
-}
-
-.search-bar-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    background: rgba(255,255,255,0.15);
-    border-radius: 12px;
-    padding: 4px 4px 4px 0;
-    backdrop-filter: blur(10px);
-}
-
-.search-container {
-    flex: 1;
-    position: relative;
-}
-
-.search-bar {
-    width: 100%;
-    background: transparent;
-    border: none;
-    color: white;
-    font-size: 14px;
-    padding: 10px 12px;
-    outline: none;
-}
-
-.search-bar::placeholder {
-    color: rgba(255,255,255,0.7);
-}
-
-/* ===================================================== */
-/* LISTE DE SUGGESTIONS (AUTOCOMPLETE)
-/* ===================================================== */
-
-.suggestions-list {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: white;
-    border-radius: 0 0 12px 12px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-    max-height: 300px;
-    overflow-y: auto;
-    z-index: 2100;
-    display: none;
-    margin-top: 4px;
-}
-
-.suggestions-list.show {
-    display: block;
-    animation: slideDown 0.2s ease;
-}
-
-.suggestion-item {
-    padding: 12px 16px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    border-bottom: 1px solid #f0f0f0;
-    transition: background 0.2s ease;
-}
-
-.suggestion-item:last-child {
-    border-bottom: none;
-}
-
-.suggestion-item:hover {
-    background: #f5f5f5;
-}
-
-.suggestion-item .material-icons {
-    color: #667eea;
-    font-size: 18px;
-}
-
-.suggestion-content {
-    flex: 1;
-}
-
-.suggestion-name {
-    font-size: 14px;
-    font-weight: 500;
-    color: #333;
-    margin-bottom: 2px;
-}
-
-.suggestion-line {
-    font-size: 11px;
-    color: #999;
-    display: flex;
-    gap: 8px;
-}
-
-.line-badge {
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 10px;
-    font-weight: bold;
-    color: white;
-}
-
-.line-badge.bus4 {
-    background: #FFD700;
-    color: #333;
-}
-
-.line-badge.bus8 {
-    background: #34A853;
-}
-
-/* ===================================================== */
-/* DRAWER (MENU LATÉRAL) POUR LA LISTE COMPLÈTE
-/* ===================================================== */
-
-.stops-drawer {
-    position: fixed;
-    top: 0;
-    left: -350px;
-    width: 350px;
-    max-width: 85%;
-    height: 100vh;
-    background: white;
-    box-shadow: 2px 0 20px rgba(0,0,0,0.2);
-    z-index: 3000;
-    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-.stops-drawer.open {
-    left: 0;
-}
-
-.drawer-header {
-    padding: 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.drawer-title {
-    font-size: 20px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 0;
-}
-
-.drawer-title .material-icons {
-    font-size: 24px;
-}
-
-.close-drawer {
-    background: rgba(255,255,255,0.2);
-    border: none;
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: white;
-    transition: all 0.2s ease;
-}
-
-.close-drawer:hover {
-    background: rgba(255,255,255,0.3);
-    transform: rotate(90deg);
-}
-
-.close-drawer .material-icons {
-    font-size: 20px;
-}
-
-.drawer-search {
-    padding: 15px;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: #f8f9fa;
-}
-
-.drawer-search .material-icons {
-    color: #999;
-    font-size: 20px;
-}
-
-.drawer-search-input {
-    flex: 1;
-    border: none;
-    background: transparent;
-    font-size: 14px;
-    outline: none;
-    padding: 8px 0;
-}
-
-.drawer-search-input::placeholder {
-    color: #999;
-}
-
-.drawer-tabs {
-    display: flex;
-    border-bottom: 1px solid #eee;
-    background: white;
-}
-
-.drawer-tab {
-    flex: 1;
-    padding: 12px 0;
-    background: none;
-    border: none;
-    font-size: 13px;
-    font-weight: 500;
-    color: #666;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    position: relative;
-}
-
-.drawer-tab.active {
-    color: #667eea;
-}
-
-.drawer-tab.active::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 20%;
-    width: 60%;
-    height: 3px;
-    background: #667eea;
-    border-radius: 3px 3px 0 0;
-}
-
-.drawer-tab:hover {
-    color: #333;
-    background: #f5f5f5;
-}
-
-.stops-list {
-    flex: 1;
-    overflow-y: auto;
-    padding: 15px;
-    background: #fafafa;
-}
-
-.stop-card {
-    background: white;
-    border-radius: 12px;
-    padding: 15px;
-    margin-bottom: 10px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border-left: 4px solid transparent;
-}
-
-.stop-card:hover {
-    transform: translateX(5px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.stop-card.bus4 {
-    border-left-color: #FFD700;
-}
-
-.stop-card.bus8 {
-    border-left-color: #34A853;
-}
-
-.stop-card.favorite {
-    background: #fff9e6;
-}
-
-.stop-card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 8px;
-}
-
-.stop-card-name {
-    font-size: 15px;
-    font-weight: 600;
-    color: #333;
-}
-
-.stop-card-favorite {
-    color: #FFD700;
-    cursor: pointer;
-    transition: transform 0.2s ease;
-}
-
-.stop-card-favorite:hover {
-    transform: scale(1.2);
-}
-
-.stop-card-favorite .material-icons {
-    font-size: 20px;
-}
-
-.stop-card-details {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    font-size: 12px;
-    color: #666;
-}
-
-.stop-card-line {
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: bold;
-    color: white;
-}
-
-.stop-card-line.bus4 {
-    background: #FFD700;
-    color: #333;
-}
-
-.stop-card-line.bus8 {
-    background: #34A853;
-}
-
-.stop-card-distance {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.stop-card-distance .material-icons {
-    font-size: 14px;
-    color: #999;
-}
-
-.drawer-footer {
-    padding: 15px;
-    border-top: 1px solid #eee;
-    background: white;
-}
-
-.drawer-stats {
-    font-size: 12px;
-    color: #999;
-    text-align: center;
-}
-
-.drawer-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 2500;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-}
-
-.drawer-overlay.active {
-    opacity: 1;
-    visibility: visible;
-}
-
-/* ===================================================== */
-/* RESPONSIVE POUR LE DRAWER
-/* ===================================================== */
-
-@media (max-width: 480px) {
-    .stops-drawer {
-        width: 100%;
-        left: -100%;
+    /**
+     * Calcule l'itinéraire vers un arrêt
+     */
+    calculateRouteToStop(stopName) {
+        const endInput = document.getElementById('endInput');
+        if (endInput) {
+            endInput.value = stopName;
+            
+            // Ouvrir le modal et déclencher le calcul
+            const routeModal = document.getElementById('routeModal');
+            if (routeModal) {
+                routeModal.style.display = 'block';
+            }
+            
+            // Déclencher le calcul d'itinéraire
+            setTimeout(() => {
+                const traceBtn = document.getElementById('traceBtn');
+                if (traceBtn) {
+                    traceBtn.click();
+                }
+            }, 500);
+        }
     }
-    
-    .menu-toggle {
-        width: 44px;
-        height: 44px;
+
+    /**
+     * Va directement à un arrêt
+     */
+    goToStop(stopName) {
+        const busManager = window.busManager;
+        const allStops = busManager.getAllStops();
+        const stop = allStops.find(s => s.name === stopName);
+        
+        if (stop) {
+            this.mapService.map.setView([stop.coords[0], stop.coords[1]], 18, {
+                animate: true,
+                duration: 1
+            });
+            
+            // Ouvrir le popup de l'arrêt
+            setTimeout(() => {
+                L.popup()
+                    .setLatLng([stop.coords[0], stop.coords[1]])
+                    .setContent(`
+                        <div class="popup-container">
+                            <div class="popup-title">🛑 ${stop.name}</div>
+                            <div class="popup-content">Arrêt sélectionné</div>
+                        </div>
+                    `)
+                    .openOn(this.mapService.map);
+            }, 500);
+        }
     }
-    
-    .menu-toggle .material-icons {
-        font-size: 22px;
+
+    startTracking(initialLoad = false, centerImmediately = false) {
+        if (!navigator.geolocation) {
+            this.showNotification(
+                "Géolocalisation non supportée", 
+                "Votre navigateur ne supporte pas la géolocalisation",
+                'error'
+            );
+            return;
+        }
+
+        const handlePosition = (position) => {
+            this.onPositionUpdate(position, initialLoad);
+            
+            if (centerImmediately) {
+                this.centerOnUserAndShowPopup();
+            }
+        };
+
+        if (initialLoad) {
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    handlePosition(position);
+                    this.watchId = navigator.geolocation.watchPosition(
+                        position => this.onPositionUpdate(position, false),
+                        error => this.onPositionError(error),
+                        CONFIG.geolocation
+                    );
+                },
+                error => {
+                    console.warn("Impossible d'obtenir la position au démarrage");
+                    this.onPositionError(error);
+                },
+                CONFIG.geolocation
+            );
+        } 
+        else if (this.watchId === null) {
+            this.watchId = navigator.geolocation.watchPosition(
+                position => this.onPositionUpdate(position, false),
+                error => this.onPositionError(error),
+                CONFIG.geolocation
+            );
+        }
     }
-    
-    .stop-card {
-        padding: 12px;
+
+    onPositionUpdate(position, isInitial = false) {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        const accuracy = position.coords.accuracy;
+
+        this.userCoords = L.latLng(lat, lng);
+
+        if (isInitial && !this.initialLocationSet) {
+            this.mapService.centerOnUserLocation(lat, lng);
+            this.initialLocationSet = true;
+        }
+
+        if (!this.userMarker) {
+            this.createUserMarker(accuracy);
+        } else {
+            this.updateUserMarker(accuracy);
+        }
     }
-    
-    .stop-card-name {
-        font-size: 14px;
+
+    createUserMarker(accuracy) {
+        this.userMarker = L.circleMarker(this.userCoords, {
+            radius: 8,
+            fillColor: COLORS.primary,
+            color: COLORS.white,
+            weight: 2,
+            fillOpacity: 1,
+            className: 'user-location-marker'
+        }).addTo(this.mapService.map);
+
+        this.userMarker.bindPopup(`
+            <div class="popup-container">
+                <div class="popup-title">📍 Ma position</div>
+                <div class="popup-content">Vous êtes ici</div>
+                <div class="popup-content" style="font-size: 11px; color: #999;">
+                    ${new Date().toLocaleTimeString()}
+                </div>
+            </div>
+        `, {
+            autoClose: true,
+            closeOnClick: true,
+            autoPan: true
+        });
+
+        this.userMarker.on('click', () => {
+            this.userMarker.openPopup();
+        });
+
+        this.accuracyCircle = L.circle(this.userCoords, {
+            radius: accuracy,
+            color: COLORS.primary,
+            fillColor: COLORS.primary,
+            fillOpacity: 0.15,
+            weight: 1,
+            className: 'accuracy-circle'
+        }).addTo(this.mapService.map);
+    }
+
+    updateUserMarker(accuracy) {
+        this.userMarker.setLatLng(this.userCoords);
+        this.accuracyCircle.setLatLng(this.userCoords);
+        this.accuracyCircle.setRadius(accuracy);
+        
+        this.userMarker.setPopupContent(`
+            <div class="popup-container">
+                <div class="popup-title">📍 Ma position</div>
+                <div class="popup-content">Vous êtes ici</div>
+                <div class="popup-content" style="font-size: 11px; color: #999;">
+                    ${new Date().toLocaleTimeString()}
+                </div>
+            </div>
+        `);
+    }
+
+    onPositionError(error) {
+        console.warn("Erreur de géolocalisation:", error.message);
+        
+        let errorMessage = "Impossible d'obtenir votre position.";
+        
+        switch(error.code) {
+            case 1:
+                errorMessage = "Accès à la position refusé. Veuillez autoriser la géolocalisation.";
+                break;
+            case 2:
+                errorMessage = "Position indisponible. Vérifiez votre connexion GPS.";
+                break;
+            case 3:
+                errorMessage = "Délai d'attente dépassé. Réessayez.";
+                break;
+        }
+        
+        this.showNotification("Erreur de localisation", errorMessage, 'error');
+    }
+
+    getCurrentCoords() {
+        return this.userCoords;
     }
 }
 
-/* ===================================================== */
-/* ANIMATIONS POUR LE DRAWER
-/* ===================================================== */
+/**
+ * ======================================================================
+ * SECTION 6 : GESTION DES ITINÉRAIRES
+ * ======================================================================
+ */
 
-@keyframes slideIn {
-    from {
-        transform: translateX(-100%);
+class RouteManager {
+    constructor(mapService, geolocationManager) {
+        this.mapService = mapService;
+        this.geolocationManager = geolocationManager;
+        this.routeLine = null;
+        this.init();
     }
-    to {
-        transform: translateX(0);
+
+    init() {
+        this.setupRouteModal();
+        this.setupTraceButton();
+        this.setupClearButton();
+    }
+
+    setupRouteModal() {
+        const routeBtn = document.getElementById('routeBtn');
+        const routeModal = document.getElementById('routeModal');
+        const closeRouteModal = document.getElementById('closeRouteModal');
+
+        routeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            routeModal.style.display = 'block';
+        });
+
+        closeRouteModal.addEventListener('click', () => {
+            routeModal.style.display = 'none';
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!routeModal.contains(e.target) && e.target !== routeBtn) {
+                routeModal.style.display = 'none';
+            }
+        });
+    }
+
+    setupTraceButton() {
+        document.getElementById("traceBtn").addEventListener("click", () => {
+            this.calculateRoute();
+        });
+    }
+
+    setupClearButton() {
+        document.getElementById("clearRouteBtn").addEventListener("click", () => {
+            this.clearRoute();
+        });
+    }
+
+    async calculateRoute() {
+        const userCoords = this.geolocationManager.getCurrentCoords();
+        if (!userCoords) {
+            alert("Cliquez d'abord sur 'Ma position'.");
+            return;
+        }
+
+        const destinationText = document.getElementById("endInput").value.trim().toLowerCase();
+        if (!destinationText) {
+            alert("Veuillez entrer un arrêt.");
+            return;
+        }
+
+        const busManager = window.busManager;
+        const allStops = busManager.getAllStops();
+
+        const matchedStop = allStops.find(stop =>
+            stop.name.toLowerCase().includes(destinationText)
+        );
+
+        if (!matchedStop) {
+            alert("Arrêt introuvable.");
+            return;
+        }
+
+        const destLat = matchedStop.coords[0];
+        const destLng = matchedStop.coords[1];
+
+        const url = `https://router.project-osrm.org/route/v1/foot/${userCoords.lng},${userCoords.lat};${destLng},${destLat}?overview=full&geometries=geojson`;
+
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (!data.routes?.[0]) {
+                alert("Itinéraire non disponible.");
+                return;
+            }
+
+            const route = data.routes[0];
+            const routeCoords = route.geometry.coordinates.map(coord => [coord[1], coord[0]]);
+
+            this.clearRoute();
+
+            this.routeLine = L.polyline(routeCoords, {
+                color: COLORS.primary,
+                weight: 6,
+                opacity: 0.9,
+                lineJoin: "round",
+                lineCap: "round"
+            }).addTo(this.mapService.map);
+
+            this.mapService.map.fitBounds(this.routeLine.getBounds(), {
+                padding: [60, 60]
+            });
+
+            const distance = Math.round(route.distance);
+            const duration = Math.round(route.duration / 60);
+
+            L.popup()
+                .setLatLng([destLat, destLng])
+                .setContent(`
+                    <div class="popup-container">
+                        <div class="popup-title">${matchedStop.name}</div>
+                        <div class="popup-content">Distance : ${distance} m</div>
+                        <div class="popup-content">Durée : ~${duration} min à pied</div>
+                    </div>
+                `)
+                .openOn(this.mapService.map);
+
+        } catch (error) {
+            alert("Erreur lors du calcul de l'itinéraire.");
+            console.error("Erreur de routage:", error);
+        }
+    }
+
+    clearRoute() {
+        if (this.routeLine) {
+            this.mapService.map.removeLayer(this.routeLine);
+            this.routeLine = null;
+        }
     }
 }
 
-@keyframes slideOut {
-    from {
-        transform: translateX(0);
+/**
+ * ======================================================================
+ * SECTION 7 : GESTION DES FAVORIS
+ * ======================================================================
+ */
+
+class FavoritesManager {
+    constructor() {
+        this.storageKey = "bus_favorites";
     }
-    to {
-        transform: translateX(-100%);
+
+    add(stopName) {
+        let favorites = this.getAll();
+        
+        if (!favorites.includes(stopName)) {
+            favorites.push(stopName);
+            localStorage.setItem(this.storageKey, JSON.stringify(favorites));
+            alert("⭐ Arrêt ajouté aux favoris");
+        }
+    }
+
+    remove(stopName) {
+        let favorites = this.getAll();
+        favorites = favorites.filter(f => f !== stopName);
+        localStorage.setItem(this.storageKey, JSON.stringify(favorites));
+    }
+
+    getAll() {
+        return JSON.parse(localStorage.getItem(this.storageKey)) || [];
+    }
+
+    isFavorite(stopName) {
+        return this.getAll().includes(stopName);
     }
 }
 
+/**
+ * ======================================================================
+ * SECTION 8 : CONTRÔLES DE LA CARTE (MODIFIÉ POUR GÉRER LES POPUPS)
+ * ======================================================================
+ */
 
+class MapControls {
+    constructor(mapService) {
+        this.mapService = mapService;
+        this.initLayerControl();
+        this.setupGlobalClickHandler();
+    }
 
+    initLayerControl() {
+        const titleLayer = L.layerGroup();
 
+        const baseMaps = {
+            "<b>TYPES DE CARTE</b>": titleLayer,
+            "🗺️ Standard": L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"),
+            "🛰️ Satellite": L.tileLayer(
+                "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+            )
+        };
 
+        const overlayMaps = {
+            "<b>DÉTAILS</b>": titleLayer,
+            "🏷️ Libellés": L.tileLayer(
+                "https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}.png",
+                { opacity: 0.9 }
+            ),
+            "🟡 Ligne BUS 4": this.mapService.layers.bus4Line,
+            "🟢 Ligne BUS 8": this.mapService.layers.bus8Line,
+            "🛑 Arrêts BUS 4": this.mapService.layers.bus4,
+            "🛑 Arrêts BUS 8": this.mapService.layers.bus8,
+            "🎓 Campus": this.mapService.layers.campus,
+            "🅿️ Parkings": this.mapService.layers.parking,
+            "🚍 Suivre BUS 4 uniquement": this.mapService.layers.followBus4,
+            "🚍 Suivre BUS 8 uniquement": this.mapService.layers.followBus8
+        };
 
-/* ===================================================== */
-/* ÉTAT VIDE
-/* ===================================================== */
+        L.control.layers(baseMaps, overlayMaps, { collapsed: true }).addTo(this.mapService.map);
+    }
 
-.empty-state {
-    text-align: center;
-    padding: 40px 20px;
-    color: #999;
+    /**
+     * Configure un gestionnaire global pour fermer tous les popups
+     */
+    setupGlobalClickHandler() {
+        // Fermer tous les popups quand on clique sur la carte (en dehors des marqueurs)
+        this.mapService.map.on('click', (e) => {
+            // Vérifier si le clic n'est pas sur un marqueur
+            if (!e.originalEvent.target.classList.contains('leaflet-marker-icon')) {
+                this.mapService.map.closePopup();
+            }
+        });
+
+        // Fermer les popups quand on change de couche
+        this.mapService.map.on('overlayadd overlayremove', () => {
+            this.mapService.map.closePopup();
+        });
+    }
 }
 
-.empty-state .material-icons {
-    font-size: 48px;
-    margin-bottom: 10px;
-    color: #ddd;
+/**
+ * ======================================================================
+ * SECTION 9 : INITIALISATION DE L'APPLICATION (MODIFIÉE)
+ * ======================================================================
+ */
+
+class Application {
+    async init() {
+        console.log("🚀 Initialisation de l'application...");
+
+        this.showLoadingMessage();
+
+        this.mapService = new MapService();
+        this.favoritesManager = new FavoritesManager();
+        this.busManager = new BusManager(this.mapService);
+        
+        this.geolocationManager = new GeolocationManager(this.mapService);
+        window.geolocationManager = this.geolocationManager;
+        
+        this.routeManager = new RouteManager(this.mapService, this.geolocationManager);
+        this.mapControls = new MapControls(this.mapService);
+        
+        // Initialiser le SearchManager
+        this.searchManager = new SearchManager(this.mapService, this.geolocationManager);
+        window.searchManager = this.searchManager;
+
+        window.busManager = this.busManager;
+        window.favoritesManager = this.favoritesManager;
+
+        setTimeout(() => {
+            this.startBusAnimations();
+            this.hideLoadingMessage();
+        }, 2000);
+
+        console.log("✅ Application initialisée avec succès");
+    }
+    // ... reste du code
+
+
+    showLoadingMessage() {
+        // Créer un indicateur de chargement
+        const loadingDiv = document.createElement('div');
+        loadingDiv.id = 'loading-message';
+        loadingDiv.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            z-index: 2000;
+            text-align: center;
+            font-family: Arial, sans-serif;
+        `;
+        loadingDiv.innerHTML = `
+            <div style="margin-bottom: 10px;">
+                <span class="material-icons" style="color: #667eea; font-size: 40px;">my_location</span>
+            </div>
+            <div style="font-weight: bold; margin-bottom: 5px;">Recherche de votre position...</div>
+            <div style="font-size: 12px; color: #666;">Veuillez patienter</div>
+        `;
+        document.body.appendChild(loadingDiv);
+    }
+
+    hideLoadingMessage() {
+        const loadingDiv = document.getElementById('loading-message');
+        if (loadingDiv) {
+            loadingDiv.style.opacity = '0';
+            loadingDiv.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => {
+                if (loadingDiv.parentNode) {
+                    loadingDiv.parentNode.removeChild(loadingDiv);
+                }
+            }, 500);
+        }
+    }
+
+    startBusAnimations() {
+        // Bus 4
+        this.busManager.animateBus(
+            'bus4',
+            BUS_STOPS.bus4,
+            BUS_TYPES.bus4,
+            this.mapService.layers.bus4Line
+        );
+
+        // Bus 8
+        this.busManager.animateBus(
+            'bus8',
+            BUS_STOPS.bus8,
+            BUS_TYPES.bus8,
+            this.mapService.layers.bus8Line
+        );
+    }
 }
 
-.empty-state p {
-    font-size: 14px;
-    margin: 0;
+/**
+ * ======================================================================
+ * SECTION 10 : DÉMARRAGE DE L'APPLICATION
+ * ======================================================================
+ */
+
+// Attendre que le DOM soit chargé
+document.addEventListener('DOMContentLoaded', () => {
+    const app = new Application();
+    app.init().catch(error => {
+        console.error("❌ Erreur lors de l'initialisation:", error);
+    });
+});
+
+
+ /**
+ * ======================================================================
+ * SECTION 10 : GESTIONNAIRE DE RECHERCHE ET LISTE DES ARRÊTS
+ * ======================================================================
+ */
+
+class SearchManager {
+    constructor(mapService, geolocationManager) {
+        this.mapService = mapService;
+        this.geolocationManager = geolocationManager;
+        this.allStops = [];
+        this.favorites = [];
+        this.currentTab = 'all';
+        this.searchTerm = '';
+        this.init();
+    }
+
+    init() {
+        this.getAllStops();
+        this.loadFavorites();
+        this.setupEventListeners();
+        this.renderStopsList();
+    }
+
+    getAllStops() {
+        // Récupérer tous les arrêts avec leurs lignes
+        const bus4Stops = BUS_STOPS.bus4.map(stop => ({
+            ...stop,
+            lines: ['BUS 4']
+        }));
+
+        const bus8Stops = BUS_STOPS.bus8.map(stop => ({
+            ...stop,
+            lines: ['BUS 8']
+        }));
+
+        // Fusionner et éviter les doublons (arrêts communs aux deux lignes)
+        const stopsMap = new Map();
+        
+        [...bus4Stops, ...bus8Stops].forEach(stop => {
+            if (stopsMap.has(stop.name)) {
+                // Arrêt existant, ajouter la ligne
+                const existing = stopsMap.get(stop.name);
+                existing.lines = [...new Set([...existing.lines, ...stop.lines])];
+            } else {
+                stopsMap.set(stop.name, { ...stop });
+            }
+        });
+
+        this.allStops = Array.from(stopsMap.values());
+    }
+
+    loadFavorites() {
+        this.favorites = JSON.parse(localStorage.getItem('bus_favorites')) || [];
+    }
+
+    setupEventListeners() {
+        // Bouton menu pour ouvrir le drawer
+        document.getElementById('menuToggle').addEventListener('click', () => {
+            this.openDrawer();
+        });
+
+        // Fermer le drawer
+        document.getElementById('closeDrawer').addEventListener('click', () => {
+            this.closeDrawer();
+        });
+
+        document.getElementById('drawerOverlay').addEventListener('click', () => {
+            this.closeDrawer();
+        });
+
+        // Recherche dans le drawer
+        document.getElementById('drawerSearchInput').addEventListener('input', (e) => {
+            this.searchTerm = e.target.value.toLowerCase();
+            this.renderStopsList();
+        });
+
+        // Tabs du drawer
+        document.querySelectorAll('.drawer-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.drawer-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                this.currentTab = tab.dataset.tab;
+                this.renderStopsList();
+            });
+        });
+
+        // Recherche principale avec autocomplete
+        const searchInput = document.getElementById('searchStop');
+        const suggestionsList = document.getElementById('suggestionsList');
+
+        searchInput.addEventListener('input', (e) => {
+            const value = e.target.value.toLowerCase();
+            if (value.length < 2) {
+                suggestionsList.classList.remove('show');
+                return;
+            }
+
+            const suggestions = this.allStops
+                .filter(stop => stop.name.toLowerCase().includes(value))
+                .slice(0, 5);
+
+            this.showSuggestions(suggestions);
+        });
+
+        // Cacher les suggestions quand on clique ailleurs
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-container')) {
+                suggestionsList.classList.remove('show');
+            }
+        });
+
+        // Bouton de recherche
+        document.getElementById('searchBtn').addEventListener('click', () => {
+            const searchTerm = document.getElementById('searchStop').value;
+            if (searchTerm) {
+                this.searchAndGoToStop(searchTerm);
+            }
+        });
+
+        // Recherche avec Entrée
+        document.getElementById('searchStop').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const searchTerm = e.target.value;
+                if (searchTerm) {
+                    this.searchAndGoToStop(searchTerm);
+                }
+            }
+        });
+    }
+
+    showSuggestions(suggestions) {
+        const suggestionsList = document.getElementById('suggestionsList');
+        
+        if (suggestions.length === 0) {
+            suggestionsList.classList.remove('show');
+            return;
+        }
+
+        suggestionsList.innerHTML = suggestions.map(stop => {
+            const lines = stop.lines.map(line => 
+                `<span class="line-badge ${line.toLowerCase().replace(' ', '')}">${line}</span>`
+            ).join('');
+
+            return `
+                <div class="suggestion-item" onclick="searchManager.goToStop('${stop.name}')">
+                    <span class="material-icons">location_on</span>
+                    <div class="suggestion-content">
+                        <div class="suggestion-name">${stop.name}</div>
+                        <div class="suggestion-line">${lines}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        suggestionsList.classList.add('show');
+    }
+
+    searchAndGoToStop(searchTerm) {
+        const stop = this.allStops.find(s => 
+            s.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+
+        if (stop) {
+            this.goToStop(stop.name);
+        } else {
+            alert('Arrêt non trouvé. Veuillez réessayer.');
+        }
+    }
+
+    goToStop(stopName) {
+        const stop = this.allStops.find(s => s.name === stopName);
+        if (!stop) return;
+
+        // Fermer les suggestions et le drawer
+        document.getElementById('suggestionsList').classList.remove('show');
+        this.closeDrawer();
+
+        // Centrer la carte sur l'arrêt
+        this.mapService.map.setView(stop.coords, 18, {
+            animate: true,
+            duration: 1
+        });
+
+        // Ouvrir un popup sur l'arrêt
+        setTimeout(() => {
+            const distance = this.geolocationManager.userCoords 
+                ? Math.round(this.geolocationManager.userCoords.distanceTo(L.latLng(stop.coords)))
+                : null;
+
+            const distanceText = distance ? `<div class="popup-content">Distance: ${distance} m</div>` : '';
+
+            L.popup({
+                autoClose: true,
+                closeOnClick: true
+            })
+                .setLatLng(stop.coords)
+                .setContent(`
+                    <div class="popup-container">
+                        <div class="popup-title">🛑 ${stop.name}</div>
+                        <div class="popup-content">Lignes: ${stop.lines.join(' - ')}</div>
+                        ${distanceText}
+                        <button class="popup-btn" onclick="searchManager.addToFavorites('${stop.name}')">
+                            ⭐ Ajouter aux favoris
+                        </button>
+                    </div>
+                `)
+                .openOn(this.mapService.map);
+        }, 500);
+    }
+
+    addToFavorites(stopName) {
+        window.favoritesManager.add(stopName);
+        this.loadFavorites();
+        this.renderStopsList();
+    }
+
+    removeFromFavorites(stopName) {
+        window.favoritesManager.remove(stopName);
+        this.loadFavorites();
+        this.renderStopsList();
+    }
+
+    toggleFavorite(stopName) {
+        if (this.favorites.includes(stopName)) {
+            this.removeFromFavorites(stopName);
+        } else {
+            this.addToFavorites(stopName);
+        }
+    }
+
+    getFilteredStops() {
+        let stops = this.allStops;
+
+        // Filtrer par onglet
+        if (this.currentTab === 'bus4') {
+            stops = stops.filter(stop => stop.lines.includes('BUS 4'));
+        } else if (this.currentTab === 'bus8') {
+            stops = stops.filter(stop => stop.lines.includes('BUS 8'));
+        } else if (this.currentTab === 'favorites') {
+            stops = stops.filter(stop => this.favorites.includes(stop.name));
+        }
+
+        // Filtrer par recherche
+        if (this.searchTerm) {
+            stops = stops.filter(stop => 
+                stop.name.toLowerCase().includes(this.searchTerm)
+            );
+        }
+
+        return stops;
+    }
+
+    renderStopsList() {
+        const stopsList = document.getElementById('stopsList');
+        const drawerStats = document.getElementById('drawerStats');
+        
+        const filteredStops = this.getFilteredStops();
+
+        if (filteredStops.length === 0) {
+            stopsList.innerHTML = `
+                <div class="empty-state">
+                    <span class="material-icons">search_off</span>
+                    <p>Aucun arrêt trouvé</p>
+                </div>
+            `;
+            drawerStats.textContent = '0 arrêt';
+            return;
+        }
+
+        stopsList.innerHTML = filteredStops.map(stop => {
+            const isFavorite = this.favorites.includes(stop.name);
+            const busClass = stop.lines.includes('BUS 4') ? 'bus4' : 'bus8';
+            
+            // Calculer la distance si la position utilisateur est disponible
+            let distanceText = '';
+            if (this.geolocationManager.userCoords) {
+                const distance = Math.round(this.geolocationManager.userCoords.distanceTo(
+                    L.latLng(stop.coords[0], stop.coords[1])
+                ));
+                distanceText = `
+                    <div class="stop-card-distance">
+                        <span class="material-icons">straighten</span>
+                        ${distance} m
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="stop-card ${busClass} ${isFavorite ? 'favorite' : ''}" 
+                     onclick="searchManager.goToStop('${stop.name}')">
+                    <div class="stop-card-header">
+                        <span class="stop-card-name">${stop.name}</span>
+                        <span class="stop-card-favorite" 
+                              onclick="event.stopPropagation(); searchManager.toggleFavorite('${stop.name}')">
+                            <span class="material-icons">${isFavorite ? 'star' : 'star_border'}</span>
+                        </span>
+                    </div>
+                    <div class="stop-card-details">
+                        <span class="stop-card-line ${busClass}">${stop.lines.join(' • ')}</span>
+                        ${distanceText}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        drawerStats.textContent = `${filteredStops.length} arrêt${filteredStops.length > 1 ? 's' : ''}`;
+    }
+
+    openDrawer() {
+        document.getElementById('stopsDrawer').classList.add('open');
+        document.getElementById('drawerOverlay').classList.add('active');
+        this.renderStopsList(); // Rafraîchir la liste
+    }
+
+    closeDrawer() {
+        document.getElementById('stopsDrawer').classList.remove('open');
+        document.getElementById('drawerOverlay').classList.remove('active');
+    }
 }
+
+// Ajouter cette ligne à la fin du fichier pour rendre le searchManager accessible globalement
+window.searchManager = null;
