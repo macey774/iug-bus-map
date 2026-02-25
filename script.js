@@ -1,18 +1,39 @@
 /**
  * ======================================================================
  * SYSTÈME DE SUIVI DE BUS - APPLICATION DE TRANSPORT EN COMMUN
- * Version professionnelle 3.0
+ * Version professionnelle 3.0 - Popups unifiés version compacte
  * Auteur : Mabel Cédric Yvan
  * Description : Application de suivi en temps réel des bus avec
  *              calcul d'itinéraires, géolocalisation et interface moderne
+ * 
+ * Tous les popups d'arrêts utilisent le même format compact :
+ * - Nom de l'arrêt
+ * - Lignes de bus desservies
+ * - Boutons favori (étoile) et itinéraire (direction)
  * ======================================================================
  */
 
-/**
- * ======================================================================
- * SECTION 1 : CONFIGURATION ET CONSTANTES GLOBALES
- * ======================================================================
- */
+// ======================================================================
+// CONFIGURATION FIREBASE (à activer pour le suivi réel des bus)
+// ======================================================================
+/*
+const firebaseConfig = {
+  apiKey: "AIzaSyBcKo-baav4AZss0wibZFSPUonwOPeZEF8",
+  authDomain: "bus-scolaire---iug.firebaseapp.com",
+  databaseURL: "https://bus-scolaire---iug-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "bus-scolaire---iug",
+  storageBucket: "bus-scolaire---iug.firebasestorage.app",
+  messagingSenderId: "527926199083",
+  appId: "1:527926199083:web:c0f5057680762a33343b6e"
+};
+// Initialisation Firebase (à décommenter quand les bus sont équipés)
+// firebase.initializeApp(firebaseConfig);
+// const database = firebase.database();
+*/
+
+// ======================================================================
+// SECTION 1 : CONFIGURATION ET CONSTANTES GLOBALES
+// ======================================================================
 
 const CONFIG = {
     map: {
@@ -23,10 +44,11 @@ const CONFIG = {
         zoomControl: true
     },
     bus: {
-        animationSpeed: 20,
-        averageSpeed: 30,
-        averageSpeedMps: 8.33,
-        updateInterval: 3000
+        animationSpeed: 200,
+        averageSpeed: 20,
+        averageSpeedMps: 5.56,
+        updateInterval: 5000,
+        maxRealisticDistance: 15000
     },
     geolocation: {
         enableHighAccuracy: true,
@@ -35,7 +57,8 @@ const CONFIG = {
     },
     walking: {
         speedMps: 1.4,
-        speedMpm: 83.33
+        speedMpm: 84,
+        comfortFactor: 1.2
     }
 };
 
@@ -102,11 +125,9 @@ const POINTS_OF_INTEREST = {
     ]
 };
 
-/**
- * ======================================================================
- * SECTION 2 : ICÔNES ET STYLES
- * ======================================================================
- */
+// ======================================================================
+// SECTION 2 : ICÔNES PERSONNALISÉES (BUS ET ARRÊTS)
+// ======================================================================
 
 const Icons = {
     bus: L.divIcon({
@@ -210,11 +231,9 @@ const Icons = {
     }
 };
 
-/**
- * ======================================================================
- * SECTION 3 : INITIALISATION DE LA CARTE
- * ======================================================================
- */
+// ======================================================================
+// SECTION 3 : SERVICE DE CARTE (MapService)
+// ======================================================================
 
 class MapService {
     constructor() {
@@ -300,13 +319,19 @@ class MapService {
             return coords;
         }
     }
+
+    validateDistance(distance) {
+        if (distance > CONFIG.bus.maxRealisticDistance) {
+            console.warn(`Distance anormalement élevée : ${distance}m`);
+            return CONFIG.bus.maxRealisticDistance;
+        }
+        return distance;
+    }
 }
 
-/**
- * ======================================================================
- * SECTION 4 : GESTION DES BUS
- * ======================================================================
- */
+// ======================================================================
+// SECTION 4 : GESTIONNAIRE DES BUS (BusManager)
+// ======================================================================
 
 class BusManager {
     constructor(mapService) {
@@ -507,59 +532,71 @@ class BusManager {
             route
         );
 
-        const timeMinutes = this.calculateEstimatedTime(distanceToNext);
+        const validatedDistance = this.mapService.validateDistance(distanceToNext);
+        const timeMinutes = this.calculateEstimatedTime(validatedDistance);
 
         return {
             stop: nextStop,
-            distance: distanceToNext,
+            distance: validatedDistance,
             timeMinutes: timeMinutes
         };
     }
 
     calculateDistanceAlongRoute(currentPos, nextStopCoords, route) {
+        if (!route || route.length === 0) {
+            return this.mapService.map.distance(currentPos, nextStopCoords);
+        }
+
         let minDistToCurrent = Infinity;
         let minDistToNext = Infinity;
-        let currentSegmentIndex = -1;
-        let nextSegmentIndex = -1;
+        let currentIndex = -1;
+        let nextIndex = -1;
 
-        for (let i = 0; i < route.length; i++) {
-            const distToCurrent = this.mapService.map.distance(currentPos, route[i]);
-            const distToNext = this.mapService.map.distance(nextStopCoords, route[i]);
+        route.forEach((point, index) => {
+            const distToCurrent = this.mapService.map.distance(currentPos, point);
+            const distToNext = this.mapService.map.distance(nextStopCoords, point);
 
             if (distToCurrent < minDistToCurrent) {
                 minDistToCurrent = distToCurrent;
-                currentSegmentIndex = i;
+                currentIndex = index;
             }
 
             if (distToNext < minDistToNext) {
                 minDistToNext = distToNext;
-                nextSegmentIndex = i;
+                nextIndex = index;
+            }
+        });
+
+        return this.calculateRealisticDistance(route, currentIndex, nextIndex);
+    }
+
+    calculateRealisticDistance(route, startIndex, endIndex) {
+        if (startIndex === endIndex) return 0;
+        
+        let distance = 0;
+        const routeLength = route.length;
+        
+        if (endIndex > startIndex) {
+            for (let i = startIndex; i < endIndex; i++) {
+                distance += this.mapService.map.distance(route[i], route[i + 1]);
+            }
+        } else {
+            for (let i = startIndex; i < routeLength - 1; i++) {
+                distance += this.mapService.map.distance(route[i], route[i + 1]);
+            }
+            for (let i = 0; i < endIndex; i++) {
+                distance += this.mapService.map.distance(route[i], route[i + 1]);
             }
         }
-
-        if (currentSegmentIndex !== -1 && nextSegmentIndex !== -1) {
-            let distance = 0;
-            
-            if (nextSegmentIndex > currentSegmentIndex) {
-                for (let i = currentSegmentIndex; i < nextSegmentIndex; i++) {
-                    distance += this.mapService.map.distance(route[i], route[i + 1]);
-                }
-            } else {
-                for (let i = currentSegmentIndex; i < route.length - 1; i++) {
-                    distance += this.mapService.map.distance(route[i], route[i + 1]);
-                }
-                distance += this.mapService.map.distance(route[route.length - 1], route[0]);
-            }
-
-            return distance;
-        }
-
-        return this.mapService.map.distance(currentPos, nextStopCoords);
+        
+        return distance;
     }
 
     calculateEstimatedTime(distanceMeters) {
         const timeSeconds = distanceMeters / CONFIG.bus.averageSpeedMps;
-        return Math.ceil(timeSeconds / 60);
+        const timeMinutes = Math.ceil(timeSeconds / 60);
+        const trafficFactor = 1.15;
+        return Math.ceil(timeMinutes * trafficFactor);
     }
 
     createBusPopup(busInfo, currentStop, nextStopInfo) {
@@ -647,11 +684,9 @@ class BusManager {
     }
 }
 
-/**
- * ======================================================================
- * SECTION 5 : GESTION DE LA GÉOLOCALISATION
- * ======================================================================
- */
+// ======================================================================
+// SECTION 5 : GESTIONNAIRE DE GÉOLOCALISATION (GeolocationManager)
+// ======================================================================
 
 class GeolocationManager {
     constructor(mapService) {
@@ -752,53 +787,30 @@ class GeolocationManager {
         }
 
         const stopLatLng = L.latLng(nearestStop.coords[0], nearestStop.coords[1]);
-        const walkingTime = Math.round(minDistance / CONFIG.walking.speedMpm);
 
-        const popupContent = `
-            <div class="detailed-popup-container">
-                <div class="popup-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                    <div class="popup-header-icon">🛑</div>
-                    <div class="popup-header-title">Arrêt le plus proche</div>
-                </div>
-                <div class="popup-body">
-                    <div class="stop-name-section">
-                        <div class="stop-name">${nearestStop.name}</div>
-                    </div>
-                    <div class="distance-section">
-                        <div class="distance-item">
-                            <span class="material-icons distance-icon">straighten</span>
-                            <div class="distance-info">
-                                <span class="distance-label">Distance</span>
-                                <span class="distance-value">${Math.round(minDistance)} m</span>
-                            </div>
-                        </div>
-                        <div class="distance-item">
-                            <span class="material-icons distance-icon">directions_walk</span>
-                            <div class="distance-info">
-                                <span class="distance-label">À pied</span>
-                                <span class="distance-value">~${walkingTime} min</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="popup-actions">
-                        <button class="action-btn primary" onclick="window.geolocationManager.calculateRouteToStop('${nearestStop.name}')">
-                            <span class="material-icons">directions</span>
-                        </button>
-                        <button class="action-btn secondary" onclick="window.favoritesManager.add('${nearestStop.name}')">
-                            <span class="material-icons">star_border</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
+        const isInBus4 = BUS_STOPS.bus4.some(s => s.name === nearestStop.name);
+        const isInBus8 = BUS_STOPS.bus8.some(s => s.name === nearestStop.name);
+        const busLines = [];
+        if (isInBus4) busLines.push('BUS 4');
+        if (isInBus8) busLines.push('BUS 8');
+        const linesText = busLines.join(' • ');
+        const favorites = JSON.parse(localStorage.getItem('bus_favorites')) || [];
+        const isFavorite = favorites.includes(nearestStop.name);
+
+        const popupContent = busManager.createStopPopup(
+            nearestStop.name,
+            busLines,
+            linesText,
+            isFavorite
+        );
 
         this.mapService.map.closePopup();
 
         L.popup({
             autoClose: true,
             closeOnClick: true,
-            maxWidth: 320,
-            className: 'detailed-popup'
+            maxWidth: 280,
+            className: 'stop-popup'
         })
             .setLatLng(stopLatLng)
             .setContent(popupContent)
@@ -938,6 +950,11 @@ class GeolocationManager {
         } else {
             this.updateUserMarker(accuracy);
         }
+
+        // AJOUT : Mettre à jour la progression de l'itinéraire
+        if (window.routeManager) {
+            window.routeManager.updateRouteProgress(this.userCoords);
+        }
     }
 
     createUserMarker(accuracy) {
@@ -1003,17 +1020,18 @@ class GeolocationManager {
     }
 }
 
-/**
- * ======================================================================
- * SECTION 6 : GESTION DES ITINÉRAIRES
- * ======================================================================
- */
+// ======================================================================
+// SECTION 6 : GESTIONNAIRE D'ITINÉRAIRES (RouteManager) - MODIFIÉ
+// ======================================================================
 
 class RouteManager {
     constructor(mapService, geolocationManager) {
         this.mapService = mapService;
         this.geolocationManager = geolocationManager;
         this.routeLine = null;
+        // AJOUT : stocker la route complète et l'index précédent
+        this.fullRouteCoords = null;
+        this.lastIndex = null;
         this.init();
     }
 
@@ -1098,8 +1116,13 @@ class RouteManager {
             const route = data.routes[0];
             const routeCoords = route.geometry.coordinates.map(coord => [coord[1], coord[0]]);
 
+            // AJOUT : stocker la route complète
+            this.fullRouteCoords = routeCoords;
+            this.lastIndex = null;
+
             this.clearRoute();
 
+            // Trace la ligne (complète au départ)
             this.routeLine = L.polyline(routeCoords, {
                 color: COLORS.primary,
                 weight: 6,
@@ -1110,18 +1133,31 @@ class RouteManager {
                 padding: [60, 60]
             });
 
-            const distance = Math.round(route.distance);
-            const duration = Math.round(route.duration / 60);
+            // Affiche le popup de destination
+            const isInBus4 = BUS_STOPS.bus4.some(s => s.name === matchedStop.name);
+            const isInBus8 = BUS_STOPS.bus8.some(s => s.name === matchedStop.name);
+            const busLines = [];
+            if (isInBus4) busLines.push('BUS 4');
+            if (isInBus8) busLines.push('BUS 8');
+            const linesText = busLines.join(' • ');
+            const favorites = JSON.parse(localStorage.getItem('bus_favorites')) || [];
+            const isFavorite = favorites.includes(matchedStop.name);
 
-            L.popup()
+            const popupContent = busManager.createStopPopup(
+                matchedStop.name,
+                busLines,
+                linesText,
+                isFavorite
+            );
+
+            L.popup({
+                autoClose: true,
+                closeOnClick: true,
+                maxWidth: 280,
+                className: 'stop-popup'
+            })
                 .setLatLng([destLat, destLng])
-                .setContent(`
-                    <div class="popup-container">
-                        <div class="popup-title">${matchedStop.name}</div>
-                        <div class="popup-content">Distance : ${distance} m</div>
-                        <div class="popup-content">Durée : ~${duration} min</div>
-                    </div>
-                `)
+                .setContent(popupContent)
                 .openOn(this.mapService.map);
 
         } catch (error) {
@@ -1130,19 +1166,42 @@ class RouteManager {
         }
     }
 
+    // AJOUT : mise à jour de la ligne en fonction de la position
+    updateRouteProgress(userCoords) {
+        if (!this.fullRouteCoords || !this.routeLine) return;
+
+        // Trouver l'index du point le plus proche
+        let minDist = Infinity;
+        let closestIndex = 0;
+        for (let i = 0; i < this.fullRouteCoords.length; i++) {
+            const dist = this.mapService.map.distance(userCoords, this.fullRouteCoords[i]);
+            if (dist < minDist) {
+                minDist = dist;
+                closestIndex = i;
+            }
+        }
+
+        // Si l'utilisateur est très proche du point suivant, on peut affiner (optionnel)
+        // Ici on prend simplement la portion de closestIndex à la fin
+        const remainingCoords = this.fullRouteCoords.slice(closestIndex);
+        this.routeLine.setLatLngs(remainingCoords);
+
+        this.lastIndex = closestIndex;
+    }
+
     clearRoute() {
         if (this.routeLine) {
             this.mapService.map.removeLayer(this.routeLine);
             this.routeLine = null;
         }
+        this.fullRouteCoords = null;
+        this.lastIndex = null;
     }
 }
 
-/**
- * ======================================================================
- * SECTION 7 : GESTION DES FAVORIS
- * ======================================================================
- */
+// ======================================================================
+// SECTION 7 : GESTIONNAIRE DES FAVORIS (FavoritesManager)
+// ======================================================================
 
 class FavoritesManager {
     constructor() {
@@ -1206,11 +1265,9 @@ class FavoritesManager {
     }
 }
 
-/**
- * ======================================================================
- * SECTION 8 : CONTRÔLES DE LA CARTE
- * ======================================================================
- */
+// ======================================================================
+// SECTION 8 : CONTRÔLES DE LA CARTE (MapControls)
+// ======================================================================
 
 class MapControls {
     constructor(mapService) {
@@ -1256,11 +1313,9 @@ class MapControls {
     }
 }
 
-/**
- * ======================================================================
- * SECTION 9 : GESTIONNAIRE DE RECHERCHE
- * ======================================================================
- */
+// ======================================================================
+// SECTION 9 : GESTIONNAIRE DE RECHERCHE (SearchManager)
+// ======================================================================
 
 class SearchManager {
     constructor(mapService, geolocationManager) {
@@ -1431,24 +1486,26 @@ class SearchManager {
         });
 
         setTimeout(() => {
-            const distance = this.geolocationManager.userCoords 
-                ? Math.round(this.geolocationManager.userCoords.distanceTo(L.latLng(stop.coords)))
-                : null;
+            const busManager = window.busManager;
+            const linesText = stop.lines.join(' • ');
+            const favorites = JSON.parse(localStorage.getItem('bus_favorites')) || [];
+            const isFavorite = favorites.includes(stop.name);
 
-            const distanceText = distance ? `<div class="popup-content">${distance} m</div>` : '';
+            const popupContent = busManager.createStopPopup(
+                stop.name,
+                stop.lines,
+                linesText,
+                isFavorite
+            );
 
             L.popup({
                 autoClose: true,
-                closeOnClick: true
+                closeOnClick: true,
+                maxWidth: 280,
+                className: 'stop-popup'
             })
                 .setLatLng(stop.coords)
-                .setContent(`
-                    <div class="popup-container">
-                        <div class="popup-title">🛑 ${stop.name}</div>
-                        <div class="popup-content">${stop.lines.join(' - ')}</div>
-                        ${distanceText}
-                    </div>
-                `)
+                .setContent(popupContent)
                 .openOn(this.mapService.map);
         }, 500);
     }
@@ -1499,10 +1556,11 @@ class SearchManager {
                 const distance = Math.round(this.geolocationManager.userCoords.distanceTo(
                     L.latLng(stop.coords[0], stop.coords[1])
                 ));
+                const validatedDistance = this.mapService.validateDistance(distance);
                 distanceText = `
                     <div class="stop-card-distance">
                         <span class="material-icons">straighten</span>
-                        ${distance} m
+                        ${validatedDistance} m
                     </div>
                 `;
             }
@@ -1548,11 +1606,9 @@ class SearchManager {
     }
 }
 
-/**
- * ======================================================================
- * SECTION 10 : INITIALISATION DE L'APPLICATION
- * ======================================================================
- */
+// ======================================================================
+// SECTION 10 : APPLICATION PRINCIPALE
+// ======================================================================
 
 class Application {
     constructor() {
@@ -1579,10 +1635,11 @@ class Application {
         this.mapControls = new MapControls(this.mapService);
         this.searchManager = new SearchManager(this.mapService, this.geolocationManager);
 
-        // Exposer les instances globalement
+        // AJOUT : exposer routeManager globalement (déjà fait, mais on s'assure)
         window.busManager = this.busManager;
         window.favoritesManager = this.favoritesManager;
         window.geolocationManager = this.geolocationManager;
+        window.routeManager = this.routeManager;   // <-- AJOUT
         window.searchManager = this.searchManager;
 
         setTimeout(() => {
@@ -1638,11 +1695,9 @@ class Application {
     }
 }
 
-/**
- * ======================================================================
- * SECTION 11 : DÉMARRAGE
- * ======================================================================
- */
+// ======================================================================
+// SECTION 11 : DÉMARRAGE DE L'APPLICATION
+// ======================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
     const app = new Application();
