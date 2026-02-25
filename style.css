@@ -10,7 +10,7 @@
 
 * {
     box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent; /* Supprime flash bleu mobile */
+    -webkit-tap-highlight-color: transparent;
     margin: 0;
     padding: 0;
 }
@@ -20,7 +20,7 @@ html, body {
     padding: 0;
     height: 100%;
     font-family: 'Arial', sans-serif;
-    overflow: hidden; /* Empêche scroll parasite mobile */
+    overflow: hidden;
 }
 
 body {
@@ -33,7 +33,7 @@ body {
 main {
     flex: 1;
     display: flex;
-    min-height: 0; /* Important pour flex overflow */
+    min-height: 0;
 }
 
 /* =========================================================
@@ -117,7 +117,7 @@ main {
 .search-container {
     flex: 1;
     position: relative;
-    min-width: 0; /* Permet au flex de réduire */
+    min-width: 0;
 }
 
 .search-bar {
@@ -953,225 +953,162 @@ main {
     gap: 4px;
 }
 
-/* Popup détaillé pour arrêt le plus proche */
-.detailed-popup .leaflet-popup-content-wrapper {
+/* ===================================================== */
+/* POPUP COMPACT POUR ARRÊTS (VERSION UNIQUE)
+/* ===================================================== */
+
+.stop-popup .leaflet-popup-content-wrapper {
     border-radius: 20px !important;
 }
 
-.detailed-popup-container {
-    width: 340px;
-    max-width: 100%;
+.stop-popup-container.compact {
+    width: 220px;
+    padding: 12px;
+    font-family: Arial, sans-serif;
 }
 
-.popup-header {
-    padding: 20px;
-    color: white;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.popup-header-icon {
-    font-size: 32px;
-    background: rgba(255,255,255,0.2);
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.popup-header-title {
-    font-size: 20px;
-    font-weight: bold;
-}
-
-.popup-body {
-    padding: 20px;
-    background: white;
-}
-
-.stop-name-section {
-    text-align: center;
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-.stop-name {
-    font-size: 18px;
+.stop-popup-container.compact .stop-popup-name {
+    font-size: 14px;
     font-weight: bold;
     color: #333;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
+    text-align: center;
+    word-wrap: break-word;
 }
 
-.stop-type {
-    font-size: 13px;
-    color: #4285f4;
+.stop-popup-container.compact .stop-popup-lines {
+    font-size: 10px;
+    padding: 2px 8px;
+    margin-bottom: 12px;
+    display: inline-block;
+    width: auto;
+    margin-left: auto;
+    margin-right: auto;
+    background: #f0f0f0;
+    border-radius: 30px;
+    color: #555;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
-.distance-section {
-    background: #f8f9fa;
-    border-radius: 16px;
-    padding: 16px;
-    margin-bottom: 20px;
-}
-
-.distance-item {
+.stop-popup-container.compact .stop-popup-actions {
     display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
-}
-
-.distance-item:last-child {
+    gap: 8px;
+    justify-content: center;
     margin-bottom: 0;
 }
 
-.distance-icon {
-    color: #4285f4;
-    font-size: 22px;
-    width: 28px;
-}
-
-.distance-info {
-    flex: 1;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.distance-label {
-    font-size: 13px;
-    color: #666;
-}
-
-.distance-value {
-    font-size: 16px;
-    font-weight: bold;
-    color: #333;
-}
-
-.section-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 15px;
-    font-weight: bold;
-    color: #555;
-    margin-bottom: 12px;
-}
-
-.section-title .material-icons {
-    font-size: 20px;
-    color: #4285f4;
-}
-
-.bus-lines {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.bus-line-item {
-    background: #f8f9fa;
-    padding: 12px 16px;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 500;
-}
-
-.nearby-stops {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.nearby-stop-item {
-    background: #f8f9fa;
-    padding: 12px 16px;
-    border-radius: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: 1px solid transparent;
-}
-
-.nearby-stop-item:hover {
-    background: #e8f0fe;
-    border-color: #4285f4;
-    transform: translateX(5px);
-}
-
-.nearby-stop-name {
-    font-size: 14px;
-    color: #333;
-    font-weight: 500;
-}
-
-.nearby-stop-distance {
-    font-size: 12px;
-    color: #4285f4;
-    font-weight: bold;
-}
-
-.popup-actions {
-    display: flex;
-    gap: 12px;
-    margin: 20px 0 15px;
-}
-
-.action-btn {
-    flex: 1;
-    padding: 14px;
+.stop-popup-container.compact .stop-popup-btn {
+    width: 44px;
+    height: 44px;
     border: none;
-    border-radius: 14px;
-    font-size: 14px;
-    font-weight: 600;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
     cursor: pointer;
     transition: all 0.2s ease;
-}
-
-.action-btn.primary {
-    background: #4285f4;
-    color: white;
-}
-
-.action-btn.primary:hover {
-    background: #3367d6;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(66,133,244,0.3);
-}
-
-.action-btn.secondary {
     background: #f8f9fa;
-    color: #666;
     border: 1px solid #e0e0e0;
 }
 
-.action-btn.secondary:hover {
-    background: #e8f0fe;
-    transform: translateY(-2px);
+.stop-popup-container.compact .stop-popup-btn .material-icons {
+    font-size: 22px;
 }
 
-.popup-note {
+.stop-popup-container.compact .stop-popup-btn.favorite-btn {
+    background: #fff9e6;
+    border-color: #FFD700;
+    color: #B8860B;
+}
+
+.stop-popup-container.compact .stop-popup-btn.favorite-btn.active {
+    background: #FFD700;
+    color: white;
+    border-color: #FFD700;
+}
+
+.stop-popup-container.compact .stop-popup-btn.favorite-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+}
+
+.stop-popup-container.compact .stop-popup-btn.route-btn {
+    background: #e8f0fe;
+    border-color: #4285f4;
+    color: #4285f4;
+}
+
+.stop-popup-container.compact .stop-popup-btn.route-btn:hover {
+    background: #4285f4;
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
+}
+
+/* Tooltip pour les boutons (apparition au survol) */
+.stop-popup-container.compact .stop-popup-btn {
+    position: relative;
+}
+
+.stop-popup-container.compact .stop-popup-btn::after {
+    content: attr(title);
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.stop-popup-container.compact .stop-popup-btn:hover::after {
+    opacity: 1;
+    visibility: visible;
+    bottom: -35px;
+}
+
+/* Style optionnel pour afficher la distance (si utilisée) */
+.stop-popup-container.compact .stop-popup-distance {
     display: flex;
     align-items: center;
-    gap: 6px;
+    justify-content: center;
+    gap: 4px;
     font-size: 11px;
-    color: #999;
-    padding-top: 12px;
-    border-top: 1px dashed #e0e0e0;
+    color: #4285f4;
+    margin-bottom: 10px;
+    background: #f0f8ff;
+    padding: 4px 8px;
+    border-radius: 20px;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.stop-popup-container.compact .stop-popup-distance .material-icons {
+    font-size: 14px;
+}
+
+/* CORRECTION LARGEUR POPUP */
+.stop-popup .leaflet-popup-content {
+    margin: 0 !important;
+    width: auto !important;
+    min-width: 0 !important;
+}
+
+.stop-popup-container.compact {
+    display: inline-block;
+    width: auto;
+    max-width: 220px;
 }
 
 /* ===================================================== */
@@ -1522,10 +1459,6 @@ main {
         width: 240px;
     }
 
-    .detailed-popup-container {
-        width: 280px;
-    }
-
     .popup-header {
         padding: 16px;
     }
@@ -1603,6 +1536,29 @@ main {
         font-size: 12px;
     }
 
+    .stop-popup-container.compact {
+        width: 200px;
+        padding: 10px;
+    }
+
+    .stop-popup-container.compact .stop-popup-name {
+        font-size: 13px;
+    }
+
+    .stop-popup-container.compact .stop-popup-lines {
+        font-size: 9px;
+        padding: 2px 6px;
+    }
+
+    .stop-popup-container.compact .stop-popup-btn {
+        width: 40px;
+        height: 40px;
+    }
+
+    .stop-popup-container.compact .stop-popup-btn .material-icons {
+        font-size: 20px;
+    }
+
     .notification {
         min-width: 250px;
         padding: 12px 20px;
@@ -1640,305 +1596,6 @@ main {
     white-space: nowrap;
     border: 0;
 }
-
-
-/* Version compacte */
-.stop-popup-container.compact {
-    width: 220px;
-    padding: 12px;
-}
-
-.stop-popup-container.compact .stop-popup-name {
-    font-size: 14px;
-    margin-bottom: 8px;
-    text-align: center;
-}
-
-.stop-popup-container.compact .stop-popup-lines {
-    font-size: 10px;
-    padding: 2px 8px;
-    margin-bottom: 12px;
-    display: inline-block;
-    width: auto;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.stop-popup-container.compact .stop-popup-actions {
-    margin-bottom: 0;
-    gap: 8px;
-}
-
-.stop-popup-container.compact .stop-popup-btn {
-    width: 44px;
-    height: 44px;
-}
-
-.stop-popup-container.compact .stop-popup-btn .material-icons {
-    font-size: 22px;
-}
-
-/* ===================================================== */
-/* POPUP POUR ARRÊTS DE BUS
-/* ===================================================== */
-
-.stop-popup .leaflet-popup-content-wrapper {
-    border-radius: 20px !important;
-    padding: 0 !important;
-    overflow: hidden;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.2) !important;
-}
-
-.stop-popup-container {
-    width: 300px;
-    max-width: 100%;
-    font-family: Arial, sans-serif;
-}
-
-/* En-tête */
-.stop-popup-header {
-    padding: 16px;
-    color: white;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: linear-gradient(135deg, #FFD700 0%, #34A853 100%);
-}
-
-.stop-popup-icon {
-    font-size: 28px;
-    background: rgba(255,255,255,0.2);
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.stop-popup-title {
-    font-size: 18px;
-    font-weight: bold;
-}
-
-/* Corps */
-.stop-popup-body {
-    padding: 20px;
-    background: white;
-}
-
-/* Section nom */
-.stop-popup-name-section {
-    text-align: center;
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-.stop-popup-name {
-    font-size: 18px;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 8px;
-    line-height: 1.4;
-}
-
-.stop-popup-lines {
-    display: inline-block;
-    padding: 4px 15px;
-    background: #f0f0f0;
-    border-radius: 30px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #555;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-/* Boutons d'action */
-.stop-popup-actions {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 20px;
-}
-
-.stop-popup-btn {
-    flex: 1;
-    padding: 14px 8px;
-    border: none;
-    border-radius: 14px;
-    font-size: 13px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    background: #f8f9fa;
-    color: #555;
-    border: 1px solid #e0e0e0;
-}
-
-.stop-popup-btn .material-icons {
-    font-size: 20px;
-}
-
-.stop-popup-btn .btn-text {
-    white-space: nowrap;
-}
-
-/* Bouton favori */
-.stop-popup-btn.favorite-btn {
-    background: #fff9e6;
-    border-color: #FFD700;
-    color: #B8860B;
-}
-
-.stop-popup-btn.favorite-btn.active {
-    background: #FFD700;
-    color: white;
-    border-color: #FFD700;
-}
-
-.stop-popup-btn.favorite-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(255, 215, 0, 0.3);
-}
-
-/* Bouton itinéraire */
-.stop-popup-btn.route-btn {
-    background: #e8f0fe;
-    border-color: #4285f4;
-    color: #4285f4;
-}
-
-.stop-popup-btn.route-btn:hover {
-    background: #4285f4;
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(66, 133, 244, 0.3);
-}
-
-/* Pied de page */
-.stop-popup-footer {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    color: #999;
-    padding-top: 12px;
-    border-top: 1px dashed #e0e0e0;
-    justify-content: center;
-}
-
-.stop-popup-footer .material-icons {
-    font-size: 14px;
-    color: #4285f4;
-}
-
-/* ===================================================== */
-/* RESPONSIVE POUR LES POPUPS D'ARRÊTS
-/* ===================================================== */
-
-@media (max-width: 480px) {
-    .stop-popup-container {
-        width: 260px;
-    }
-
-    .stop-popup-header {
-        padding: 14px;
-    }
-
-    .stop-popup-icon {
-        width: 40px;
-        height: 40px;
-        font-size: 24px;
-    }
-
-    .stop-popup-title {
-        font-size: 16px;
-    }
-
-    .stop-popup-body {
-        padding: 16px;
-    }
-
-    .stop-popup-name {
-        font-size: 16px;
-    }
-
-    .stop-popup-btn {
-        padding: 12px 6px;
-        font-size: 12px;
-    }
-
-    .stop-popup-btn .material-icons {
-        font-size: 18px;
-    }
-
-    .stop-popup-btn .btn-text {
-        display: none; /* Cache le texte sur mobile, garde juste l'icône */
-    }
-
-    .stop-popup-footer {
-        font-size: 10px;
-    }
-}
-
-/* Pour les écrans très petits */
-@media (max-width: 360px) {
-    .stop-popup-container {
-        width: 220px;
-    }
-
-    .stop-popup-name {
-        font-size: 14px;
-    }
-
-    .stop-popup-lines {
-        font-size: 10px;
-        padding: 3px 10px;
-    }
-}
-
-/* Version compacte */
-.stop-popup-container.compact {
-    width: 220px;
-    padding: 12px;
-}
-
-.stop-popup-container.compact .stop-popup-name {
-    font-size: 14px;
-    margin-bottom: 8px;
-    text-align: center;
-}
-
-.stop-popup-container.compact .stop-popup-lines {
-    font-size: 10px;
-    padding: 2px 8px;
-    margin-bottom: 12px;
-    display: inline-block;
-    width: auto;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.stop-popup-container.compact .stop-popup-actions {
-    margin-bottom: 0;
-    gap: 8px;
-}
-
-.stop-popup-container.compact .stop-popup-btn {
-    width: 44px;
-    height: 44px;
-}
-
-.stop-popup-container.compact .stop-popup-btn .material-icons {
-    font-size: 22px;
-}
-
-
 
 /* ===================================================== */
 /* ICÔNES DE BUS PERSONNALISÉES
@@ -2158,8 +1815,6 @@ main {
     }
     
     .bus-icon-container.moving {
-        animation: none; /* Désactiver animations sur mobile pour performance */
+        animation: none;
     }
 }
-
-
