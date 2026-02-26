@@ -14,9 +14,9 @@
  */
 
 // ======================================================================
-// CONFIGURATION FIREBASE (à activer pour le suivi réel des bus)
+// CONFIGURATION FIREBASE (activée pour le suivi réel des bus)
 // ======================================================================
-/*
+// AJOUT : Décommenté et initialisé
 const firebaseConfig = {
   apiKey: "AIzaSyBcKo-baav4AZss0wibZFSPUonwOPeZEF8",
   authDomain: "bus-scolaire---iug.firebaseapp.com",
@@ -26,10 +26,9 @@ const firebaseConfig = {
   messagingSenderId: "527926199083",
   appId: "1:527926199083:web:c0f5057680762a33343b6e"
 };
-// Initialisation Firebase (à décommenter quand les bus sont équipés)
-// firebase.initializeApp(firebaseConfig);
-// const database = firebase.database();
-*/
+// Initialisation Firebase
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
 
 // ======================================================================
 // SECTION 1 : CONFIGURATION ET CONSTANTES GLOBALES
@@ -342,6 +341,8 @@ class BusManager {
         this.initRoutes();
         this.initStops();
         this.initPOI();
+        // AJOUT : Lancer l'écoute Firebase
+        this.listenToFirebase();
     }
 
     async initRoutes() {
@@ -681,6 +682,87 @@ class BusManager {
 
     getAllStops() {
         return [...BUS_STOPS.bus4, ...BUS_STOPS.bus8];
+    }
+
+    // ========== AJOUTS POUR FIREBASE ==========
+
+    /**
+     * Écoute les positions des bus sur Firebase et met à jour la carte
+     */
+    listenToFirebase() {
+        const busRef = database.ref('bus_positions');
+        busRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (!data) return;
+
+            // Pour chaque bus reçu
+            for (let busId in data) {
+                const pos = data[busId];
+                // Mettre à jour le marqueur de ce bus
+                this.updateBusPosition(busId, pos.lat, pos.lng, pos.speed);
+            }
+        });
+    }
+
+    /**
+     * Met à jour (ou crée) le marqueur d'un bus avec sa nouvelle position
+     */
+    updateBusPosition(busId, lat, lng, speed) {
+        const marker = this.busMarkers.get(busId);
+        
+        // Déterminer le type de bus et ses arrêts
+        const busKey = busId.toLowerCase(); // "bus_4" ou "bus_8"
+        const busInfo = busKey === 'bus_4' ? BUS_TYPES.bus4 : BUS_TYPES.bus8;
+        const stops = busKey === 'bus_4' ? BUS_STOPS.bus4 : BUS_STOPS.bus8;
+        const icon = busKey === 'bus_4' ? Icons.bus4 : Icons.bus8;
+
+        if (marker) {
+            // Animer le déplacement (optionnel, mais plus joli)
+            this.animateMarkerToPosition(marker, [lat, lng]);
+            
+            // Mettre à jour le contenu du popup
+            const currentStop = this.findClosestStop(stops, [lat, lng]).stop;
+            const nextStopInfo = this.findNextStop(stops, currentStop, [lat, lng], this.busRoutes.get(busKey));
+            const popupContent = this.createBusPopup(busInfo, currentStop, nextStopInfo);
+            marker.setPopupContent(popupContent);
+        } else {
+            // Créer un nouveau marqueur
+            const newMarker = L.marker([lat, lng], { icon: icon }).addTo(this.mapService.map);
+            newMarker.bindPopup('', { autoClose: true, closeOnClick: true });
+            newMarker.on('click', () => {
+                const currentStop = this.findClosestStop(stops, [lat, lng]).stop;
+                const nextStopInfo = this.findNextStop(stops, currentStop, [lat, lng], this.busRoutes.get(busKey));
+                const popupContent = this.createBusPopup(busInfo, currentStop, nextStopInfo);
+                newMarker.setPopupContent(popupContent);
+                newMarker.openPopup();
+            });
+            this.busMarkers.set(busId, newMarker);
+        }
+    }
+
+    /**
+     * Anime le déplacement d'un marqueur d'un point à un autre (transition fluide)
+     */
+    animateMarkerToPosition(marker, newLatLng) {
+        const duration = 1000; // 1 seconde
+        const start = marker.getLatLng();
+        const startTime = performance.now();
+
+        const animate = (currentTime) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const lat = start.lat + (newLatLng[0] - start.lat) * progress;
+            const lng = start.lng + (newLatLng[1] - start.lng) * progress;
+            marker.setLatLng([lat, lng]);
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                // Assurer la position exacte à la fin
+                marker.setLatLng(newLatLng);
+            }
+        };
+        requestAnimationFrame(animate);
     }
 }
 
@@ -1635,11 +1717,11 @@ class Application {
         this.mapControls = new MapControls(this.mapService);
         this.searchManager = new SearchManager(this.mapService, this.geolocationManager);
 
-        // AJOUT : exposer routeManager globalement (déjà fait, mais on s'assure)
+        // Exposer les instances globalement
         window.busManager = this.busManager;
         window.favoritesManager = this.favoritesManager;
         window.geolocationManager = this.geolocationManager;
-        window.routeManager = this.routeManager;   // <-- AJOUT
+        window.routeManager = this.routeManager;   // <-- AJOUT (déjà présent)
         window.searchManager = this.searchManager;
 
         setTimeout(() => {
@@ -1690,8 +1772,10 @@ class Application {
     }
 
     startBusAnimations() {
-        this.busManager.animateBus('bus4', BUS_STOPS.bus4, BUS_TYPES.bus4);
-        this.busManager.animateBus('bus8', BUS_STOPS.bus8, BUS_TYPES.bus8);
+        // Si vous utilisez Firebase, vous pouvez désactiver les animations simulées
+        // en commentant les lignes suivantes :
+        //this.busManager.animateBus('bus4', BUS_STOPS.bus4, BUS_TYPES.bus4);
+        //this.busManager.animateBus('bus8', BUS_STOPS.bus8, BUS_TYPES.bus8);
     }
 }
 
