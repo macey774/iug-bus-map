@@ -655,32 +655,50 @@ class BusManager {
 
     // ========== NOUVELLE MÉTHODE : POLLING VERS LE RELAIS ==========
 
-    startPolling() {
-        // Appel immédiat puis toutes les 2 secondes
-        this.fetchPositionsFromRelay();
-        setInterval(() => this.fetchPositionsFromRelay(), 2000);
-    }
+    // Dans BusManager, remplacez startPolling et fetchPositionsFromRelay par ceci :
 
-    async fetchPositionsFromRelay() {
-        try {
-            const response = await fetch(RELAY_URL);
-            if (!response.ok) {
-                console.error("Erreur relais:", response.status);
-                return;
-            }
-            const data = await response.json();
-            if (!data) return;
+startPolling() {
+    console.log("🚌 Démarrage du polling vers le relais toutes les 2 secondes");
+    // Appel immédiat
+    this.fetchPositionsFromRelay();
+    // Puis toutes les 2 secondes
+    setInterval(() => this.fetchPositionsFromRelay(), 2000);
+}
 
-            // data est un objet avec les clés busId (ex: "BUS_4", "BUS_8")
-            for (let busId in data) {
-                const pos = data[busId];
-                // Le relais renvoie probablement lat, lng, speed, timestamp
-                this.updateBusPosition(busId, pos.lat, pos.lng, pos.speed, pos.timestamp);
-            }
-        } catch (error) {
-            console.error("Erreur lors de la récupération des positions:", error);
+async fetchPositionsFromRelay() {
+    console.log("🔄 Interrogation du relais...");
+    try {
+        const response = await fetch(RELAY_URL);
+        console.log("📡 Réponse reçue, statut:", response.status);
+        if (!response.ok) {
+            console.error("❌ Erreur relais:", response.status);
+            return;
         }
+        const data = await response.json();
+        console.log("📦 Données reçues:", data);
+        if (!data) {
+            console.log("⚠️ Aucune donnée reçue (objet vide)");
+            return;
+        }
+
+        // data est un objet avec des clés comme "BUS_4", "BUS_8"
+        const busIds = Object.keys(data);
+        console.log(`🚍 ${busIds.length} bus trouvés dans les données`);
+        
+        for (let busId of busIds) {
+            const pos = data[busId];
+            console.log(`🟡 Traitement de ${busId}:`, pos);
+            // Vérifier que les coordonnées sont présentes
+            if (pos && typeof pos.lat === 'number' && typeof pos.lng === 'number') {
+                this.updateBusPosition(busId, pos.lat, pos.lng, pos.speed, pos.timestamp);
+            } else {
+                console.warn(`⚠️ Données invalides pour ${busId}:`, pos);
+            }
+        }
+    } catch (error) {
+        console.error("❌ Erreur lors de la récupération des positions:", error);
     }
+}
 
     /**
      * Met à jour (ou crée) le marqueur d'un bus avec sa nouvelle position
@@ -1753,3 +1771,4 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error("❌ Erreur lors de l'initialisation:", error);
     });
 });
+
