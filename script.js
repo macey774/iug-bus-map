@@ -14,9 +14,12 @@
  */
 
 // ======================================================================
-// CONFIGURATION FIREBASE (activée pour le suivi réel des bus)
+// CONFIGURATION DU RELAIS (au lieu de Firebase direct)
 // ======================================================================
-// AJOUT : Décommenté et initialisé
+const RELAY_URL = "https://bus-relais.onrender.com/api/positions"; // Route GET pour lire les positions
+
+// Ancienne config Firebase commentée (gardée pour référence)
+/*
 const firebaseConfig = {
   apiKey: "AIzaSyBcKo-baav4AZss0wibZFSPUonwOPeZEF8",
   authDomain: "bus-scolaire---iug.firebaseapp.com",
@@ -26,9 +29,9 @@ const firebaseConfig = {
   messagingSenderId: "527926199083",
   appId: "1:527926199083:web:c0f5057680762a33343b6e"
 };
-// Initialisation Firebase
-firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
+// firebase.initializeApp(firebaseConfig);
+// const database = firebase.database();
+*/
 
 // ======================================================================
 // SECTION 1 : CONFIGURATION ET CONSTANTES GLOBALES
@@ -329,7 +332,7 @@ class MapService {
 }
 
 // ======================================================================
-// SECTION 4 : GESTIONNAIRE DES BUS (BusManager)
+// SECTION 4 : GESTIONNAIRE DES BUS (BusManager) - MODIFIÉ POUR UTILISER LE RELAIS
 // ======================================================================
 
 class BusManager {
@@ -338,11 +341,12 @@ class BusManager {
         this.busPositions = new Map();
         this.busRoutes = new Map();
         this.busMarkers = new Map();
+        this.busTimestamps = new Map(); // Pour stocker le timestamp de chaque bus
         this.initRoutes();
         this.initStops();
         this.initPOI();
-        // AJOUT : Lancer l'écoute Firebase
-        this.listenToFirebase();
+        // Lancer le polling vers le relais
+        this.startPolling();
     }
 
     async initRoutes() {
@@ -600,10 +604,16 @@ class BusManager {
         return Math.ceil(timeMinutes * trafficFactor);
     }
 
-    createBusPopup(busInfo, currentStop, nextStopInfo) {
+    createBusPopup(busInfo, currentStop, nextStopInfo, timestamp) {
         const nextStopText = nextStopInfo ? 
             `${nextStopInfo.stop.name} (${nextStopInfo.timeMinutes} min)` : 
             "Terminus";
+        
+        let timeStr = "inconnue";
+        if (timestamp) {
+            const date = new Date(timestamp);
+            timeStr = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
 
         return `
             <div class="bus-popup">
@@ -625,89 +635,57 @@ class BusManager {
                         <span class="bus-popup-label">⏭️ Prochain:</span>
                         <span class="bus-popup-value bus-popup-next">${nextStopText}</span>
                     </div>
+                    <div class="bus-popup-divider"></div>
+                    <div class="bus-popup-row">
+                        <span class="bus-popup-label">🕒 Dernière MAJ:</span>
+                        <span class="bus-popup-value">${timeStr}</span>
+                    </div>
                 </div>
             </div>
         `;
     }
 
     async animateBus(busId, stops, busInfo) {
-        const fullRoute = await this.mapService.getRoute(stops.map(s => s.coords));
-        let index = 0;
-
-        const busIcon = busId === 'bus4' ? Icons.bus4 : Icons.bus8;
-        
-        const marker = L.marker(fullRoute[0], { 
-            icon: busIcon,
-            className: `bus-marker-${busId}`
-        }).addTo(this.mapService.map);
-
-        this.busMarkers.set(busId, marker);
-
-        marker.bindPopup('', {
-            autoClose: true,
-            closeOnClick: true,
-            autoPan: true
-        });
-
-        marker.on('click', () => {
-            const currentPos = this.busPositions.get(busId) || fullRoute[index];
-            const { stop: currentStop } = this.findClosestStop(stops, currentPos);
-            const nextStopInfo = this.findNextStop(stops, currentStop, currentPos, fullRoute);
-            
-            const popupContent = this.createBusPopup(busInfo, currentStop, nextStopInfo);
-            marker.setPopupContent(popupContent);
-            marker.openPopup();
-        });
-
-        const move = () => {
-            marker.setLatLng(fullRoute[index]);
-            this.busPositions.set(busId, fullRoute[index]);
-
-            const { stop: currentStop } = this.findClosestStop(stops, fullRoute[index]);
-            const nextStopInfo = this.findNextStop(stops, currentStop, fullRoute[index], fullRoute);
-
-            const popupContent = this.createBusPopup(busInfo, currentStop, nextStopInfo);
-            marker.setPopupContent(popupContent);
-
-            index = (index + 1) % fullRoute.length;
-
-            requestAnimationFrame(() => {
-                setTimeout(move, CONFIG.bus.animationSpeed);
-            });
-        };
-
-        move();
-        return marker;
+        // Méthode conservée pour compatibilité, mais non utilisée
     }
 
     getAllStops() {
         return [...BUS_STOPS.bus4, ...BUS_STOPS.bus8];
     }
 
-    // ========== AJOUTS POUR FIREBASE ==========
+    // ========== NOUVELLE MÉTHODE : POLLING VERS LE RELAIS ==========
 
-    /**
-     * Écoute les positions des bus sur Firebase et met à jour la carte
-     */
-    listenToFirebase() {
-        const busRef = database.ref('bus_positions');
-        busRef.on('value', (snapshot) => {
-            const data = snapshot.val();
+    startPolling() {
+        // Appel immédiat puis toutes les 2 secondes
+        this.fetchPositionsFromRelay();
+        setInterval(() => this.fetchPositionsFromRelay(), 2000);
+    }
+
+    async fetchPositionsFromRelay() {
+        try {
+            const response = await fetch(RELAY_URL);
+            if (!response.ok) {
+                console.error("Erreur relais:", response.status);
+                return;
+            }
+            const data = await response.json();
             if (!data) return;
 
-            // Pour chaque bus reçu
+            // data est un objet avec les clés busId (ex: "BUS_4", "BUS_8")
             for (let busId in data) {
                 const pos = data[busId];
-                // Mettre à jour le marqueur de ce bus
-                this.updateBusPosition(busId, pos.lat, pos.lng, pos.speed);
+                // Le relais renvoie probablement lat, lng, speed, timestamp
+                this.updateBusPosition(busId, pos.lat, pos.lng, pos.speed, pos.timestamp);
             }
-        });
+        } catch (error) {
+            console.error("Erreur lors de la récupération des positions:", error);
+        }
     }
 
     /**
      * Met à jour (ou crée) le marqueur d'un bus avec sa nouvelle position
      */
-    updateBusPosition(busId, lat, lng, speed) {
+    updateBusPosition(busId, lat, lng, speed, timestamp) {
         const marker = this.busMarkers.get(busId);
         
         // Déterminer le type de bus et ses arrêts
@@ -716,14 +694,17 @@ class BusManager {
         const stops = busKey === 'bus_4' ? BUS_STOPS.bus4 : BUS_STOPS.bus8;
         const icon = busKey === 'bus_4' ? Icons.bus4 : Icons.bus8;
 
+        // Stocker le timestamp
+        this.busTimestamps.set(busId, timestamp);
+
         if (marker) {
-            // Animer le déplacement (optionnel, mais plus joli)
+            // Animer le déplacement
             this.animateMarkerToPosition(marker, [lat, lng]);
             
             // Mettre à jour le contenu du popup
             const currentStop = this.findClosestStop(stops, [lat, lng]).stop;
             const nextStopInfo = this.findNextStop(stops, currentStop, [lat, lng], this.busRoutes.get(busKey));
-            const popupContent = this.createBusPopup(busInfo, currentStop, nextStopInfo);
+            const popupContent = this.createBusPopup(busInfo, currentStop, nextStopInfo, timestamp);
             marker.setPopupContent(popupContent);
         } else {
             // Créer un nouveau marqueur
@@ -732,7 +713,7 @@ class BusManager {
             newMarker.on('click', () => {
                 const currentStop = this.findClosestStop(stops, [lat, lng]).stop;
                 const nextStopInfo = this.findNextStop(stops, currentStop, [lat, lng], this.busRoutes.get(busKey));
-                const popupContent = this.createBusPopup(busInfo, currentStop, nextStopInfo);
+                const popupContent = this.createBusPopup(busInfo, currentStop, nextStopInfo, timestamp);
                 newMarker.setPopupContent(popupContent);
                 newMarker.openPopup();
             });
@@ -1033,7 +1014,7 @@ class GeolocationManager {
             this.updateUserMarker(accuracy);
         }
 
-        // AJOUT : Mettre à jour la progression de l'itinéraire
+        // Mettre à jour la progression de l'itinéraire
         if (window.routeManager) {
             window.routeManager.updateRouteProgress(this.userCoords);
         }
@@ -1103,7 +1084,7 @@ class GeolocationManager {
 }
 
 // ======================================================================
-// SECTION 6 : GESTIONNAIRE D'ITINÉRAIRES (RouteManager) - MODIFIÉ
+// SECTION 6 : GESTIONNAIRE D'ITINÉRAIRES (RouteManager)
 // ======================================================================
 
 class RouteManager {
@@ -1111,7 +1092,6 @@ class RouteManager {
         this.mapService = mapService;
         this.geolocationManager = geolocationManager;
         this.routeLine = null;
-        // AJOUT : stocker la route complète et l'index précédent
         this.fullRouteCoords = null;
         this.lastIndex = null;
         this.init();
@@ -1198,13 +1178,11 @@ class RouteManager {
             const route = data.routes[0];
             const routeCoords = route.geometry.coordinates.map(coord => [coord[1], coord[0]]);
 
-            // AJOUT : stocker la route complète
             this.fullRouteCoords = routeCoords;
             this.lastIndex = null;
 
             this.clearRoute();
 
-            // Trace la ligne (complète au départ)
             this.routeLine = L.polyline(routeCoords, {
                 color: COLORS.primary,
                 weight: 6,
@@ -1215,7 +1193,6 @@ class RouteManager {
                 padding: [60, 60]
             });
 
-            // Affiche le popup de destination
             const isInBus4 = BUS_STOPS.bus4.some(s => s.name === matchedStop.name);
             const isInBus8 = BUS_STOPS.bus8.some(s => s.name === matchedStop.name);
             const busLines = [];
@@ -1248,11 +1225,9 @@ class RouteManager {
         }
     }
 
-    // AJOUT : mise à jour de la ligne en fonction de la position
     updateRouteProgress(userCoords) {
         if (!this.fullRouteCoords || !this.routeLine) return;
 
-        // Trouver l'index du point le plus proche
         let minDist = Infinity;
         let closestIndex = 0;
         for (let i = 0; i < this.fullRouteCoords.length; i++) {
@@ -1263,11 +1238,8 @@ class RouteManager {
             }
         }
 
-        // Si l'utilisateur est très proche du point suivant, on peut affiner (optionnel)
-        // Ici on prend simplement la portion de closestIndex à la fin
         const remainingCoords = this.fullRouteCoords.slice(closestIndex);
         this.routeLine.setLatLngs(remainingCoords);
-
         this.lastIndex = closestIndex;
     }
 
@@ -1717,15 +1689,14 @@ class Application {
         this.mapControls = new MapControls(this.mapService);
         this.searchManager = new SearchManager(this.mapService, this.geolocationManager);
 
-        // Exposer les instances globalement
         window.busManager = this.busManager;
         window.favoritesManager = this.favoritesManager;
         window.geolocationManager = this.geolocationManager;
-        window.routeManager = this.routeManager;   // <-- AJOUT (déjà présent)
+        window.routeManager = this.routeManager;
         window.searchManager = this.searchManager;
 
         setTimeout(() => {
-            this.startBusAnimations();
+            // Les animations simulées sont désactivées
             this.hideLoadingMessage();
         }, 2000);
 
@@ -1769,13 +1740,6 @@ class Application {
                 }
             }, 500);
         }
-    }
-
-    startBusAnimations() {
-        // Si vous utilisez Firebase, vous pouvez désactiver les animations simulées
-        // en commentant les lignes suivantes :
-        //this.busManager.animateBus('bus4', BUS_STOPS.bus4, BUS_TYPES.bus4);
-        //this.busManager.animateBus('bus8', BUS_STOPS.bus8, BUS_TYPES.bus8);
     }
 }
 
