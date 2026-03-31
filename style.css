@@ -1,9 +1,8 @@
 /* ======================================================================
-   BusEye - Styles avec splash screen et logo image
-   Version 5.3
+   BusEye - Styles finaux, complets et responsive
    ====================================================================== */
 
-/* Reset et base */
+/* Reset */
 * {
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
@@ -29,7 +28,7 @@ main {
 }
 
 /* =========================================================
-   SPLASH SCREEN (image de chargement)
+   SPLASH SCREEN
 ========================================================= */
 .splash-screen {
     position: fixed;
@@ -62,14 +61,8 @@ main {
 }
 
 @keyframes fadeInScale {
-    from {
-        opacity: 0;
-        transform: scale(0.9);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
 }
 
 @keyframes pulse {
@@ -77,14 +70,13 @@ main {
     50% { opacity: 1; }
 }
 
-/* Masquer le splash après chargement */
 .splash-screen.hidden {
     opacity: 0;
     visibility: hidden;
 }
 
 /* =========================================================
-   HUBAR (barre fixe superposée)
+   HUBAR
 ========================================================= */
 .hubar {
     position: fixed;
@@ -102,7 +94,6 @@ main {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: all 0.3s;
 }
 
 .hubar-left {
@@ -127,12 +118,12 @@ main {
 .logo-area h1 {
     font-size: 1.5rem;
     font-weight: 700;
-    background: linear-gradient(135deg, #1e2b3a, #2c5a7a);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
     margin: 0;
+    display: inline-block;
 }
+
+.bus-part { color: #4285f4; }
+.eye-part { color: #FFD700; }
 
 .hubar-right {
     display: flex;
@@ -153,8 +144,12 @@ main {
     transition: background 0.2s;
 }
 
-.icon-btn .material-icons {
-    font-size: 24px;
+#searchToggleBtn .material-icons,
+#routeBtn .material-icons {
+    color: #4285f4;
+}
+
+#menuToggle .material-icons {
     color: #5f6368;
 }
 
@@ -162,7 +157,9 @@ main {
     background: rgba(0, 0, 0, 0.05);
 }
 
-/* Panneau de recherche expansible */
+/* =========================================================
+   PANNEAU DE RECHERCHE EXPANSIBLE
+========================================================= */
 .search-panel {
     position: fixed;
     top: 70px;
@@ -235,7 +232,6 @@ main {
     transform: scale(1.05);
 }
 
-/* Suggestions dans le panneau expansible */
 .suggestions-list-expandable {
     margin-top: 10px;
     max-height: 350px;
@@ -262,7 +258,6 @@ main {
     background: #f8f9ff;
 }
 
-/* Les suggestions globales */
 .suggestion-item .material-icons {
     color: #4285f4;
 }
@@ -298,14 +293,385 @@ main {
 .line-badge.bus4 { background: #FFD700; color: #333; }
 .line-badge.bus8 { background: #34A853; }
 
-/* Carte */
+/* =========================================================
+   TOASTS
+========================================================= */
+.toast-container {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 400px;
+    z-index: 1100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
+}
+
+.toast {
+    background: white;
+    border-radius: 40px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    padding: 12px 20px;
+    min-width: 250px;
+    max-width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.3);
+    animation: slideDownToast 0.3s ease forwards;
+    pointer-events: auto;
+}
+
+.toast-icon {
+    font-size: 20px;
+}
+
+.toast-content {
+    flex: 1;
+}
+
+.toast-title {
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+
+.toast-message {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: #999;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.toast-close:hover {
+    background: rgba(0,0,0,0.1);
+}
+
+.toast-success { background: linear-gradient(135deg, #34A853, #2e8b47); color: white; }
+.toast-error   { background: linear-gradient(135deg, #f44336, #d32f2f); color: white; }
+.toast-info    { background: linear-gradient(135deg, #4285f4, #3367d6); color: white; }
+.toast-warning { background: linear-gradient(135deg, #FBBC05, #f39c12); color: white; }
+
+@keyframes slideDownToast {
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.toast-exit {
+    animation: fadeOutUp 0.3s ease forwards;
+}
+
+@keyframes fadeOutUp {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(-20px); }
+}
+
+/* =========================================================
+   CARTE
+========================================================= */
 #map {
     width: 100%;
     height: 100%;
     z-index: 1;
 }
 
-/* Boutons flottants */
+/* =========================================================
+   CONTRÔLE DES COUCHES MODERNE
+========================================================= */
+.leaflet-control-layers {
+    border: none !important;
+    background: none !important;
+    box-shadow: none !important;
+    margin-top: 70px !important;
+    margin-right: 20px !important;
+}
+
+.leaflet-control-layers-toggle {
+    width: 44px !important;
+    height: 44px !important;
+    background-color: #ffffff !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234285f4'%3E%3Cpath d='M3 14h4v-4H3v4zm0 6h4v-4H3v4zM3 2h4V0H3v2zm8 12h4v-4h-4v4zm0 6h4v-4h-4v4zM3 10h4V6H3v4zm8 2h4V8h-4v4zm0-8h4V0h-4v2zm8 0h4V0h-4v2zm0 4h4V4h-4v2zm0 4h4V8h-4v2zm0 4h4v-4h-4v4zm0 6h4v-4h-4v4z'/%3E%3C/svg%3E") !important;
+    background-size: 24px !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+    transition: all 0.2s ease !important;
+}
+
+.leaflet-control-layers-toggle:hover {
+    background-color: #f5f5f5 !important;
+    transform: scale(1.02) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+.leaflet-control-layers-expanded {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px) !important;
+    border-radius: 24px !important;
+    padding: 12px 16px !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    font-family: 'Arial', sans-serif !important;
+    min-width: 180px !important;
+}
+
+.leaflet-control-layers-separator {
+    margin: 8px 0 !important;
+    border-top: 1px solid #e0e0e0 !important;
+}
+
+.leaflet-control-layers-base,
+.leaflet-control-layers-overlays {
+    margin-bottom: 8px !important;
+}
+
+.leaflet-control-layers-base label,
+.leaflet-control-layers-overlays label {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 6px 0 !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #1e293b !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+}
+
+.leaflet-control-layers-base label:hover,
+.leaflet-control-layers-overlays label:hover {
+    background: #f1f5f9 !important;
+    padding-left: 4px !important;
+    border-radius: 8px !important;
+}
+
+.leaflet-control-layers-selector {
+    width: 18px !important;
+    height: 18px !important;
+    margin: 0 !important;
+    accent-color: #4285f4 !important;
+    cursor: pointer !important;
+}
+
+.leaflet-control-layers-base > span,
+.leaflet-control-layers-overlays > span {
+    display: block !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    color: #64748b !important;
+    margin: 8px 0 4px 0 !important;
+    padding-left: 4px !important;
+}
+
+@media (max-width: 768px) {
+    .leaflet-control-layers {
+        margin-top: 60px !important;
+        margin-right: 12px !important;
+    }
+    .leaflet-control-layers-expanded {
+        min-width: 160px !important;
+        padding: 8px 12px !important;
+    }
+}
+
+/* =========================================================
+   MARQUEUR UTILISATEUR (vague)
+========================================================= */
+.user-marker {
+    position: relative;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+}
+
+.user-marker .core {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 16px;
+    height: 16px;
+    background: #4285f4;
+    border: 2px solid white;
+    border-radius: 50%;
+    box-shadow: 0 0 2px rgba(0,0,0,0.2);
+    z-index: 2;
+}
+
+.user-marker .pulse-ring {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: rgba(66, 133, 244, 0.4);
+    animation: ripple 1.5s infinite ease-out;
+    z-index: 1;
+}
+
+@keyframes ripple {
+    0% { transform: scale(0.6); opacity: 0.8; }
+    100% { transform: scale(2); opacity: 0; }
+}
+
+/* =========================================================
+   POPUP BUS
+========================================================= */
+.bus-popup {
+    font-family: Arial, sans-serif;
+    border-radius: 16px;
+    overflow: hidden;
+    width: 280px;
+}
+
+.bus-popup-header {
+    padding: 16px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.bus-popup-icon {
+    font-size: 24px;
+    background: rgba(255,255,255,0.2);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bus-popup-title {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.bus-popup-content {
+    padding: 16px;
+    background: white;
+}
+
+.bus-popup-row {
+    margin: 8px 0;
+    display: flex;
+    align-items: baseline;
+}
+
+.bus-popup-label {
+    font-size: 12px;
+    color: #666;
+    width: 100px;
+    flex-shrink: 0;
+    font-weight: 500;
+}
+
+.bus-popup-value {
+    font-size: 13px;
+    color: #333;
+    font-weight: 600;
+    flex: 1;
+}
+
+.bus-popup-stop {
+    color: #4285f4;
+    font-weight: bold;
+}
+
+.bus-popup-next {
+    color: #34A853;
+    font-weight: bold;
+}
+
+.bus-popup-divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, #eee, transparent);
+    margin: 12px 0;
+}
+
+/* =========================================================
+   POPUP ARRÊT (COMPACT)
+========================================================= */
+.stop-popup-container.compact {
+    width: 220px;
+    padding: 12px;
+    text-align: center;
+}
+
+.stop-popup-name {
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.stop-popup-lines {
+    font-size: 10px;
+    background: #f0f0f0;
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 30px;
+    margin-bottom: 12px;
+}
+
+.stop-popup-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.stop-popup-btn {
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    transition: all 0.2s;
+}
+
+.stop-popup-btn .material-icons {
+    font-size: 22px;
+}
+
+.stop-popup-btn.favorite-btn.active {
+    background: #FFD700;
+    color: white;
+}
+
+.stop-popup-btn.route-btn:hover {
+    background: #4285f4;
+    color: white;
+}
+
+/* =========================================================
+   BOUTONS FLOTTANTS
+========================================================= */
 .mobile-btn {
     position: fixed;
     right: 20px;
@@ -321,7 +687,6 @@ main {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 1001;
     border: none;
-    outline: none;
 }
 
 .mobile-btn:hover {
@@ -349,21 +714,9 @@ main {
     color: white;
 }
 
-.loading {
-    pointer-events: none;
-    opacity: 0.8;
-}
-
-.loading .material-icons {
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
-/* Fenêtre itinéraire */
+/* =========================================================
+   FENÊTRE MODALE ITINÉRAIRE
+========================================================= */
 .route-modal {
     display: none;
     position: fixed;
@@ -380,7 +733,7 @@ main {
 
 @keyframes modalFadeIn {
     from { opacity: 0; transform: translateY(-15px); }
-    to { opacity: 1; transform: translateY(0); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 .route-modal-content h3 {
@@ -478,21 +831,24 @@ main {
     transform: rotate(90deg);
 }
 
-/* Drawer latéral */
+/* =========================================================
+   DRAWER LATÉRAL (AMÉLIORÉ)
+========================================================= */
 .stops-drawer {
     position: fixed;
     top: 0;
-    left: -380px;
-    width: 380px;
-    max-width: 90%;
+    left: -400px;
+    width: 400px;
+    max-width: 85%;
     height: 100vh;
-    background: white;
-    box-shadow: 4px 0 25px rgba(0,0,0,0.15);
+    background: #ffffff;
+    box-shadow: 4px 0 25px rgba(0, 0, 0, 0.2);
     z-index: 3000;
-    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    border-radius: 0 24px 24px 0;
 }
 
 .stops-drawer.open {
@@ -500,46 +856,59 @@ main {
 }
 
 .drawer-header {
-    padding: 24px;
-    background: linear-gradient(135deg, #4285f4, #5a6fd8);
+    padding: 24px 20px;
+    background: linear-gradient(135deg, #4285f4, #2a56c6);
     color: white;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-radius: 0 24px 0 0;
 }
 
 .drawer-title {
-    font-size: 22px;
+    font-size: 1.5rem;
+    font-weight: 600;
     display: flex;
     align-items: center;
     gap: 12px;
+    margin: 0;
+}
+
+.drawer-title .material-icons {
+    font-size: 28px;
 }
 
 .close-drawer {
-    background: rgba(255,255,255,0.2);
+    background: rgba(255, 255, 255, 0.2);
     border: none;
     border-radius: 50%;
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    transition: all 0.2s;
     color: white;
 }
 
 .close-drawer:hover {
-    background: rgba(255,255,255,0.3);
+    background: rgba(255, 255, 255, 0.3);
     transform: rotate(90deg);
 }
 
 .drawer-search {
-    padding: 16px;
-    border-bottom: 1px solid #eee;
+    padding: 16px 20px;
+    border-bottom: 1px solid #eef2f6;
     display: flex;
     align-items: center;
     gap: 12px;
-    background: #f8f9fa;
+    background: #f8fafc;
+}
+
+.drawer-search .material-icons {
+    color: #94a3b8;
+    font-size: 20px;
 }
 
 .drawer-search-input {
@@ -547,14 +916,20 @@ main {
     border: none;
     background: transparent;
     font-size: 15px;
+    padding: 10px 0;
     outline: none;
-    padding: 8px 0;
+    color: #1e293b;
+}
+
+.drawer-search-input::placeholder {
+    color: #94a3b8;
 }
 
 .drawer-tabs {
     display: flex;
-    border-bottom: 1px solid #e0e0e0;
-    background: white;
+    background: #ffffff;
+    border-bottom: 1px solid #eef2f6;
+    padding: 0 12px;
 }
 
 .drawer-tab {
@@ -564,10 +939,11 @@ main {
     border: none;
     font-size: 14px;
     font-weight: 600;
-    color: #666;
+    color: #64748b;
     cursor: pointer;
     transition: all 0.2s;
     position: relative;
+    letter-spacing: 0.3px;
 }
 
 .drawer-tab.active {
@@ -583,94 +959,137 @@ main {
     height: 3px;
     background: #4285f4;
     border-radius: 3px 3px 0 0;
+    transition: width 0.2s ease;
+}
+
+.drawer-tab:hover {
+    color: #4285f4;
+    background: #f1f5f9;
 }
 
 .stops-list {
     flex: 1;
     overflow-y: auto;
-    padding: 16px;
-    background: #fafafa;
+    padding: 16px 12px;
+    background: #fefefe;
 }
 
 .stop-card {
     background: white;
-    border-radius: 16px;
+    border-radius: 20px;
     padding: 16px;
     margin-bottom: 12px;
     cursor: pointer;
-    transition: all 0.2s;
-    border-left: 4px solid transparent;
-    border: 1px solid #f0f0f0;
+    transition: all 0.25s ease;
+    border: 1px solid #eef2f6;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
 }
 
 .stop-card:hover {
-    transform: translateX(5px) translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-    border-color: #4285f4;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 20px -12px rgba(0, 0, 0, 0.15);
+    border-color: #d9e2ef;
 }
 
-.stop-card.bus4 { border-left-color: #FFD700; }
-.stop-card.bus8 { border-left-color: #34A853; }
-.stop-card.favorite { background: #fff9e6; }
+.stop-card.bus4 {
+    border-left: 4px solid #FFD700;
+}
+
+.stop-card.bus8 {
+    border-left: 4px solid #34A853;
+}
+
+.stop-card.favorite {
+    background: #fffef7;
+    border-left-width: 4px;
+}
 
 .stop-card-header {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 10px;
+    align-items: center;
+    margin-bottom: 12px;
 }
 
 .stop-card-name {
     font-size: 16px;
     font-weight: 600;
-    color: #333;
+    color: #0f172a;
+    line-height: 1.3;
 }
 
 .stop-card-favorite {
     color: #FFD700;
     cursor: pointer;
+    transition: transform 0.2s;
+    background: none;
+    border: none;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .stop-card-favorite:hover {
     transform: scale(1.2);
 }
 
+.stop-card-favorite .material-icons {
+    font-size: 22px;
+}
+
 .stop-card-details {
     display: flex;
     align-items: center;
-    gap: 16px;
-    font-size: 13px;
-    color: #666;
+    gap: 12px;
     flex-wrap: wrap;
+    font-size: 13px;
 }
 
 .stop-card-line {
     padding: 4px 14px;
     border-radius: 30px;
-    font-size: 12px;
-    font-weight: bold;
-    color: white;
+    font-size: 11px;
+    font-weight: 600;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: white;
 }
 
-.stop-card-line.bus4 { background: #FFD700; color: #333; }
-.stop-card-line.bus8 { background: #34A853; }
+.stop-card-line.bus4 {
+    background: #FFD700;
+    color: #1e293b;
+}
+
+.stop-card-line.bus8 {
+    background: #34A853;
+}
 
 .stop-card-distance {
     display: flex;
     align-items: center;
-    gap: 4px;
-    background: #f0f0f0;
-    padding: 4px 10px;
-    border-radius: 20px;
+    gap: 5px;
+    background: #f1f5f9;
+    padding: 4px 12px;
+    border-radius: 30px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #1e293b;
+}
+
+.stop-card-distance .material-icons {
+    font-size: 16px;
+    color: #4285f4;
 }
 
 .drawer-footer {
-    padding: 16px;
-    border-top: 1px solid #eee;
+    padding: 16px 20px;
+    border-top: 1px solid #eef2f6;
     background: white;
     text-align: center;
     font-size: 13px;
-    color: #666;
+    color: #64748b;
+    font-weight: 500;
 }
 
 .drawer-overlay {
@@ -679,12 +1098,12 @@ main {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.5);
     z-index: 2500;
     opacity: 0;
     visibility: hidden;
-    transition: all 0.3s;
-    backdrop-filter: blur(3px);
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    backdrop-filter: blur(2px);
 }
 
 .drawer-overlay.active {
@@ -692,86 +1111,9 @@ main {
     visibility: visible;
 }
 
-/* Popups */
-.stop-popup-container.compact {
-    width: 220px;
-    padding: 12px;
-    text-align: center;
-}
-
-.stop-popup-name {
-    font-weight: bold;
-    font-size: 14px;
-    margin-bottom: 8px;
-}
-
-.stop-popup-lines {
-    font-size: 10px;
-    background: #f0f0f0;
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 30px;
-    margin-bottom: 12px;
-}
-
-.stop-popup-actions {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-}
-
-.stop-popup-btn {
-    width: 44px;
-    height: 44px;
-    border: none;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    background: #f8f9fa;
-    border: 1px solid #e0e0e0;
-    transition: all 0.2s;
-}
-
-.stop-popup-btn .material-icons {
-    font-size: 22px;
-}
-
-.stop-popup-btn.favorite-btn.active {
-    background: #FFD700;
-    color: white;
-}
-
-.stop-popup-btn.route-btn:hover {
-    background: #4285f4;
-    color: white;
-}
-
-/* Notifications */
-.notification {
-    position: fixed;
-    top: 100px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 16px 24px;
-    border-radius: 16px;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-    z-index: 2000;
-    animation: slideDown 0.3s ease;
-    min-width: 280px;
-    text-align: center;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.2);
-    font-weight: 500;
-}
-
-.notification-error { background: linear-gradient(135deg, #f44336, #d32f2f); color: white; }
-.notification-success { background: linear-gradient(135deg, #34A853, #2e8b47); color: white; }
-.notification-info { background: linear-gradient(135deg, #4285f4, #3367d6); color: white; }
-.notification-warning { background: linear-gradient(135deg, #FBBC05, #f39c12); color: white; }
-
-/* Footer */
+/* =========================================================
+   FOOTER
+========================================================= */
 .footer {
     position: fixed;
     bottom: 0;
@@ -792,314 +1134,33 @@ main {
     text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
 }
 
-/* Responsive */
+/* =========================================================
+   RESPONSIVE GLOBAL
+========================================================= */
 @media (max-width: 768px) {
     .hubar {
         top: 5px;
         padding: 0.4rem 0.8rem;
     }
-
-    .logo-image {
-        height: 32px;
-    }
-
-    .logo-area h1 {
-        font-size: 1.2rem;
-    }
-
-    .icon-btn {
-        width: 40px;
-        height: 40px;
-    }
-
-    .icon-btn .material-icons {
-        font-size: 22px;
-    }
-
-    .search-panel {
-        top: 60px;
-        width: 95%;
-    }
-
-    .search-bar-expandable {
-        font-size: 14px;
-        padding: 10px 14px;
-    }
-
-    .search-btn-expandable {
-        width: 40px;
-        height: 40px;
-    }
-
-    .mobile-btn {
-        width: 50px;
-        height: 50px;
-        right: 15px;
-    }
-
+    .logo-image { height: 32px; }
+    .logo-area h1 { font-size: 1.2rem; }
+    .icon-btn { width: 40px; height: 40px; }
+    .icon-btn .material-icons { font-size: 22px; }
+    .search-panel { top: 60px; width: 95%; }
+    .search-bar-expandable { font-size: 14px; padding: 10px 14px; }
+    .search-btn-expandable { width: 40px; height: 40px; }
+    .toast-container { top: 70px; width: 95%; }
+    .mobile-btn { width: 50px; height: 50px; right: 15px; }
     #locateBtn { bottom: 75px; }
     #followBtn { bottom: 140px; }
     #nearestStopBtn { bottom: 205px; }
-
-    .route-modal {
-        width: 90%;
-        right: 5%;
-        top: 80px;
-    }
-
-    .stops-drawer {
-        width: 100%;
-        left: -100%;
-    }
+    .route-modal { width: 90%; right: 5%; top: 80px; }
+    .stops-drawer { width: 100%; left: -100%; border-radius: 0; }
+    .drawer-header { border-radius: 0; }
 }
 
 @media (max-width: 480px) {
-    .logo-image {
-        height: 28px;
-    }
-
-    .logo-area h1 {
-        font-size: 1rem;
-    }
-
-    .search-bar-expandable {
-        font-size: 13px;
-        padding: 8px 12px;
-    }
-}
-
-/* =========================================================
-   TOAST NOTIFICATIONS (sous la Hubar)
-========================================================= */
-.toast-container {
-    position: fixed;
-    top: 80px; /* juste sous la Hubar */
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90%;
-    max-width: 400px;
-    z-index: 1100;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    pointer-events: none; /* pour ne pas gêner les clics sur la carte */
-}
-
-.toast {
-    background: white;
-    border-radius: 40px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    padding: 12px 20px;
-    min-width: 250px;
-    max-width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-family: 'Arial', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.3);
-    animation: slideDownToast 0.3s ease forwards;
-    pointer-events: auto;
-    transition: opacity 0.3s ease;
-}
-
-.toast-icon {
-    font-size: 20px;
-}
-
-.toast-content {
-    flex: 1;
-}
-
-.toast-title {
-    font-weight: bold;
-    margin-bottom: 2px;
-}
-
-.toast-message {
-    font-size: 12px;
-    opacity: 0.8;
-}
-
-.toast-close {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 18px;
-    color: #999;
-    padding: 0;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: background 0.2s;
-}
-
-.toast-close:hover {
-    background: rgba(0,0,0,0.1);
-}
-
-/* Types de toasts */
-.toast-success {
-    background: linear-gradient(135deg, #34A853, #2e8b47);
-    color: white;
-}
-.toast-error {
-    background: linear-gradient(135deg, #f44336, #d32f2f);
-    color: white;
-}
-.toast-info {
-    background: linear-gradient(135deg, #4285f4, #3367d6);
-    color: white;
-}
-.toast-warning {
-    background: linear-gradient(135deg, #FBBC05, #f39c12);
-    color: white;
-}
-
-/* Animation d'entrée */
-@keyframes slideDownToast {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Animation de sortie */
-.toast-exit {
-    animation: fadeOutUp 0.3s ease forwards;
-}
-
-@keyframes fadeOutUp {
-    from {
-        opacity: 1;
-        transform: translateY(0);
-    }
-    to {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-}
-
-/* Responsive : ajuster la position sur mobile */
-@media (max-width: 768px) {
-    .toast-container {
-        top: 70px;
-        width: 95%;
-    }
-}
-
-/* =========================================================
-   HUBAR - Titre avec couleurs personnalisées
-========================================================= */
-.logo-area h1 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin: 0;
-    display: inline-block;
-}
-
-.bus-part {
-    color: #4285f4; /* Bleu */
-}
-
-.eye-part {
-    color: #FFD700; /* Jaune */
-}
-
-/* Boutons de la Hubar */
-.icon-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s;
-}
-
-/* Icônes Recherche et Itinéraire : bleu */
-#searchToggleBtn .material-icons,
-#routeBtn .material-icons {
-    color: #4285f4;
-}
-
-/* Icône Menu : gris professionnel */
-#menuToggle .material-icons {
-    color: #5f6368;
-}
-
-.icon-btn:hover {
-    background: rgba(0, 0, 0, 0.05);
-}
-
-/* Ajustement responsive pour le titre */
-@media (max-width: 768px) {
-    .logo-area h1 {
-        font-size: 1.2rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .logo-area h1 {
-        font-size: 1rem;
-    }
-}
-
-/* =========================================================
-   MARQUEUR UTILISATEUR AVEC EFFET DE VAGUE (comme Google Maps)
-========================================================= */
-.user-marker {
-    position: relative;
-    width: 24px;
-    height: 24px;
-    cursor: pointer;
-}
-
-.user-marker .core {
-    position: absolute;
-    top: 6px;
-    left: 6px;
-    width: 12px;
-    height: 12px;
-    background: #4285f4;
-    border: 2px solid white;
-    border-radius: 50%;
-    box-shadow: 0 0 2px rgba(0,0,0,0.2);
-    z-index: 2;
-}
-
-.user-marker .pulse-ring {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    background: rgba(66, 133, 244, 0.4);
-    animation: ripple 1.5s infinite ease-out;
-    z-index: 1;
-}
-
-@keyframes ripple {
-    0% {
-        transform: scale(0.6);
-        opacity: 0.8;
-    }
-    100% {
-        transform: scale(2);
-        opacity: 0;
-    }
+    .logo-image { height: 28px; }
+    .logo-area h1 { font-size: 1rem; }
+    .search-bar-expandable { font-size: 13px; padding: 8px 12px; }
 }
