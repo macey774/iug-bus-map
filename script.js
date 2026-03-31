@@ -1,79 +1,23 @@
 /**
- * ======================================================================
- * SYSTÈME DE SUIVI DE BUS - APPLICATION DE TRANSPORT EN COMMUN
- * Version professionnelle 3.0 - Popups unifiés version compacte
+ * BusEye - Application de suivi des bus scolaires
+ * Version 5.3 - Splash screen avec image personnalisée
  * Auteur : Mabel Cédric Yvan
- * Description : Application de suivi en temps réel des bus avec
- *              calcul d'itinéraires, géolocalisation et interface moderne
- * 
- * Tous les popups d'arrêts utilisent le même format compact :
- * - Nom de l'arrêt
- * - Lignes de bus desservies
- * - Boutons favori (étoile) et itinéraire (direction)
- * ======================================================================
  */
 
 // ======================================================================
-// CONFIGURATION DU RELAIS (au lieu de Firebase direct)
+// CONFIGURATION
 // ======================================================================
-const RELAY_URL = "https://bus-relais.onrender.com/api/positions"; // Route GET pour lire les positions
-
-// Ancienne config Firebase commentée (gardée pour référence)
-/*
-const firebaseConfig = {
-  apiKey: "AIzaSyBcKo-baav4AZss0wibZFSPUonwOPeZEF8",
-  authDomain: "bus-scolaire---iug.firebaseapp.com",
-  databaseURL: "https://bus-scolaire---iug-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "bus-scolaire---iug",
-  storageBucket: "bus-scolaire---iug.firebasestorage.app",
-  messagingSenderId: "527926199083",
-  appId: "1:527926199083:web:c0f5057680762a33343b6e"
-};
-// firebase.initializeApp(firebaseConfig);
-// const database = firebase.database();
-*/
-
-// ======================================================================
-// SECTION 1 : CONFIGURATION ET CONSTANTES GLOBALES
-// ======================================================================
+const RELAY_URL = "https://bus-relais.onrender.com/api/positions";
+const OSRM_URL = "https://router.project-osrm.org";
 
 const CONFIG = {
-    map: {
-        defaultCenter: [4.040770, 9.752837],
-        defaultZoom: 18,
-        minZoom: 12,
-        maxZoom: 18,
-        zoomControl: true
-    },
-    bus: {
-        animationSpeed: 200,
-        averageSpeed: 20,
-        averageSpeedMps: 5.56,
-        updateInterval: 5000,
-        maxRealisticDistance: 15000
-    },
-    geolocation: {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-    },
-    walking: {
-        speedMps: 1.4,
-        speedMpm: 84,
-        comfortFactor: 1.2
-    }
+    map: { defaultCenter: [4.040770, 9.752837], defaultZoom: 18, minZoom: 12, maxZoom: 18 },
+    bus: { averageSpeedMps: 5.56, updateInterval: 2000, maxRealisticDistance: 15000 },
+    geolocation: { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+    walking: { speedMps: 1.4 }
 };
 
-const COLORS = {
-    primary: '#4285F4',
-    success: '#34A853',
-    warning: '#FBBC05',
-    danger: '#EA4335',
-    bus4: '#FFD700',
-    bus8: '#34A853',
-    white: '#FFFFFF',
-    black: '#000000'
-};
+const COLORS = { primary: '#4285F4', bus4: '#FFD700', bus8: '#34A853' };
 
 const BUS_STOPS = {
     bus4: [
@@ -102,18 +46,8 @@ const BUS_STOPS = {
 };
 
 const BUS_TYPES = {
-    bus4: {
-        name: "BUS 4",
-        company: "Socatur",
-        type: "Standard",
-        color: COLORS.bus4
-    },
-    bus8: {
-        name: "BUS 8",
-        company: "Coaster",
-        type: "Express",
-        color: COLORS.bus8
-    }
+    bus4: { name: "BUS 4", company: "Socatur", color: COLORS.bus4 },
+    bus8: { name: "BUS 8", company: "Coaster", color: COLORS.bus8 }
 };
 
 const POINTS_OF_INTEREST = {
@@ -128,224 +62,73 @@ const POINTS_OF_INTEREST = {
 };
 
 // ======================================================================
-// SECTION 2 : ICÔNES PERSONNALISÉES (BUS ET ARRÊTS)
+// ICÔNES
 // ======================================================================
-
 const Icons = {
-    bus: L.divIcon({
-        className: 'custom-bus-icon',
-        html: `
-            <div class="bus-icon-container">
-                <svg width="42" height="42" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-                        <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.3"/>
-                    </filter>
-                    <rect x="4" y="10" width="34" height="20" rx="4" fill="#4285F4" filter="url(#shadow)"/>
-                    <rect x="8" y="13" width="8" height="6" rx="1" fill="#E1F5FE" stroke="white" stroke-width="0.5"/>
-                    <rect x="18" y="13" width="8" height="6" rx="1" fill="#E1F5FE" stroke="white" stroke-width="0.5"/>
-                    <rect x="28" y="13" width="6" height="6" rx="1" fill="#E1F5FE" stroke="white" stroke-width="0.5"/>
-                    <circle cx="6" cy="18" r="2" fill="#FFD700"/>
-                    <circle cx="36" cy="18" r="2" fill="#FFD700"/>
-                    <circle cx="12" cy="30" r="5" fill="#333" stroke="#666" stroke-width="1.5"/>
-                    <circle cx="30" cy="30" r="5" fill="#333" stroke="#666" stroke-width="1.5"/>
-                    <circle cx="12" cy="30" r="2.5" fill="#AAA"/>
-                    <circle cx="30" cy="30" r="2.5" fill="#AAA"/>
-                    <rect x="4" y="10" width="34" height="4" fill="rgba(255,255,255,0.3)"/>
-                    <rect x="8" y="6" width="26" height="4" rx="1" fill="#2C3E50"/>
-                </svg>
-                <div class="bus-label">BUS</div>
-            </div>
-        `,
-        iconSize: [42, 42],
-        iconAnchor: [21, 36],
-        popupAnchor: [0, -36]
-    }),
-
     bus4: L.divIcon({
         className: 'custom-bus-icon',
-        html: `
-            <div class="bus-icon-container bus4">
-                <svg width="42" height="42" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <filter id="shadow4" x="-20%" y="-20%" width="140%" height="140%">
-                        <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.3"/>
-                    </filter>
-                    <rect x="4" y="10" width="34" height="20" rx="4" fill="#FFD700" filter="url(#shadow4)"/>
-                    <rect x="8" y="13" width="8" height="6" rx="1" fill="#E1F5FE" stroke="white" stroke-width="0.5"/>
-                    <rect x="18" y="13" width="8" height="6" rx="1" fill="#E1F5FE" stroke="white" stroke-width="0.5"/>
-                    <rect x="28" y="13" width="6" height="6" rx="1" fill="#E1F5FE" stroke="white" stroke-width="0.5"/>
-                    <circle cx="6" cy="18" r="2" fill="#FFD700"/>
-                    <circle cx="36" cy="18" r="2" fill="#FFD700"/>
-                    <circle cx="12" cy="30" r="5" fill="#333" stroke="#666" stroke-width="1.5"/>
-                    <circle cx="30" cy="30" r="5" fill="#333" stroke="#666" stroke-width="1.5"/>
-                    <circle cx="12" cy="30" r="2.5" fill="#AAA"/>
-                    <circle cx="30" cy="30" r="2.5" fill="#AAA"/>
-                    <rect x="4" y="10" width="34" height="4" fill="rgba(255,255,255,0.3)"/>
-                    <rect x="8" y="6" width="26" height="4" rx="1" fill="#2C3E50"/>
-                </svg>
-                <div class="bus-label">BUS 4</div>
-            </div>
-        `,
-        iconSize: [42, 42],
-        iconAnchor: [21, 36],
-        popupAnchor: [0, -36]
+        html: `<div class="bus-icon-container bus4"><svg width="42" height="42" viewBox="0 0 42 42"><rect x="4" y="10" width="34" height="20" rx="4" fill="#FFD700"/><circle cx="12" cy="30" r="5" fill="#333"/><circle cx="30" cy="30" r="5" fill="#333"/><rect x="8" y="6" width="26" height="4" rx="1" fill="#2C3E50"/></svg><div class="bus-label">BUS 4</div></div>`,
+        iconSize: [42, 42], iconAnchor: [21, 36], popupAnchor: [0, -36]
     }),
-
     bus8: L.divIcon({
         className: 'custom-bus-icon',
-        html: `
-            <div class="bus-icon-container bus8">
-                <svg width="42" height="42" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <filter id="shadow8" x="-20%" y="-20%" width="140%" height="140%">
-                        <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.3"/>
-                    </filter>
-                    <rect x="4" y="10" width="34" height="20" rx="4" fill="#34A853" filter="url(#shadow8)"/>
-                    <rect x="8" y="13" width="8" height="6" rx="1" fill="#E1F5FE" stroke="white" stroke-width="0.5"/>
-                    <rect x="18" y="13" width="8" height="6" rx="1" fill="#E1F5FE" stroke="white" stroke-width="0.5"/>
-                    <rect x="28" y="13" width="6" height="6" rx="1" fill="#E1F5FE" stroke="white" stroke-width="0.5"/>
-                    <circle cx="6" cy="18" r="2" fill="#FFD700"/>
-                    <circle cx="36" cy="18" r="2" fill="#FFD700"/>
-                    <circle cx="12" cy="30" r="5" fill="#333" stroke="#666" stroke-width="1.5"/>
-                    <circle cx="30" cy="30" r="5" fill="#333" stroke="#666" stroke-width="1.5"/>
-                    <circle cx="12" cy="30" r="2.5" fill="#AAA"/>
-                    <circle cx="30" cy="30" r="2.5" fill="#AAA"/>
-                    <rect x="4" y="10" width="34" height="4" fill="rgba(255,255,255,0.3)"/>
-                    <rect x="8" y="6" width="26" height="4" rx="1" fill="#2C3E50"/>
-                </svg>
-                <div class="bus-label">BUS 8</div>
-            </div>
-        `,
-        iconSize: [42, 42],
-        iconAnchor: [21, 36],
-        popupAnchor: [0, -36]
+        html: `<div class="bus-icon-container bus8"><svg width="42" height="42" viewBox="0 0 42 42"><rect x="4" y="10" width="34" height="20" rx="4" fill="#34A853"/><circle cx="12" cy="30" r="5" fill="#333"/><circle cx="30" cy="30" r="5" fill="#333"/><rect x="8" y="6" width="26" height="4" rx="1" fill="#2C3E50"/></svg><div class="bus-label">BUS 8</div></div>`,
+        iconSize: [42, 42], iconAnchor: [21, 36], popupAnchor: [0, -36]
     }),
-
     busStop: {
-        bus4: L.icon({
-            iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-yellow.png",
-            iconSize: [25, 41],
-            iconAnchor: [12, 41]
-        }),
-        bus8: L.icon({
-            iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
-            iconSize: [25, 41],
-            iconAnchor: [12, 41]
-        })
+        bus4: L.icon({ iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-yellow.png", iconSize: [25, 41], iconAnchor: [12, 41] }),
+        bus8: L.icon({ iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png", iconSize: [25, 41], iconAnchor: [12, 41] })
     }
 };
 
 // ======================================================================
-// SECTION 3 : SERVICE DE CARTE (MapService)
+// MAP SERVICE
 // ======================================================================
-
 class MapService {
     constructor() {
-        this.map = null;
-        this.layers = {};
-        this.routeCache = new Map();
-        this.userLocationSet = false;
-        this.init();
-    }
-
-    init() {
-        this.map = L.map("map", {
-            zoomControl: true,
-            minZoom: CONFIG.map.minZoom,
-            maxZoom: CONFIG.map.maxZoom
-        }).setView(CONFIG.map.defaultCenter, CONFIG.map.defaultZoom);
-
-        const mapSatellite = L.tileLayer(
-            "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-            { attribution: "© Mabel Cédric Yvan" }
-        );
-
-        const mapStandard = L.tileLayer(
-            "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        );
-
-        const mapLabels = L.tileLayer(
-            "https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}.png",
-            { opacity: 0.9 }
-        );
-
-        mapStandard.addTo(this.map);
-        mapLabels.addTo(this.map);
-
+        this.map = L.map("map").setView(CONFIG.map.defaultCenter, CONFIG.map.defaultZoom);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(this.map);
+        L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { opacity: 0.5 }).addTo(this.map);
         this.layers = {
             bus4: L.layerGroup().addTo(this.map),
             bus8: L.layerGroup().addTo(this.map),
             bus4Line: L.layerGroup().addTo(this.map),
             bus8Line: L.layerGroup().addTo(this.map),
             campus: L.layerGroup().addTo(this.map),
-            parking: L.layerGroup().addTo(this.map),
-            followBus4: L.layerGroup(),
-            followBus8: L.layerGroup()
+            parking: L.layerGroup().addTo(this.map)
         };
-
-        return this.map;
-    }
-
-    centerOnUserLocation(lat, lng) {
-        if (!this.userLocationSet) {
-            this.map.setView([lat, lng], CONFIG.map.defaultZoom, {
-                animate: true,
-                duration: 1
-            });
-            this.userLocationSet = true;
-        }
+        this.routeCache = new Map();
     }
 
     async getRoute(coords) {
         const key = JSON.stringify(coords);
-        
-        if (this.routeCache.has(key)) {
-            return this.routeCache.get(key);
-        }
-
+        if (this.routeCache.has(key)) return this.routeCache.get(key);
         try {
             const points = coords.map(c => `${c[1]},${c[0]}`).join(";");
-            const url = `https://router.project-osrm.org/route/v1/driving/${points}?overview=full&geometries=geojson`;
-
-            const response = await fetch(url);
-            const data = await response.json();
-
-            if (!data.routes?.[0]) {
-                return coords;
-            }
-
+            const url = `${OSRM_URL}/route/v1/driving/${points}?overview=full&geometries=geojson`;
+            const res = await fetch(url);
+            const data = await res.json();
+            if (!data.routes?.[0]) return coords;
             const route = data.routes[0].geometry.coordinates.map(p => [p[1], p[0]]);
             this.routeCache.set(key, route);
-            
             return route;
-        } catch (error) {
-            console.error("Erreur OSRM :", error);
-            return coords;
-        }
+        } catch (e) { console.error("Erreur OSRM", e); return coords; }
     }
 
-    validateDistance(distance) {
-        if (distance > CONFIG.bus.maxRealisticDistance) {
-            console.warn(`Distance anormalement élevée : ${distance}m`);
-            return CONFIG.bus.maxRealisticDistance;
-        }
-        return distance;
-    }
+    validateDistance(d) { return Math.min(d, CONFIG.bus.maxRealisticDistance); }
 }
 
 // ======================================================================
-// SECTION 4 : GESTIONNAIRE DES BUS (BusManager) - MODIFIÉ POUR UTILISER LE RELAIS
+// BUS MANAGER
 // ======================================================================
-
 class BusManager {
     constructor(mapService) {
         this.mapService = mapService;
-        this.busPositions = new Map();
-        this.busRoutes = new Map();
         this.busMarkers = new Map();
-        this.busTimestamps = new Map(); // Pour stocker le timestamp de chaque bus
+        this.busRoutes = new Map();
         this.initRoutes();
         this.initStops();
         this.initPOI();
-        // Lancer le polling vers le relais
         this.startPolling();
     }
 
@@ -353,26 +136,21 @@ class BusManager {
         const route4 = await this.mapService.getRoute(BUS_STOPS.bus4.map(s => s.coords));
         const line4 = L.polyline(route4, { color: COLORS.bus4, weight: 6 });
         this.mapService.layers.bus4Line.addLayer(line4);
-        this.mapService.layers.followBus4.addLayer(line4);
         this.busRoutes.set('bus4', route4);
 
         const route8 = await this.mapService.getRoute(BUS_STOPS.bus8.map(s => s.coords));
         const line8 = L.polyline(route8, { color: COLORS.bus8, weight: 6 });
         this.mapService.layers.bus8Line.addLayer(line8);
-        this.mapService.layers.followBus8.addLayer(line8);
         this.busRoutes.set('bus8', route8);
     }
 
     initStops() {
         BUS_STOPS.bus4.forEach(stop => {
-            const marker = L.marker(stop.coords, { icon: Icons.busStop.bus4 })
-                .addTo(this.mapService.layers.bus4);
+            const marker = L.marker(stop.coords, { icon: Icons.busStop.bus4 }).addTo(this.mapService.layers.bus4);
             this.updateStopPopup(marker, stop);
         });
-
         BUS_STOPS.bus8.forEach(stop => {
-            const marker = L.marker(stop.coords, { icon: Icons.busStop.bus8 })
-                .addTo(this.mapService.layers.bus8);
+            const marker = L.marker(stop.coords, { icon: Icons.busStop.bus8 }).addTo(this.mapService.layers.bus8);
             this.updateStopPopup(marker, stop);
         });
     }
@@ -380,395 +158,188 @@ class BusManager {
     updateStopPopup(marker, stop) {
         const isInBus4 = BUS_STOPS.bus4.some(s => s.name === stop.name);
         const isInBus8 = BUS_STOPS.bus8.some(s => s.name === stop.name);
-        
         const busLines = [];
         if (isInBus4) busLines.push('BUS 4');
         if (isInBus8) busLines.push('BUS 8');
-        
         const linesText = busLines.join(' • ');
-        const favorites = JSON.parse(localStorage.getItem('bus_favorites')) || [];
-        const isFavorite = favorites.includes(stop.name);
+        const isFavorite = window.favoritesManager?.isFavorite(stop.name) || false;
 
-        const popupContent = this.createStopPopup(stop.name, busLines, linesText, isFavorite);
-
-        marker.bindPopup(popupContent, {
-            autoClose: true,
-            closeOnClick: true,
-            maxWidth: 280,
-            className: 'stop-popup'
-        });
-
-        marker.on('click', () => {
-            const currentFavorites = JSON.parse(localStorage.getItem('bus_favorites')) || [];
-            const currentIsFavorite = currentFavorites.includes(stop.name);
-            
-            const updatedPopupContent = this.createStopPopup(
-                stop.name, 
-                busLines, 
-                linesText, 
-                currentIsFavorite
-            );
-            
-            marker.setPopupContent(updatedPopupContent);
-        });
-    }
-
-    createStopPopup(stopName, busLines, linesText, isFavorite) {
-        const favoriteIcon = isFavorite ? 'star' : 'star_border';
-        
-        return `
+        const popupContent = `
             <div class="stop-popup-container compact">
-                <div class="stop-popup-name">${stopName}</div>
+                <div class="stop-popup-name">${stop.name}</div>
                 <div class="stop-popup-lines">${linesText}</div>
                 <div class="stop-popup-actions">
-                    <button class="stop-popup-btn favorite-btn ${isFavorite ? 'active' : ''}" 
-                            onclick="window.busManager.toggleFavorite('${stopName}')"
-                            title="${isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}">
-                        <span class="material-icons">${favoriteIcon}</span>
+                    <button class="stop-popup-btn favorite-btn ${isFavorite ? 'active' : ''}" onclick="window.busManager.toggleFavorite('${stop.name}')">
+                        <span class="material-icons">${isFavorite ? 'star' : 'star_border'}</span>
                     </button>
-                    <button class="stop-popup-btn route-btn" 
-                            onclick="window.busManager.openRouteToStop('${stopName}')"
-                            title="Calculer l'itinéraire">
+                    <button class="stop-popup-btn route-btn" onclick="window.busManager.openRouteToStop('${stop.name}')">
                         <span class="material-icons">directions</span>
                     </button>
                 </div>
             </div>
         `;
+        marker.bindPopup(popupContent, { className: 'stop-popup', maxWidth: 280 });
     }
 
     toggleFavorite(stopName) {
-        const favoritesManager = window.favoritesManager;
-        if (!favoritesManager) return;
+        if (window.favoritesManager.isFavorite(stopName)) window.favoritesManager.remove(stopName);
+        else window.favoritesManager.add(stopName);
+        this.refreshOpenPopup(stopName);
+    }
 
-        const isFavorite = favoritesManager.isFavorite(stopName);
-        
-        if (isFavorite) {
-            favoritesManager.remove(stopName);
-        } else {
-            favoritesManager.add(stopName);
-        }
-
-        this.updateCurrentPopup(stopName);
+    refreshOpenPopup(stopName) {
+        this.mapService.map.eachLayer(layer => {
+            if (layer instanceof L.Marker && layer.isPopupOpen()) {
+                const popup = layer.getPopup();
+                if (popup && popup.getContent().includes(stopName)) {
+                    const stop = this.getAllStops().find(s => s.name === stopName);
+                    if (stop) this.updateStopPopup(layer, stop);
+                }
+            }
+        });
     }
 
     openRouteToStop(stopName) {
-        const endInput = document.getElementById('endInput');
-        if (endInput) {
-            endInput.value = stopName;
-            
-            const routeModal = document.getElementById('routeModal');
-            if (routeModal) {
-                routeModal.style.display = 'block';
-            }
-            
-            setTimeout(() => {
-                const traceBtn = document.getElementById('traceBtn');
-                if (traceBtn) {
-                    traceBtn.click();
-                }
-            }, 500);
-        }
-    }
-
-    updateCurrentPopup(stopName) {
-        const updateLayers = (layerGroup) => {
-            layerGroup.eachLayer(layer => {
-                if (layer instanceof L.Marker && layer.isPopupOpen()) {
-                    const popup = layer.getPopup();
-                    if (popup && popup.getContent().includes(stopName)) {
-                        const favorites = JSON.parse(localStorage.getItem('bus_favorites')) || [];
-                        const isFavorite = favorites.includes(stopName);
-                        
-                        const isInBus4 = BUS_STOPS.bus4.some(s => s.name === stopName);
-                        const isInBus8 = BUS_STOPS.bus8.some(s => s.name === stopName);
-                        const busLines = [];
-                        if (isInBus4) busLines.push('BUS 4');
-                        if (isInBus8) busLines.push('BUS 8');
-                        const linesText = busLines.join(' • ');
-                        
-                        const newContent = this.createStopPopup(stopName, busLines, linesText, isFavorite);
-                        layer.setPopupContent(newContent);
-                    }
-                }
-            });
-        };
-
-        updateLayers(this.mapService.layers.bus4);
-        updateLayers(this.mapService.layers.bus8);
+        document.getElementById('endInput').value = stopName;
+        document.getElementById('routeModal').style.display = 'block';
+        setTimeout(() => document.getElementById('traceBtn').click(), 500);
     }
 
     initPOI() {
-        POINTS_OF_INTEREST.campuses.forEach(c =>
-            L.marker(c.coords).addTo(this.mapService.layers.campus).bindPopup(`🎓 ${c.name}`)
-        );
-
-        POINTS_OF_INTEREST.parkings.forEach(p =>
-            L.marker(p.coords).addTo(this.mapService.layers.parking).bindPopup(`🅿️ ${p.name}`)
-        );
+        POINTS_OF_INTEREST.campuses.forEach(c => L.marker(c.coords).addTo(this.mapService.layers.campus).bindPopup(`🎓 ${c.name}`));
+        POINTS_OF_INTEREST.parkings.forEach(p => L.marker(p.coords).addTo(this.mapService.layers.parking).bindPopup(`🅿️ ${p.name}`));
     }
 
-    findClosestStop(stops, position) {
-        let closest = null;
-        let minDistance = Infinity;
-        let closestIndex = -1;
-
-        stops.forEach((stop, index) => {
-            const distance = this.mapService.map.distance(position, stop.coords);
-            if (distance < minDistance) {
-                minDistance = distance;
-                closest = stop;
-                closestIndex = index;
+    getAllStops() {
+        const stopsMap = new Map();
+        [...BUS_STOPS.bus4, ...BUS_STOPS.bus8].forEach(stop => {
+            if (stopsMap.has(stop.name)) {
+                const existing = stopsMap.get(stop.name);
+                existing.lines = [...new Set([...existing.lines, ...(stop.lines || [])])];
+            } else {
+                stopsMap.set(stop.name, { ...stop, lines: [] });
             }
         });
-
-        return { stop: closest, distance: minDistance, index: closestIndex };
+        return Array.from(stopsMap.values());
     }
 
-    findNextStop(stops, currentStop, currentPosition, route) {
+    findClosestStop(stops, pos) {
+        let closest = null, minDist = Infinity;
+        stops.forEach(stop => {
+            const dist = this.mapService.map.distance(pos, stop.coords);
+            if (dist < minDist) { minDist = dist; closest = stop; }
+        });
+        return { stop: closest, distance: minDist };
+    }
+
+    findNextStop(stops, currentStop, currentPos, route) {
         if (!currentStop) return null;
-
-        const currentIndex = stops.findIndex(s => s.name === currentStop.name);
-        const nextIndex = (currentIndex + 1) % stops.length;
-        const nextStop = stops[nextIndex];
-
-        const distanceToNext = this.calculateDistanceAlongRoute(
-            currentPosition,
-            nextStop.coords,
-            route
-        );
-
-        const validatedDistance = this.mapService.validateDistance(distanceToNext);
-        const timeMinutes = this.calculateEstimatedTime(validatedDistance);
-
-        return {
-            stop: nextStop,
-            distance: validatedDistance,
-            timeMinutes: timeMinutes
-        };
+        const idx = stops.findIndex(s => s.name === currentStop.name);
+        const nextIdx = (idx + 1) % stops.length;
+        const nextStop = stops[nextIdx];
+        const dist = this.calcDistanceAlongRoute(currentPos, nextStop.coords, route);
+        const time = Math.ceil((dist / CONFIG.bus.averageSpeedMps) / 60);
+        return { stop: nextStop, distance: dist, timeMinutes: time };
     }
 
-    calculateDistanceAlongRoute(currentPos, nextStopCoords, route) {
-        if (!route || route.length === 0) {
-            return this.mapService.map.distance(currentPos, nextStopCoords);
-        }
-
-        let minDistToCurrent = Infinity;
-        let minDistToNext = Infinity;
-        let currentIndex = -1;
-        let nextIndex = -1;
-
-        route.forEach((point, index) => {
-            const distToCurrent = this.mapService.map.distance(currentPos, point);
-            const distToNext = this.mapService.map.distance(nextStopCoords, point);
-
-            if (distToCurrent < minDistToCurrent) {
-                minDistToCurrent = distToCurrent;
-                currentIndex = index;
-            }
-
-            if (distToNext < minDistToNext) {
-                minDistToNext = distToNext;
-                nextIndex = index;
-            }
+    calcDistanceAlongRoute(currentPos, nextCoords, route) {
+        if (!route || route.length === 0) return this.mapService.map.distance(currentPos, nextCoords);
+        let minDistCurrent = Infinity, minDistNext = Infinity, idxCurr = -1, idxNext = -1;
+        route.forEach((p, i) => {
+            const dCurr = this.mapService.map.distance(currentPos, p);
+            const dNext = this.mapService.map.distance(nextCoords, p);
+            if (dCurr < minDistCurrent) { minDistCurrent = dCurr; idxCurr = i; }
+            if (dNext < minDistNext) { minDistNext = dNext; idxNext = i; }
         });
-
-        return this.calculateRealisticDistance(route, currentIndex, nextIndex);
-    }
-
-    calculateRealisticDistance(route, startIndex, endIndex) {
-        if (startIndex === endIndex) return 0;
-        
-        let distance = 0;
-        const routeLength = route.length;
-        
-        if (endIndex > startIndex) {
-            for (let i = startIndex; i < endIndex; i++) {
-                distance += this.mapService.map.distance(route[i], route[i + 1]);
-            }
+        if (idxCurr === -1 || idxNext === -1) return 0;
+        let dist = 0;
+        if (idxNext > idxCurr) {
+            for (let i = idxCurr; i < idxNext; i++) dist += this.mapService.map.distance(route[i], route[i + 1]);
         } else {
-            for (let i = startIndex; i < routeLength - 1; i++) {
-                distance += this.mapService.map.distance(route[i], route[i + 1]);
-            }
-            for (let i = 0; i < endIndex; i++) {
-                distance += this.mapService.map.distance(route[i], route[i + 1]);
-            }
+            for (let i = idxCurr; i < route.length - 1; i++) dist += this.mapService.map.distance(route[i], route[i + 1]);
+            for (let i = 0; i < idxNext; i++) dist += this.mapService.map.distance(route[i], route[i + 1]);
         }
-        
-        return distance;
-    }
-
-    calculateEstimatedTime(distanceMeters) {
-        const timeSeconds = distanceMeters / CONFIG.bus.averageSpeedMps;
-        const timeMinutes = Math.ceil(timeSeconds / 60);
-        const trafficFactor = 1.15;
-        return Math.ceil(timeMinutes * trafficFactor);
+        return this.mapService.validateDistance(dist);
     }
 
     createBusPopup(busInfo, currentStop, nextStopInfo, timestamp) {
-        const nextStopText = nextStopInfo ? 
-            `${nextStopInfo.stop.name} (${nextStopInfo.timeMinutes} min)` : 
-            "Terminus";
-        
-        let timeStr = "inconnue";
-        if (timestamp) {
-            const date = new Date(timestamp);
-            timeStr = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        }
-
+        const nextText = nextStopInfo ? `${nextStopInfo.stop.name} (${nextStopInfo.timeMinutes} min)` : "Terminus";
+        const timeStr = timestamp ? new Date(timestamp).toLocaleTimeString('fr-FR') : "inconnue";
         return `
             <div class="bus-popup">
-                <div class="bus-popup-header" style="background-color: ${busInfo.color};">
+                <div class="bus-popup-header" style="background: ${busInfo.color}">
                     <span class="bus-popup-icon">🚌</span>
                     <span class="bus-popup-title">${busInfo.name}</span>
                 </div>
                 <div class="bus-popup-content">
-                    <div class="bus-popup-row">
-                        <span class="bus-popup-label">Compagnie:</span>
-                        <span class="bus-popup-value">${busInfo.company}</span>
-                    </div>
-                    <div class="bus-popup-divider"></div>
-                    <div class="bus-popup-row">
-                        <span class="bus-popup-label">🚏 Arrêt actuel:</span>
-                        <span class="bus-popup-value bus-popup-stop">${currentStop?.name || "En circulation"}</span>
-                    </div>
-                    <div class="bus-popup-row">
-                        <span class="bus-popup-label">⏭️ Prochain:</span>
-                        <span class="bus-popup-value bus-popup-next">${nextStopText}</span>
-                    </div>
-                    <div class="bus-popup-divider"></div>
-                    <div class="bus-popup-row">
-                        <span class="bus-popup-label">🕒 Dernière MAJ:</span>
-                        <span class="bus-popup-value">${timeStr}</span>
-                    </div>
+                    <div>Compagnie: ${busInfo.company}</div>
+                    <div>🚏 Arrêt: ${currentStop?.name || "En circulation"}</div>
+                    <div>⏭️ Prochain: ${nextText}</div>
+                    <div>🕒 MAJ: ${timeStr}</div>
                 </div>
             </div>
         `;
     }
 
-    async animateBus(busId, stops, busInfo) {
-        // Méthode conservée pour compatibilité, mais non utilisée
-    }
-
-    getAllStops() {
-        return [...BUS_STOPS.bus4, ...BUS_STOPS.bus8];
-    }
-
-    // ========== NOUVELLE MÉTHODE : POLLING VERS LE RELAIS ==========
-
-    // Dans BusManager, remplacez startPolling et fetchPositionsFromRelay par ceci :
-
-startPolling() {
-    console.log("🚌 Démarrage du polling vers le relais toutes les 2 secondes");
-    // Appel immédiat
-    this.fetchPositionsFromRelay();
-    // Puis toutes les 2 secondes
-    setInterval(() => this.fetchPositionsFromRelay(), 2000);
-}
-
-async fetchPositionsFromRelay() {
-    console.log("🔄 Interrogation du relais...");
-    try {
-        const response = await fetch(RELAY_URL);
-        console.log("📡 Réponse reçue, statut:", response.status);
-        if (!response.ok) {
-            console.error("❌ Erreur relais:", response.status);
-            return;
-        }
-        const data = await response.json();
-        console.log("📦 Données reçues:", data);
-        if (!data) {
-            console.log("⚠️ Aucune donnée reçue (objet vide)");
-            return;
-        }
-
-        // data est un objet avec des clés comme "BUS_4", "BUS_8"
-        const busIds = Object.keys(data);
-        console.log(`🚍 ${busIds.length} bus trouvés dans les données`);
-        
-        for (let busId of busIds) {
-            const pos = data[busId];
-            console.log(`🟡 Traitement de ${busId}:`, pos);
-            // Vérifier que les coordonnées sont présentes
-            if (pos && typeof pos.lat === 'number' && typeof pos.lng === 'number') {
-                this.updateBusPosition(busId, pos.lat, pos.lng, pos.speed, pos.timestamp);
-            } else {
-                console.warn(`⚠️ Données invalides pour ${busId}:`, pos);
+    startPolling() {
+        const fetchPositions = async () => {
+            try {
+                const res = await fetch(RELAY_URL);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                for (let [id, pos] of Object.entries(data)) {
+                    if (pos && typeof pos.lat === 'number' && typeof pos.lng === 'number') {
+                        this.updateBusPosition(id, pos.lat, pos.lng, pos.speed, pos.timestamp);
+                    }
+                }
+            } catch (err) {
+                console.error("Erreur relais", err);
+                window.notify("Erreur réseau", "Impossible de contacter le serveur de bus", "error");
             }
-        }
-    } catch (error) {
-        console.error("❌ Erreur lors de la récupération des positions:", error);
+        };
+        fetchPositions();
+        setInterval(fetchPositions, CONFIG.bus.updateInterval);
     }
-}
 
-    /**
-     * Met à jour (ou crée) le marqueur d'un bus avec sa nouvelle position
-     */
     updateBusPosition(busId, lat, lng, speed, timestamp) {
-        const marker = this.busMarkers.get(busId);
-        
-        // Déterminer le type de bus et ses arrêts
-        const busKey = busId.toLowerCase(); // "bus_4" ou "bus_8"
-        const busInfo = busKey === 'bus_4' ? BUS_TYPES.bus4 : BUS_TYPES.bus8;
-        const stops = busKey === 'bus_4' ? BUS_STOPS.bus4 : BUS_STOPS.bus8;
-        const icon = busKey === 'bus_4' ? Icons.bus4 : Icons.bus8;
+        const busKey = busId.toLowerCase() === 'bus_4' ? 'bus4' : 'bus8';
+        const stops = busKey === 'bus4' ? BUS_STOPS.bus4 : BUS_STOPS.bus8;
+        const busInfo = BUS_TYPES[busKey];
+        const icon = Icons[busKey];
+        const route = this.busRoutes.get(busKey);
 
-        // Stocker le timestamp
-        this.busTimestamps.set(busId, timestamp);
-
-        if (marker) {
-            // Animer le déplacement
-            this.animateMarkerToPosition(marker, [lat, lng]);
-            
-            // Mettre à jour le contenu du popup
+        if (this.busMarkers.has(busId)) {
+            this.animateMarker(this.busMarkers.get(busId), [lat, lng]);
             const currentStop = this.findClosestStop(stops, [lat, lng]).stop;
-            const nextStopInfo = this.findNextStop(stops, currentStop, [lat, lng], this.busRoutes.get(busKey));
-            const popupContent = this.createBusPopup(busInfo, currentStop, nextStopInfo, timestamp);
-            marker.setPopupContent(popupContent);
+            const nextStopInfo = this.findNextStop(stops, currentStop, [lat, lng], route);
+            this.busMarkers.get(busId).setPopupContent(this.createBusPopup(busInfo, currentStop, nextStopInfo, timestamp));
         } else {
-            // Créer un nouveau marqueur
-            const newMarker = L.marker([lat, lng], { icon: icon }).addTo(this.mapService.map);
-            newMarker.bindPopup('', { autoClose: true, closeOnClick: true });
-            newMarker.on('click', () => {
-                const currentStop = this.findClosestStop(stops, [lat, lng]).stop;
-                const nextStopInfo = this.findNextStop(stops, currentStop, [lat, lng], this.busRoutes.get(busKey));
-                const popupContent = this.createBusPopup(busInfo, currentStop, nextStopInfo, timestamp);
-                newMarker.setPopupContent(popupContent);
-                newMarker.openPopup();
-            });
-            this.busMarkers.set(busId, newMarker);
+            const marker = L.marker([lat, lng], { icon }).addTo(this.mapService.map);
+            marker.bindPopup(this.createBusPopup(busInfo, null, null, timestamp));
+            marker.on('click', () => marker.openPopup());
+            this.busMarkers.set(busId, marker);
         }
     }
 
-    /**
-     * Anime le déplacement d'un marqueur d'un point à un autre (transition fluide)
-     */
-    animateMarkerToPosition(marker, newLatLng) {
-        const duration = 1000; // 1 seconde
+    animateMarker(marker, newPos) {
         const start = marker.getLatLng();
         const startTime = performance.now();
-
-        const animate = (currentTime) => {
-            const elapsed = currentTime - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-            const lat = start.lat + (newLatLng[0] - start.lat) * progress;
-            const lng = start.lng + (newLatLng[1] - start.lng) * progress;
+        const duration = 1000;
+        const animate = (now) => {
+            const elapsed = now - startTime;
+            const t = Math.min(1, elapsed / duration);
+            const lat = start.lat + (newPos[0] - start.lat) * t;
+            const lng = start.lng + (newPos[1] - start.lng) * t;
             marker.setLatLng([lat, lng]);
-
-            if (progress < 1) {
-                requestAnimationFrame(animate);
-            } else {
-                // Assurer la position exacte à la fin
-                marker.setLatLng(newLatLng);
-            }
+            if (t < 1) requestAnimationFrame(animate);
         };
         requestAnimationFrame(animate);
     }
 }
 
 // ======================================================================
-// SECTION 5 : GESTIONNAIRE DE GÉOLOCALISATION (GeolocationManager)
+// GEOLOCATION MANAGER
 // ======================================================================
-
 class GeolocationManager {
     constructor(mapService) {
         this.mapService = mapService;
@@ -776,999 +347,375 @@ class GeolocationManager {
         this.accuracyCircle = null;
         this.userCoords = null;
         this.watchId = null;
-        this.autoFollow = true;
-        this.initialLocationSet = false;
+        this.followMode = false;
         this.init();
-        this.startTracking(true);
     }
 
     init() {
-        this.setupLocateButton();
-        this.setupNearestStopButton();
+        document.getElementById('locateBtn').addEventListener('click', () => this.centerOnUser());
+        document.getElementById('followBtn').addEventListener('click', () => this.toggleFollow());
+        document.getElementById('nearestStopBtn').addEventListener('click', () => this.findNearestStop());
+        this.startTracking();
     }
 
-    setupLocateButton() {
-        document.getElementById("locateBtn").addEventListener("click", (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            if (this.userCoords) {
-                this.centerOnUserAndShowPopup();
-            } else {
-                this.startTracking(false, true);
-            }
-        });
+    startTracking() {
+        if (!navigator.geolocation) return window.notify("Géolocalisation non supportée", "", "error");
+        this.watchId = navigator.geolocation.watchPosition(
+            pos => this.onPositionUpdate(pos),
+            err => this.onPositionError(err),
+            CONFIG.geolocation
+        );
     }
 
-    setupNearestStopButton() {
-        document.getElementById('nearestStopBtn').addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            this.findNearestStop();
-        });
-    }
-
-    centerOnUserAndShowPopup() {
-        if (!this.userCoords) return;
-
-        this.mapService.map.setView(this.userCoords, 19, {
-            animate: true,
-            duration: 1
-        });
-
-        if (this.userMarker) {
-            this.userMarker.setPopupContent(`
-                <div class="popup-container">
-                    <div class="popup-title">📍 Ma position</div>
-                    <div class="popup-content">Vous êtes ici</div>
-                </div>
-            `);
-            
-            this.userMarker.openPopup();
+    onPositionUpdate(pos) {
+        const lat = pos.coords.latitude, lng = pos.coords.longitude, acc = pos.coords.accuracy;
+        this.userCoords = L.latLng(lat, lng);
+        if (!this.userMarker) {
+            this.userMarker = L.circleMarker([lat, lng], { radius: 8, fillColor: COLORS.primary, color: 'white', weight: 2, fillOpacity: 1 }).addTo(this.mapService.map);
+            this.userMarker.bindPopup(`<div>📍 Ma position</div>`);
+            this.accuracyCircle = L.circle([lat, lng], { radius: acc, color: COLORS.primary, fillColor: COLORS.primary, fillOpacity: 0.15 }).addTo(this.mapService.map);
+        } else {
+            this.userMarker.setLatLng([lat, lng]);
+            this.accuracyCircle.setLatLng([lat, lng]);
+            this.accuracyCircle.setRadius(acc);
         }
+        if (this.followMode) this.mapService.map.setView([lat, lng], this.mapService.map.getZoom(), { animate: true });
+    }
 
-        document.getElementById("locateBtn").classList.add('active');
-        setTimeout(() => {
-            document.getElementById("locateBtn").classList.remove('active');
-        }, 1000);
+    onPositionError(err) {
+        let msg = "Impossible d'obtenir votre position.";
+        if (err.code === 1) msg = "Accès refusé.";
+        else if (err.code === 2) msg = "Position indisponible.";
+        else if (err.code === 3) msg = "Délai dépassé.";
+        window.notify("Erreur géolocalisation", msg, "error");
+    }
+
+    centerOnUser() {
+        if (this.userCoords) {
+            this.mapService.map.setView(this.userCoords, 19, { animate: true });
+            this.userMarker.openPopup();
+        } else {
+            window.notify("Position non disponible", "Activez la géolocalisation", "warning");
+        }
+    }
+
+    toggleFollow() {
+        this.followMode = !this.followMode;
+        const btn = document.getElementById('followBtn');
+        if (this.followMode) {
+            btn.classList.add('active');
+            window.notify("Suivi activé", "La carte suivra votre position", "success");
+            if (this.userCoords) this.mapService.map.setView(this.userCoords, this.mapService.map.getZoom());
+        } else {
+            btn.classList.remove('active');
+            window.notify("Suivi désactivé", "", "info");
+        }
     }
 
     findNearestStop() {
-        if (!this.userCoords) {
-            this.showNotification(
-                "📍 Position requise", 
-                "Cliquez d'abord sur 'Ma position'",
-                'warning'
-            );
-            return;
-        }
-
-        this.showSearchIndicator();
-
-        const busManager = window.busManager;
-        const allStops = busManager.getAllStops();
-        
-        let nearestStop = null;
-        let minDistance = Infinity;
-
+        if (!this.userCoords) return window.notify("Position inconnue", "Cliquez d'abord sur 'Ma position'", "warning");
+        const allStops = window.busManager.getAllStops();
+        let nearest = null, minDist = Infinity;
         allStops.forEach(stop => {
-            const stopLatLng = L.latLng(stop.coords[0], stop.coords[1]);
-            const distance = this.userCoords.distanceTo(stopLatLng);
-            
-            if (distance < minDistance) {
-                nearestStop = stop;
-                minDistance = distance;
-            }
+            const dist = this.mapService.map.distance(this.userCoords, stop.coords);
+            if (dist < minDist) { minDist = dist; nearest = stop; }
         });
-
-        if (!nearestStop) {
-            this.hideSearchIndicator();
-            this.showNotification("Aucun arrêt trouvé", "", 'error');
-            return;
-        }
-
-        const stopLatLng = L.latLng(nearestStop.coords[0], nearestStop.coords[1]);
-
-        const isInBus4 = BUS_STOPS.bus4.some(s => s.name === nearestStop.name);
-        const isInBus8 = BUS_STOPS.bus8.some(s => s.name === nearestStop.name);
-        const busLines = [];
-        if (isInBus4) busLines.push('BUS 4');
-        if (isInBus8) busLines.push('BUS 8');
-        const linesText = busLines.join(' • ');
-        const favorites = JSON.parse(localStorage.getItem('bus_favorites')) || [];
-        const isFavorite = favorites.includes(nearestStop.name);
-
-        const popupContent = busManager.createStopPopup(
-            nearestStop.name,
-            busLines,
-            linesText,
-            isFavorite
-        );
-
-        this.mapService.map.closePopup();
-
-        L.popup({
-            autoClose: true,
-            closeOnClick: true,
-            maxWidth: 280,
-            className: 'stop-popup'
-        })
-            .setLatLng(stopLatLng)
-            .setContent(popupContent)
-            .openOn(this.mapService.map);
-
-        this.mapService.map.setView(stopLatLng, 17, {
-            animate: true,
-            duration: 1
-        });
-
-        this.hideSearchIndicator();
+        if (nearest) {
+            this.mapService.map.setView(nearest.coords, 17, { animate: true });
+            L.popup().setLatLng(nearest.coords).setContent(`<b>${nearest.name}</b><br>Distance: ${Math.round(minDist)} m`).openOn(this.mapService.map);
+        } else window.notify("Aucun arrêt trouvé", "", "error");
     }
 
-    showSearchIndicator() {
-        const btn = document.getElementById('nearestStopBtn');
-        btn.classList.add('loading');
-        btn.disabled = true;
-    }
-
-    hideSearchIndicator() {
-        const btn = document.getElementById('nearestStopBtn');
-        btn.classList.remove('loading');
-        btn.disabled = false;
-    }
-
-    showNotification(title, message, type = 'info') {
-        const notification = document.createElement('div');
-        notification.className = `notification notification-${type}`;
-        notification.innerHTML = `
-            <div class="notification-title">${title}</div>
-            <div class="notification-message">${message}</div>
-        `;
-        
-        notification.style.cssText = `
-            position: absolute;
-            top: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: ${type === 'error' ? '#f44336' : type === 'success' ? '#4CAF50' : '#667eea'};
-            color: white;
-            padding: 16px 24px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            z-index: 2000;
-            font-family: Arial, sans-serif;
-            animation: slideDown 0.3s ease;
-            min-width: 280px;
-            text-align: center;
-        `;
-        
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-            notification.style.opacity = '0';
-            notification.style.transform = 'translateX(-50%) translateY(-20px)';
-            notification.style.transition = 'all 0.3s ease';
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }, 2000);
-    }
-
-    calculateRouteToStop(stopName) {
-        const endInput = document.getElementById('endInput');
-        if (endInput) {
-            endInput.value = stopName;
-            
-            const routeModal = document.getElementById('routeModal');
-            if (routeModal) {
-                routeModal.style.display = 'block';
-            }
-            
-            setTimeout(() => {
-                const traceBtn = document.getElementById('traceBtn');
-                if (traceBtn) {
-                    traceBtn.click();
-                }
-            }, 500);
-        }
-    }
-
-    startTracking(initialLoad = false, centerImmediately = false) {
-        if (!navigator.geolocation) {
-            this.showNotification("Géolocalisation non supportée", "", 'error');
-            return;
-        }
-
-        const handlePosition = (position) => {
-            this.onPositionUpdate(position, initialLoad);
-            
-            if (centerImmediately) {
-                this.centerOnUserAndShowPopup();
-            }
-        };
-
-        if (initialLoad) {
-            navigator.geolocation.getCurrentPosition(
-                position => {
-                    handlePosition(position);
-                    this.watchId = navigator.geolocation.watchPosition(
-                        position => this.onPositionUpdate(position, false),
-                        error => this.onPositionError(error),
-                        CONFIG.geolocation
-                    );
-                },
-                error => {
-                    console.warn("Impossible d'obtenir la position au démarrage");
-                    this.onPositionError(error);
-                },
-                CONFIG.geolocation
-            );
-        } else if (this.watchId === null) {
-            this.watchId = navigator.geolocation.watchPosition(
-                position => this.onPositionUpdate(position, false),
-                error => this.onPositionError(error),
-                CONFIG.geolocation
-            );
-        }
-    }
-
-    onPositionUpdate(position, isInitial = false) {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        const accuracy = position.coords.accuracy;
-
-        this.userCoords = L.latLng(lat, lng);
-
-        if (isInitial && !this.initialLocationSet) {
-            this.mapService.centerOnUserLocation(lat, lng);
-            this.initialLocationSet = true;
-        }
-
-        if (!this.userMarker) {
-            this.createUserMarker(accuracy);
-        } else {
-            this.updateUserMarker(accuracy);
-        }
-
-        // Mettre à jour la progression de l'itinéraire
-        if (window.routeManager) {
-            window.routeManager.updateRouteProgress(this.userCoords);
-        }
-    }
-
-    createUserMarker(accuracy) {
-        this.userMarker = L.circleMarker(this.userCoords, {
-            radius: 8,
-            fillColor: COLORS.primary,
-            color: COLORS.white,
-            weight: 2,
-            fillOpacity: 1,
-            className: 'user-location-marker'
-        }).addTo(this.mapService.map);
-
-        this.userMarker.bindPopup(`
-            <div class="popup-container">
-                <div class="popup-title">📍 Ma position</div>
-                <div class="popup-content">Vous êtes ici</div>
-            </div>
-        `, {
-            autoClose: true,
-            closeOnClick: true
-        });
-
-        this.userMarker.on('click', () => {
-            this.userMarker.openPopup();
-        });
-
-        this.accuracyCircle = L.circle(this.userCoords, {
-            radius: accuracy,
-            color: COLORS.primary,
-            fillColor: COLORS.primary,
-            fillOpacity: 0.15,
-            weight: 1
-        }).addTo(this.mapService.map);
-    }
-
-    updateUserMarker(accuracy) {
-        this.userMarker.setLatLng(this.userCoords);
-        this.accuracyCircle.setLatLng(this.userCoords);
-        this.accuracyCircle.setRadius(accuracy);
-    }
-
-    onPositionError(error) {
-        console.warn("Erreur de géolocalisation:", error.message);
-        
-        let errorMessage = "Impossible d'obtenir votre position.";
-        switch(error.code) {
-            case 1:
-                errorMessage = "Accès à la position refusé.";
-                break;
-            case 2:
-                errorMessage = "Position indisponible.";
-                break;
-            case 3:
-                errorMessage = "Délai d'attente dépassé.";
-                break;
-        }
-        
-        this.showNotification("Erreur", errorMessage, 'error');
-    }
-
-    getCurrentCoords() {
-        return this.userCoords;
-    }
+    getCurrentCoords() { return this.userCoords; }
 }
 
 // ======================================================================
-// SECTION 6 : GESTIONNAIRE D'ITINÉRAIRES (RouteManager)
+// ROUTE MANAGER
 // ======================================================================
-
 class RouteManager {
     constructor(mapService, geolocationManager) {
         this.mapService = mapService;
         this.geolocationManager = geolocationManager;
         this.routeLine = null;
-        this.fullRouteCoords = null;
-        this.lastIndex = null;
         this.init();
     }
 
     init() {
-        this.setupRouteModal();
-        this.setupTraceButton();
-        this.setupClearButton();
+        document.getElementById('routeBtn').addEventListener('click', () => document.getElementById('routeModal').style.display = 'block');
+        document.getElementById('closeRouteModal').addEventListener('click', () => document.getElementById('routeModal').style.display = 'none');
+        document.getElementById('traceBtn').addEventListener('click', () => this.calculateRoute());
+        document.getElementById('clearRouteBtn').addEventListener('click', () => this.clearRoute());
+        this.setupEndInputSuggestions();
     }
 
-    setupRouteModal() {
-        const routeBtn = document.getElementById('routeBtn');
-        const routeModal = document.getElementById('routeModal');
-        const closeRouteModal = document.getElementById('closeRouteModal');
-
-        routeBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            routeModal.style.display = 'block';
+    setupEndInputSuggestions() {
+        const input = document.getElementById('endInput');
+        const suggestionsDiv = document.getElementById('endSuggestions');
+        input.addEventListener('input', () => {
+            const term = input.value.toLowerCase();
+            if (term.length < 2) { suggestionsDiv.classList.remove('show'); return; }
+            const stops = window.busManager.getAllStops().filter(s => s.name.toLowerCase().includes(term));
+            if (stops.length === 0) return;
+            suggestionsDiv.innerHTML = stops.map(stop => `
+                <div class="suggestion-item" onclick="document.getElementById('endInput').value='${stop.name}'; document.getElementById('endSuggestions').classList.remove('show');">
+                    <span class="material-icons">location_on</span>
+                    <div class="suggestion-content">
+                        <div class="suggestion-name">${stop.name}</div>
+                        <div class="suggestion-line">${stop.lines.join(' • ')}</div>
+                    </div>
+                </div>
+            `).join('');
+            suggestionsDiv.classList.add('show');
         });
-
-        closeRouteModal.addEventListener('click', () => {
-            routeModal.style.display = 'none';
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!routeModal.contains(e.target) && e.target !== routeBtn) {
-                routeModal.style.display = 'none';
-            }
-        });
-    }
-
-    setupTraceButton() {
-        document.getElementById("traceBtn").addEventListener("click", () => {
-            this.calculateRoute();
-        });
-    }
-
-    setupClearButton() {
-        document.getElementById("clearRouteBtn").addEventListener("click", () => {
-            this.clearRoute();
-        });
+        document.addEventListener('click', e => { if (!input.contains(e.target)) suggestionsDiv.classList.remove('show'); });
     }
 
     async calculateRoute() {
         const userCoords = this.geolocationManager.getCurrentCoords();
-        if (!userCoords) {
-            alert("Cliquez d'abord sur 'Ma position'.");
-            return;
-        }
-
-        const destinationText = document.getElementById("endInput").value.trim().toLowerCase();
-        if (!destinationText) {
-            alert("Veuillez entrer un arrêt.");
-            return;
-        }
-
-        const busManager = window.busManager;
-        const allStops = busManager.getAllStops();
-
-        const matchedStop = allStops.find(stop =>
-            stop.name.toLowerCase().includes(destinationText)
-        );
-
-        if (!matchedStop) {
-            alert("Arrêt introuvable.");
-            return;
-        }
-
-        const destLat = matchedStop.coords[0];
-        const destLng = matchedStop.coords[1];
-
-        const url = `https://router.project-osrm.org/route/v1/foot/${userCoords.lng},${userCoords.lat};${destLng},${destLat}?overview=full&geometries=geojson`;
-
+        if (!userCoords) return window.notify("Position requise", "Activez d'abord la géolocalisation", "warning");
+        const destName = document.getElementById('endInput').value.trim();
+        if (!destName) return window.notify("Destination manquante", "Entrez un arrêt", "warning");
+        const allStops = window.busManager.getAllStops();
+        const destStop = allStops.find(s => s.name.toLowerCase().includes(destName.toLowerCase()));
+        if (!destStop) return window.notify("Arrêt introuvable", "Vérifiez le nom", "error");
+        const url = `${OSRM_URL}/route/v1/foot/${userCoords.lng},${userCoords.lat};${destStop.coords[1]},${destStop.coords[0]}?overview=full&geometries=geojson`;
         try {
-            const response = await fetch(url);
-            const data = await response.json();
-
-            if (!data.routes?.[0]) {
-                alert("Itinéraire non disponible.");
-                return;
-            }
-
-            const route = data.routes[0];
-            const routeCoords = route.geometry.coordinates.map(coord => [coord[1], coord[0]]);
-
-            this.fullRouteCoords = routeCoords;
-            this.lastIndex = null;
-
+            const res = await fetch(url);
+            const data = await res.json();
+            if (!data.routes?.[0]) throw new Error("Aucune route");
+            const route = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
             this.clearRoute();
-
-            this.routeLine = L.polyline(routeCoords, {
-                color: COLORS.primary,
-                weight: 6,
-                opacity: 0.9
-            }).addTo(this.mapService.map);
-
-            this.mapService.map.fitBounds(this.routeLine.getBounds(), {
-                padding: [60, 60]
-            });
-
-            const isInBus4 = BUS_STOPS.bus4.some(s => s.name === matchedStop.name);
-            const isInBus8 = BUS_STOPS.bus8.some(s => s.name === matchedStop.name);
-            const busLines = [];
-            if (isInBus4) busLines.push('BUS 4');
-            if (isInBus8) busLines.push('BUS 8');
-            const linesText = busLines.join(' • ');
-            const favorites = JSON.parse(localStorage.getItem('bus_favorites')) || [];
-            const isFavorite = favorites.includes(matchedStop.name);
-
-            const popupContent = busManager.createStopPopup(
-                matchedStop.name,
-                busLines,
-                linesText,
-                isFavorite
-            );
-
-            L.popup({
-                autoClose: true,
-                closeOnClick: true,
-                maxWidth: 280,
-                className: 'stop-popup'
-            })
-                .setLatLng([destLat, destLng])
-                .setContent(popupContent)
-                .openOn(this.mapService.map);
-
-        } catch (error) {
-            alert("Erreur lors du calcul de l'itinéraire.");
-            console.error("Erreur de routage:", error);
+            this.routeLine = L.polyline(route, { color: COLORS.primary, weight: 6 }).addTo(this.mapService.map);
+            this.mapService.map.fitBounds(this.routeLine.getBounds(), { padding: [60, 60] });
+            L.popup().setLatLng(destStop.coords).setContent(`<b>${destStop.name}</b>`).openOn(this.mapService.map);
+        } catch (err) {
+            console.error(err);
+            window.notify("Erreur itinéraire", "Impossible de calculer le trajet", "error");
         }
-    }
-
-    updateRouteProgress(userCoords) {
-        if (!this.fullRouteCoords || !this.routeLine) return;
-
-        let minDist = Infinity;
-        let closestIndex = 0;
-        for (let i = 0; i < this.fullRouteCoords.length; i++) {
-            const dist = this.mapService.map.distance(userCoords, this.fullRouteCoords[i]);
-            if (dist < minDist) {
-                minDist = dist;
-                closestIndex = i;
-            }
-        }
-
-        const remainingCoords = this.fullRouteCoords.slice(closestIndex);
-        this.routeLine.setLatLngs(remainingCoords);
-        this.lastIndex = closestIndex;
     }
 
     clearRoute() {
-        if (this.routeLine) {
-            this.mapService.map.removeLayer(this.routeLine);
-            this.routeLine = null;
-        }
-        this.fullRouteCoords = null;
-        this.lastIndex = null;
+        if (this.routeLine) { this.mapService.map.removeLayer(this.routeLine); this.routeLine = null; }
     }
 }
 
 // ======================================================================
-// SECTION 7 : GESTIONNAIRE DES FAVORIS (FavoritesManager)
+// FAVORITES MANAGER
 // ======================================================================
-
 class FavoritesManager {
     constructor() {
         this.storageKey = "bus_favorites";
     }
-
-    add(stopName) {
-        let favorites = this.getAll();
-        
-        if (!favorites.includes(stopName)) {
-            favorites.push(stopName);
-            localStorage.setItem(this.storageKey, JSON.stringify(favorites));
-            this.triggerFavoritesUpdated();
-            this.showNotification('⭐ Favori ajouté', stopName);
-        }
-    }
-
-    remove(stopName) {
-        let favorites = this.getAll();
-        favorites = favorites.filter(f => f !== stopName);
-        localStorage.setItem(this.storageKey, JSON.stringify(favorites));
-        this.triggerFavoritesUpdated();
-        this.showNotification('⭐ Favori retiré', stopName);
-    }
-
-    getAll() {
-        return JSON.parse(localStorage.getItem(this.storageKey)) || [];
-    }
-
-    isFavorite(stopName) {
-        return this.getAll().includes(stopName);
-    }
-
-    triggerFavoritesUpdated() {
-        const event = new CustomEvent('favoritesUpdated', {
-            detail: { favorites: this.getAll() }
-        });
-        window.dispatchEvent(event);
-    }
-
-    showNotification(title, message) {
-        const notification = document.createElement('div');
-        notification.className = 'notification notification-info';
-        notification.innerHTML = `
-            <div class="notification-title">${title}</div>
-            <div class="notification-message">${message}</div>
-        `;
-        
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-            notification.style.opacity = '0';
-            notification.style.transform = 'translateX(-50%) translateY(-20px)';
-            notification.style.transition = 'all 0.3s ease';
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }, 2000);
-    }
+    getAll() { return JSON.parse(localStorage.getItem(this.storageKey)) || []; }
+    isFavorite(name) { return this.getAll().includes(name); }
+    add(name) { let favs = this.getAll(); if (!favs.includes(name)) { favs.push(name); localStorage.setItem(this.storageKey, JSON.stringify(favs)); window.dispatchEvent(new CustomEvent('favoritesUpdated')); window.notify("⭐ Favori ajouté", name, "success"); } }
+    remove(name) { let favs = this.getAll(); favs = favs.filter(f => f !== name); localStorage.setItem(this.storageKey, JSON.stringify(favs)); window.dispatchEvent(new CustomEvent('favoritesUpdated')); window.notify("⭐ Favori retiré", name, "info"); }
 }
 
 // ======================================================================
-// SECTION 8 : CONTRÔLES DE LA CARTE (MapControls)
+// SEARCH MANAGER
 // ======================================================================
-
-class MapControls {
-    constructor(mapService) {
-        this.mapService = mapService;
-        this.initLayerControl();
-        this.setupGlobalClickHandler();
-    }
-
-    initLayerControl() {
-        const titleLayer = L.layerGroup();
-
-        const baseMaps = {
-            "<b>TYPES DE CARTE</b>": titleLayer,
-            "🗺️ Standard": L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"),
-            "🛰️ Satellite": L.tileLayer(
-                "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-            )
-        };
-
-        const overlayMaps = {
-            "<b>DÉTAILS</b>": titleLayer,
-            "🏷️ Libellés": L.tileLayer(
-                "https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}.png",
-                { opacity: 0.9 }
-            ),
-            "🟡 Ligne BUS 4": this.mapService.layers.bus4Line,
-            "🟢 Ligne BUS 8": this.mapService.layers.bus8Line,
-            "🛑 Arrêts BUS 4": this.mapService.layers.bus4,
-            "🛑 Arrêts BUS 8": this.mapService.layers.bus8,
-            "🎓 Campus": this.mapService.layers.campus,
-            "🅿️ Parkings": this.mapService.layers.parking
-        };
-
-        L.control.layers(baseMaps, overlayMaps, { collapsed: true }).addTo(this.mapService.map);
-    }
-
-    setupGlobalClickHandler() {
-        this.mapService.map.on('click', (e) => {
-            if (!e.originalEvent.target.classList.contains('leaflet-marker-icon')) {
-                this.mapService.map.closePopup();
-            }
-        });
-    }
-}
-
-// ======================================================================
-// SECTION 9 : GESTIONNAIRE DE RECHERCHE (SearchManager)
-// ======================================================================
-
 class SearchManager {
     constructor(mapService, geolocationManager) {
         this.mapService = mapService;
         this.geolocationManager = geolocationManager;
-        this.allStops = [];
-        this.favorites = [];
-        this.currentTab = 'all';
-        this.searchTerm = '';
         this.init();
     }
 
     init() {
-        this.getAllStops();
-        this.loadFavorites();
-        this.setupEventListeners();
+        document.getElementById('menuToggle').addEventListener('click', () => this.openDrawer());
+        document.getElementById('closeDrawer').addEventListener('click', () => this.closeDrawer());
+        document.getElementById('drawerOverlay').addEventListener('click', () => this.closeDrawer());
+        document.getElementById('drawerSearchInput').addEventListener('input', () => this.renderStopsList());
+        document.querySelectorAll('.drawer-tab').forEach(tab => tab.addEventListener('click', () => this.switchTab(tab)));
+        window.addEventListener('favoritesUpdated', () => this.renderStopsList());
         this.renderStopsList();
-        
-        window.addEventListener('favoritesUpdated', () => {
-            this.loadFavorites();
-            this.renderStopsList();
-        });
-    }
 
-    getAllStops() {
-        const bus4Stops = BUS_STOPS.bus4.map(stop => ({
-            ...stop,
-            lines: ['BUS 4']
-        }));
+        // Gestion de la recherche expansible
+        const searchToggle = document.getElementById('searchToggleBtn');
+        const searchPanel = document.getElementById('searchPanel');
+        const searchInputExp = document.getElementById('searchStop');
+        const searchBtnExp = document.getElementById('searchBtnExp');
+        const suggestionsListExp = document.getElementById('suggestionsList');
 
-        const bus8Stops = BUS_STOPS.bus8.map(stop => ({
-            ...stop,
-            lines: ['BUS 8']
-        }));
+        const openSearchPanel = () => {
+            searchPanel.classList.add('open');
+            searchInputExp.focus();
+            document.addEventListener('click', closeSearchOnClickOutside);
+            document.addEventListener('keydown', closeSearchOnEscape);
+        };
 
-        const stopsMap = new Map();
-        
-        [...bus4Stops, ...bus8Stops].forEach(stop => {
-            if (stopsMap.has(stop.name)) {
-                const existing = stopsMap.get(stop.name);
-                existing.lines = [...new Set([...existing.lines, ...stop.lines])];
+        const closeSearchPanel = () => {
+            searchPanel.classList.remove('open');
+            document.removeEventListener('click', closeSearchOnClickOutside);
+            document.removeEventListener('keydown', closeSearchOnEscape);
+        };
+
+        const closeSearchOnClickOutside = (e) => {
+            if (!searchPanel.contains(e.target) && e.target !== searchToggle) {
+                closeSearchPanel();
+            }
+        };
+
+        const closeSearchOnEscape = (e) => {
+            if (e.key === 'Escape') {
+                closeSearchPanel();
+            }
+        };
+
+        searchToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (searchPanel.classList.contains('open')) {
+                closeSearchPanel();
             } else {
-                stopsMap.set(stop.name, { ...stop });
+                openSearchPanel();
             }
         });
 
-        this.allStops = Array.from(stopsMap.values());
-    }
-
-    loadFavorites() {
-        this.favorites = JSON.parse(localStorage.getItem('bus_favorites')) || [];
-    }
-
-    setupEventListeners() {
-        document.getElementById('menuToggle').addEventListener('click', () => {
-            this.openDrawer();
-        });
-
-        document.getElementById('closeDrawer').addEventListener('click', () => {
-            this.closeDrawer();
-        });
-
-        document.getElementById('drawerOverlay').addEventListener('click', () => {
-            this.closeDrawer();
-        });
-
-        document.getElementById('drawerSearchInput').addEventListener('input', (e) => {
-            this.searchTerm = e.target.value.toLowerCase();
-            this.renderStopsList();
-        });
-
-        document.querySelectorAll('.drawer-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.drawer-tab').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                this.currentTab = tab.dataset.tab;
-                this.renderStopsList();
-            });
-        });
-
-        const searchInput = document.getElementById('searchStop');
-        const suggestionsList = document.getElementById('suggestionsList');
-
-        searchInput.addEventListener('input', (e) => {
-            const value = e.target.value.toLowerCase();
-            if (value.length < 2) {
-                suggestionsList.classList.remove('show');
+        // Suggestions pour le panneau expansible
+        searchInputExp.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            if (term.length < 2) {
+                suggestionsListExp.classList.remove('show');
                 return;
             }
-
-            const suggestions = this.allStops
-                .filter(stop => stop.name.toLowerCase().includes(value))
-                .slice(0, 5);
-
-            this.showSuggestions(suggestions);
+            const stops = window.busManager.getAllStops().filter(s => s.name.toLowerCase().includes(term)).slice(0, 5);
+            if (stops.length === 0) return;
+            suggestionsListExp.innerHTML = stops.map(stop => `
+                <div class="suggestion-item" onclick="searchManager.goToStop('${stop.name}'); document.getElementById('searchPanel').classList.remove('open');">
+                    <span class="material-icons">location_on</span>
+                    <div class="suggestion-content">
+                        <div class="suggestion-name">${stop.name}</div>
+                        <div class="suggestion-line">${stop.lines.map(l => `<span class="line-badge ${l.toLowerCase().replace(' ', '')}">${l}</span>`).join('')}</div>
+                    </div>
+                </div>
+            `).join('');
+            suggestionsListExp.classList.add('show');
         });
 
+        // Fermer les suggestions quand on clique ailleurs
         document.addEventListener('click', (e) => {
-            if (!e.target.closest('.search-container')) {
-                suggestionsList.classList.remove('show');
+            if (!searchInputExp.contains(e.target) && !suggestionsListExp.contains(e.target)) {
+                suggestionsListExp.classList.remove('show');
             }
         });
 
-        document.getElementById('searchBtn').addEventListener('click', () => {
-            const searchTerm = document.getElementById('searchStop').value;
-            if (searchTerm) {
-                this.searchAndGoToStop(searchTerm);
+        searchBtnExp.addEventListener('click', () => {
+            const term = searchInputExp.value;
+            if (term) {
+                this.searchAndGoToStop(term);
+                closeSearchPanel();
             }
         });
 
-        document.getElementById('searchStop').addEventListener('keypress', (e) => {
+        searchInputExp.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                const searchTerm = e.target.value;
-                if (searchTerm) {
-                    this.searchAndGoToStop(searchTerm);
+                const term = searchInputExp.value;
+                if (term) {
+                    this.searchAndGoToStop(term);
+                    closeSearchPanel();
                 }
             }
         });
     }
 
-    showSuggestions(suggestions) {
-        const suggestionsList = document.getElementById('suggestionsList');
-        
-        if (suggestions.length === 0) {
-            suggestionsList.classList.remove('show');
-            return;
-        }
-
-        suggestionsList.innerHTML = suggestions.map(stop => {
-            const lines = stop.lines.map(line => 
-                `<span class="line-badge ${line.toLowerCase().replace(' ', '')}">${line}</span>`
-            ).join('');
-
-            return `
-                <div class="suggestion-item" onclick="searchManager.goToStop('${stop.name}')">
-                    <span class="material-icons">location_on</span>
-                    <div class="suggestion-content">
-                        <div class="suggestion-name">${stop.name}</div>
-                        <div class="suggestion-line">${lines}</div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        suggestionsList.classList.add('show');
+    searchAndGoToStop(term) {
+        const stop = window.busManager.getAllStops().find(s => s.name.toLowerCase().includes(term.toLowerCase()));
+        if (stop) this.goToStop(stop.name);
+        else window.notify("Arrêt introuvable", "Essayez un autre nom", "error");
     }
 
-    searchAndGoToStop(searchTerm) {
-        const stop = this.allStops.find(s => 
-            s.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-
+    goToStop(name) {
+        const stop = window.busManager.getAllStops().find(s => s.name === name);
         if (stop) {
-            this.goToStop(stop.name);
+            this.mapService.map.setView(stop.coords, 18, { animate: true });
+            setTimeout(() => {
+                const isFav = window.favoritesManager.isFavorite(name);
+                const lines = stop.lines.join(' • ');
+                const popup = `<div class="stop-popup-container compact"><div class="stop-popup-name">${name}</div><div class="stop-popup-lines">${lines}</div><div class="stop-popup-actions"><button class="stop-popup-btn favorite-btn ${isFav ? 'active' : ''}" onclick="window.favoritesManager.${isFav ? 'remove' : 'add'}('${name}')"><span class="material-icons">${isFav ? 'star' : 'star_border'}</span></button><button class="stop-popup-btn route-btn" onclick="window.busManager.openRouteToStop('${name}')"><span class="material-icons">directions</span></button></div></div>`;
+                L.popup().setLatLng(stop.coords).setContent(popup).openOn(this.mapService.map);
+            }, 500);
+            this.closeDrawer();
         }
     }
 
-    goToStop(stopName) {
-        const stop = this.allStops.find(s => s.name === stopName);
-        if (!stop) return;
+    openDrawer() { document.getElementById('stopsDrawer').classList.add('open'); document.getElementById('drawerOverlay').classList.add('active'); }
+    closeDrawer() { document.getElementById('stopsDrawer').classList.remove('open'); document.getElementById('drawerOverlay').classList.remove('active'); }
 
-        document.getElementById('suggestionsList').classList.remove('show');
-        this.closeDrawer();
-
-        this.mapService.map.setView(stop.coords, 18, {
-            animate: true,
-            duration: 1
-        });
-
-        setTimeout(() => {
-            const busManager = window.busManager;
-            const linesText = stop.lines.join(' • ');
-            const favorites = JSON.parse(localStorage.getItem('bus_favorites')) || [];
-            const isFavorite = favorites.includes(stop.name);
-
-            const popupContent = busManager.createStopPopup(
-                stop.name,
-                stop.lines,
-                linesText,
-                isFavorite
-            );
-
-            L.popup({
-                autoClose: true,
-                closeOnClick: true,
-                maxWidth: 280,
-                className: 'stop-popup'
-            })
-                .setLatLng(stop.coords)
-                .setContent(popupContent)
-                .openOn(this.mapService.map);
-        }, 500);
-    }
-
-    getFilteredStops() {
-        let stops = this.allStops;
-
-        if (this.currentTab === 'bus4') {
-            stops = stops.filter(stop => stop.lines.includes('BUS 4'));
-        } else if (this.currentTab === 'bus8') {
-            stops = stops.filter(stop => stop.lines.includes('BUS 8'));
-        } else if (this.currentTab === 'favorites') {
-            stops = stops.filter(stop => this.favorites.includes(stop.name));
-        }
-
-        if (this.searchTerm) {
-            stops = stops.filter(stop => 
-                stop.name.toLowerCase().includes(this.searchTerm)
-            );
-        }
-
-        return stops;
+    switchTab(tab) {
+        document.querySelectorAll('.drawer-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        this.renderStopsList();
     }
 
     renderStopsList() {
-        const stopsList = document.getElementById('stopsList');
-        const drawerStats = document.getElementById('drawerStats');
-        
-        const filteredStops = this.getFilteredStops();
-
-        if (filteredStops.length === 0) {
-            stopsList.innerHTML = `
-                <div class="empty-state">
-                    <span class="material-icons">search_off</span>
-                    <p>Aucun arrêt trouvé</p>
-                </div>
-            `;
-            drawerStats.textContent = '0 arrêt';
-            return;
-        }
-
-        stopsList.innerHTML = filteredStops.map(stop => {
-            const isFavorite = this.favorites.includes(stop.name);
+        const activeTab = document.querySelector('.drawer-tab.active').dataset.tab;
+        const searchTerm = document.getElementById('drawerSearchInput').value.toLowerCase();
+        let stops = window.busManager.getAllStops();
+        if (activeTab === 'bus4') stops = stops.filter(s => s.lines.includes('BUS 4'));
+        if (activeTab === 'bus8') stops = stops.filter(s => s.lines.includes('BUS 8'));
+        if (activeTab === 'favorites') stops = stops.filter(s => window.favoritesManager.isFavorite(s.name));
+        if (searchTerm) stops = stops.filter(s => s.name.toLowerCase().includes(searchTerm));
+        const container = document.getElementById('stopsList');
+        if (stops.length === 0) { container.innerHTML = '<div class="empty-state"><span class="material-icons">search_off</span><p>Aucun arrêt</p></div>'; return; }
+        container.innerHTML = stops.map(stop => {
+            const isFav = window.favoritesManager.isFavorite(stop.name);
             const busClass = stop.lines.includes('BUS 4') ? 'bus4' : 'bus8';
-            
-            let distanceText = '';
+            let distanceHtml = '';
             if (this.geolocationManager.userCoords) {
-                const distance = Math.round(this.geolocationManager.userCoords.distanceTo(
-                    L.latLng(stop.coords[0], stop.coords[1])
-                ));
-                const validatedDistance = this.mapService.validateDistance(distance);
-                distanceText = `
-                    <div class="stop-card-distance">
-                        <span class="material-icons">straighten</span>
-                        ${validatedDistance} m
-                    </div>
-                `;
+                const dist = Math.round(this.geolocationManager.userCoords.distanceTo(L.latLng(stop.coords)));
+                distanceHtml = `<div class="stop-card-distance"><span class="material-icons">straighten</span>${dist} m</div>`;
             }
-
             return `
-                <div class="stop-card ${busClass} ${isFavorite ? 'favorite' : ''}" 
-                     onclick="searchManager.goToStop('${stop.name}')">
+                <div class="stop-card ${busClass} ${isFav ? 'favorite' : ''}" onclick="searchManager.goToStop('${stop.name}')">
                     <div class="stop-card-header">
                         <span class="stop-card-name">${stop.name}</span>
-                        <span class="stop-card-favorite" 
-                              onclick="event.stopPropagation(); searchManager.toggleFavorite('${stop.name}')">
-                            <span class="material-icons">${isFavorite ? 'star' : 'star_border'}</span>
+                        <span class="stop-card-favorite" onclick="event.stopPropagation(); window.favoritesManager.isFavorite('${stop.name}') ? window.favoritesManager.remove('${stop.name}') : window.favoritesManager.add('${stop.name}')">
+                            <span class="material-icons">${isFav ? 'star' : 'star_border'}</span>
                         </span>
                     </div>
                     <div class="stop-card-details">
                         <span class="stop-card-line ${busClass}">${stop.lines.join(' • ')}</span>
-                        ${distanceText}
+                        ${distanceHtml}
                     </div>
                 </div>
             `;
         }).join('');
-
-        drawerStats.textContent = `${filteredStops.length} arrêt${filteredStops.length > 1 ? 's' : ''}`;
-    }
-
-    toggleFavorite(stopName) {
-        if (this.favorites.includes(stopName)) {
-            window.favoritesManager.remove(stopName);
-        } else {
-            window.favoritesManager.add(stopName);
-        }
-    }
-
-    openDrawer() {
-        document.getElementById('stopsDrawer').classList.add('open');
-        document.getElementById('drawerOverlay').classList.add('active');
-        this.renderStopsList();
-    }
-
-    closeDrawer() {
-        document.getElementById('stopsDrawer').classList.remove('open');
-        document.getElementById('drawerOverlay').classList.remove('active');
+        document.getElementById('drawerStats').innerText = `${stops.length} arrêt${stops.length > 1 ? 's' : ''}`;
     }
 }
 
 // ======================================================================
-// SECTION 10 : APPLICATION PRINCIPALE
+// NOTIFICATION GLOBALE
 // ======================================================================
-
-class Application {
-    constructor() {
-        this.mapService = null;
-        this.busManager = null;
-        this.geolocationManager = null;
-        this.routeManager = null;
-        this.favoritesManager = null;
-        this.mapControls = null;
-        this.searchManager = null;
-    }
-
-    async init() {
-        console.log("🚀 Initialisation de l'application...");
-
-        this.showLoadingMessage();
-
-        this.mapService = new MapService();
-        this.favoritesManager = new FavoritesManager();
-        this.busManager = new BusManager(this.mapService);
-        
-        this.geolocationManager = new GeolocationManager(this.mapService);
-        this.routeManager = new RouteManager(this.mapService, this.geolocationManager);
-        this.mapControls = new MapControls(this.mapService);
-        this.searchManager = new SearchManager(this.mapService, this.geolocationManager);
-
-        window.busManager = this.busManager;
-        window.favoritesManager = this.favoritesManager;
-        window.geolocationManager = this.geolocationManager;
-        window.routeManager = this.routeManager;
-        window.searchManager = this.searchManager;
-
-        setTimeout(() => {
-            // Les animations simulées sont désactivées
-            this.hideLoadingMessage();
-        }, 2000);
-
-        console.log("✅ Application initialisée avec succès");
-    }
-
-    showLoadingMessage() {
-        const loadingDiv = document.createElement('div');
-        loadingDiv.id = 'loading-message';
-        loadingDiv.style.cssText = `
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 20px 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            z-index: 2000;
-            text-align: center;
-            font-family: Arial, sans-serif;
-        `;
-        loadingDiv.innerHTML = `
-            <div style="margin-bottom: 10px;">
-                <span class="material-icons" style="color: #667eea; font-size: 40px;">directions_bus</span>
-            </div>
-            <div style="font-weight: bold; margin-bottom: 5px;">Chargement de l'application...</div>
-            <div style="font-size: 12px; color: #666;">Veuillez patienter</div>
-        `;
-        document.body.appendChild(loadingDiv);
-    }
-
-    hideLoadingMessage() {
-        const loadingDiv = document.getElementById('loading-message');
-        if (loadingDiv) {
-            loadingDiv.style.opacity = '0';
-            loadingDiv.style.transition = 'opacity 0.5s ease';
-            setTimeout(() => {
-                if (loadingDiv.parentNode) {
-                    loadingDiv.parentNode.removeChild(loadingDiv);
-                }
-            }, 500);
-        }
-    }
-}
+window.notify = (title, message, type = 'info') => {
+    const notif = document.createElement('div');
+    notif.className = `notification notification-${type}`;
+    notif.innerHTML = `<div class="notification-title">${title}</div><div class="notification-message">${message}</div>`;
+    document.body.appendChild(notif);
+    setTimeout(() => { notif.style.opacity = '0'; setTimeout(() => notif.remove(), 300); }, 3000);
+};
 
 // ======================================================================
-// SECTION 11 : DÉMARRAGE DE L'APPLICATION
+// INITIALISATION AVEC MASQUAGE DU SPLASH SCREEN
 // ======================================================================
-
 document.addEventListener('DOMContentLoaded', () => {
-    const app = new Application();
-    app.init().catch(error => {
-        console.error("❌ Erreur lors de l'initialisation:", error);
-    });
-});
+    const mapService = new MapService();
+    window.favoritesManager = new FavoritesManager();
+    window.busManager = new BusManager(mapService);
+    window.geolocationManager = new GeolocationManager(mapService);
+    window.routeManager = new RouteManager(mapService, window.geolocationManager);
+    window.searchManager = new SearchManager(mapService, window.geolocationManager);
 
+    // Masquer le splash screen après un délai ou dès que la carte est prête
+    const splash = document.getElementById('splashScreen');
+    if (splash) {
+        // Attendre que les éléments essentiels soient chargés (un peu de délai pour l'animation)
+        setTimeout(() => {
+            splash.classList.add('hidden');
+            setTimeout(() => splash.remove(), 500);
+        }, 1500);
+    }
+
+    window.notify("BusEye prêt", "Suivi en temps réel", "success");
+});
