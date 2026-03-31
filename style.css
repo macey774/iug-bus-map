@@ -867,3 +867,193 @@ main {
         padding: 8px 12px;
     }
 }
+
+/* =========================================================
+   TOAST NOTIFICATIONS (sous la Hubar)
+========================================================= */
+.toast-container {
+    position: fixed;
+    top: 80px; /* juste sous la Hubar */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 400px;
+    z-index: 1100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    pointer-events: none; /* pour ne pas gêner les clics sur la carte */
+}
+
+.toast {
+    background: white;
+    border-radius: 40px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    padding: 12px 20px;
+    min-width: 250px;
+    max-width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'Arial', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.3);
+    animation: slideDownToast 0.3s ease forwards;
+    pointer-events: auto;
+    transition: opacity 0.3s ease;
+}
+
+.toast-icon {
+    font-size: 20px;
+}
+
+.toast-content {
+    flex: 1;
+}
+
+.toast-title {
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+
+.toast-message {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: #999;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.toast-close:hover {
+    background: rgba(0,0,0,0.1);
+}
+
+/* Types de toasts */
+.toast-success {
+    background: linear-gradient(135deg, #34A853, #2e8b47);
+    color: white;
+}
+.toast-error {
+    background: linear-gradient(135deg, #f44336, #d32f2f);
+    color: white;
+}
+.toast-info {
+    background: linear-gradient(135deg, #4285f4, #3367d6);
+    color: white;
+}
+.toast-warning {
+    background: linear-gradient(135deg, #FBBC05, #f39c12);
+    color: white;
+}
+
+/* Animation d'entrée */
+@keyframes slideDownToast {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Animation de sortie */
+.toast-exit {
+    animation: fadeOutUp 0.3s ease forwards;
+}
+
+@keyframes fadeOutUp {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+
+/* Responsive : ajuster la position sur mobile */
+@media (max-width: 768px) {
+    .toast-container {
+        top: 70px;
+        width: 95%;
+    }
+}
+
+/* =========================================================
+   HUBAR - Titre avec couleurs personnalisées
+========================================================= */
+.logo-area h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    display: inline-block;
+}
+
+.bus-part {
+    color: #4285f4; /* Bleu */
+}
+
+.eye-part {
+    color: #FFD700; /* Jaune */
+}
+
+/* Boutons de la Hubar */
+.icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+/* Icônes Recherche et Itinéraire : bleu */
+#searchToggleBtn .material-icons,
+#routeBtn .material-icons {
+    color: #4285f4;
+}
+
+/* Icône Menu : gris professionnel */
+#menuToggle .material-icons {
+    color: #5f6368;
+}
+
+.icon-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+/* Ajustement responsive pour le titre */
+@media (max-width: 768px) {
+    .logo-area h1 {
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo-area h1 {
+        font-size: 1rem;
+    }
+}
