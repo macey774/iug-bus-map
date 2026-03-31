@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 
+
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -8,25 +9,27 @@
 
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <!-- Google Material Icons (conservés pour les autres icônes) -->
+    <!-- Google Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <!-- CSS principal -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- SPLASH SCREEN (image de chargement) -->
+    <!-- SPLASH SCREEN -->
     <div id="splashScreen" class="splash-screen">
         <img src="busiug.png" alt="BusEye" class="splash-image">
         <div class="splash-text">Chargement...</div>
     </div>
 
-    <!-- ================= HUBAR (barre fixe) ================= -->
+    <!-- ================= HUBAR ================= -->
     <div class="hubar">
         <div class="hubar-left">
             <div class="logo-area" id="header-logo">
                 <img src="bus.png" alt="BusEye" class="logo-image">
-                <h1 id="header-title">BusEye</h1>
+                <h1 id="header-title">
+                    <span class="bus-part">Bus</span><span class="eye-part">Eye</span>
+                </h1>
             </div>
         </div>
         <div class="hubar-right">
@@ -54,6 +57,9 @@
             <div id="suggestionsList" class="suggestions-list-expandable" role="listbox"></div>
         </div>
     </div>
+
+    <!-- CONTENEUR DE TOASTS (notifications) -->
+    <div id="toast-container" class="toast-container"></div>
 
     <!-- Menu latéral (drawer) -->
     <div id="stopsDrawer" class="stops-drawer" aria-modal="true" aria-label="Liste des arrêts" aria-hidden="true">
@@ -132,8 +138,6 @@
     <script src="script.js"></script>
 </body>
 </html>
-
-
 
 
 
