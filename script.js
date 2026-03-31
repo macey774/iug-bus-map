@@ -1,7 +1,6 @@
 /**
  * BusEye - Application de suivi des bus scolaires
- * Version 5.3 - Splash screen avec image personnalisée
- * Auteur : Mabel Cédric Yvan
+ * Version finale - Toutes fonctionnalités
  */
 
 // ======================================================================
@@ -11,10 +10,9 @@ const RELAY_URL = "https://bus-relais.onrender.com/api/positions";
 const OSRM_URL = "https://router.project-osrm.org";
 
 const CONFIG = {
-    map: { defaultCenter: [4.040770, 9.752837], defaultZoom: 18, minZoom: 12, maxZoom: 19 },
+    map: { defaultCenter: [4.040770, 9.752837], defaultZoom: 18, minZoom: 12, maxZoom: 18 },
     bus: { averageSpeedMps: 5.56, updateInterval: 2000, maxRealisticDistance: 15000 },
-    geolocation: { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
-    walking: { speedMps: 1.4 }
+    geolocation: { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
 };
 
 const COLORS = { primary: '#4285F4', bus4: '#FFD700', bus8: '#34A853' };
@@ -82,7 +80,7 @@ const Icons = {
 };
 
 // ======================================================================
-// MAP SERVICE
+// MAP SERVICE (avec contrôle des couches)
 // ======================================================================
 class MapService {
     constructor() {
@@ -92,18 +90,38 @@ class MapService {
             maxZoom: CONFIG.map.maxZoom
         }).setView(CONFIG.map.defaultCenter, CONFIG.map.defaultZoom);
 
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(this.map);
-        L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { opacity: 0.5 }).addTo(this.map);
-
-        this.layers = {
-            bus4: L.layerGroup().addTo(this.map),
-            bus8: L.layerGroup().addTo(this.map),
-            bus4Line: L.layerGroup().addTo(this.map),
-            bus8Line: L.layerGroup().addTo(this.map),
-            campus: L.layerGroup().addTo(this.map),
-            parking: L.layerGroup().addTo(this.map)
+        // Couches de base
+        this.baseMaps = {
+            "🗺️ Standard": L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"),
+            "🛰️ Satellite": L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { opacity: 0.8 })
         };
+        this.baseMaps["🗺️ Standard"].addTo(this.map);
+
+        // Groupes pour les sur-couches
+        this.layers = {
+            bus4: L.layerGroup(),
+            bus8: L.layerGroup(),
+            bus4Line: L.layerGroup(),
+            bus8Line: L.layerGroup(),
+            campus: L.layerGroup(),
+            parking: L.layerGroup()
+        };
+
+        this.overlayMaps = {
+            "🟡 Ligne BUS 4": this.layers.bus4Line,
+            "🟢 Ligne BUS 8": this.layers.bus8Line,
+            "🛑 Arrêts BUS 4": this.layers.bus4,
+            "🛑 Arrêts BUS 8": this.layers.bus8,
+            "🎓 Campus": this.layers.campus,
+            "🅿️ Parkings": this.layers.parking
+        };
+
+        for (let key in this.layers) this.layers[key].addTo(this.map);
+
         this.routeCache = new Map();
+
+        // Ajout du contrôle des couches
+        L.control.layers(this.baseMaps, this.overlayMaps, { collapsed: true }).addTo(this.map);
     }
 
     async getRoute(coords) {
@@ -271,17 +289,32 @@ class BusManager {
     createBusPopup(busInfo, currentStop, nextStopInfo, timestamp) {
         const nextText = nextStopInfo ? `${nextStopInfo.stop.name} (${nextStopInfo.timeMinutes} min)` : "Terminus";
         const timeStr = timestamp ? new Date(timestamp).toLocaleTimeString('fr-FR') : "inconnue";
+
         return `
             <div class="bus-popup">
-                <div class="bus-popup-header" style="background: ${busInfo.color}">
+                <div class="bus-popup-header" style="background-color: ${busInfo.color};">
                     <span class="bus-popup-icon">🚌</span>
                     <span class="bus-popup-title">${busInfo.name}</span>
                 </div>
                 <div class="bus-popup-content">
-                    <div>Compagnie: ${busInfo.company}</div>
-                    <div>🚏 Arrêt: ${currentStop?.name || "En circulation"}</div>
-                    <div>⏭️ Prochain: ${nextText}</div>
-                    <div>🕒 MAJ: ${timeStr}</div>
+                    <div class="bus-popup-row">
+                        <span class="bus-popup-label">Type de bus :</span>
+                        <span class="bus-popup-value">${busInfo.company}</span>
+                    </div>
+                    <div class="bus-popup-divider"></div>
+                    <div class="bus-popup-row">
+                        <span class="bus-popup-label">🚏 Arrêt actuel :</span>
+                        <span class="bus-popup-value bus-popup-stop">${currentStop?.name || "En circulation"}</span>
+                    </div>
+                    <div class="bus-popup-row">
+                        <span class="bus-popup-label">⏭️ Prochain :</span>
+                        <span class="bus-popup-value bus-popup-next">${nextText}</span>
+                    </div>
+                    <div class="bus-popup-divider"></div>
+                    <div class="bus-popup-row">
+                        <span class="bus-popup-label">🕒 Dernière MAJ :</span>
+                        <span class="bus-popup-value">${timeStr}</span>
+                    </div>
                 </div>
             </div>
         `;
@@ -344,7 +377,7 @@ class BusManager {
 }
 
 // ======================================================================
-// GEOLOCATION MANAGER
+// GEOLOCATION MANAGER (avec vague)
 // ======================================================================
 class GeolocationManager {
     constructor(mapService) {
@@ -377,13 +410,9 @@ class GeolocationManager {
         this.userCoords = L.latLng(lat, lng);
 
         if (!this.userMarker) {
-            // Création du marqueur utilisateur avec un effet de vague pulsante
             const customIcon = L.divIcon({
                 className: 'user-marker',
-                html: `
-                    <div class="pulse-ring"></div>
-                    <div class="core"></div>
-                `,
+                html: `<div class="pulse-ring"></div><div class="core"></div>`,
                 iconSize: [24, 24],
                 iconAnchor: [12, 12],
                 popupAnchor: [0, -12]
@@ -610,7 +639,6 @@ class SearchManager {
             suggestionsListExp.classList.add('show');
         });
 
-        // Fermer les suggestions quand on clique ailleurs
         document.addEventListener('click', (e) => {
             if (!searchInputExp.contains(e.target) && !suggestionsListExp.contains(e.target)) {
                 suggestionsListExp.classList.remove('show');
@@ -703,19 +731,17 @@ class SearchManager {
 }
 
 // ======================================================================
-// NOTIFICATION GLOBALE (TOASTS) - une seule à la fois
+// NOTIFICATION GLOBALE (une seule toast à la fois)
 // ======================================================================
-window.notify = (title, message, type = 'info', duration = 2000) => {
+window.notify = (title, message, type = 'info', duration = 3000) => {
     const container = document.getElementById('toast-container');
     if (!container) return;
 
-    // Supprimer la notification existante (s'il y en a une)
     const existingToast = container.querySelector('.toast');
     if (existingToast) {
         existingToast.classList.add('toast-exit');
         setTimeout(() => {
             if (existingToast.parentNode) existingToast.remove();
-            // Après suppression, créer la nouvelle notification
             createToast();
         }, 300);
     } else {
@@ -730,7 +756,6 @@ window.notify = (title, message, type = 'info', duration = 2000) => {
         if (type === 'success') icon = 'check_circle';
         if (type === 'error') icon = 'error';
         if (type === 'warning') icon = 'warning';
-        if (type === 'info') icon = 'info';
         
         toast.innerHTML = `
             <span class="material-icons toast-icon">${icon}</span>
@@ -744,13 +769,9 @@ window.notify = (title, message, type = 'info', duration = 2000) => {
         container.appendChild(toast);
         
         const closeBtn = toast.querySelector('.toast-close');
-        closeBtn.addEventListener('click', () => {
-            removeToast(toast);
-        });
+        closeBtn.addEventListener('click', () => removeToast(toast));
         
-        const timeout = setTimeout(() => {
-            removeToast(toast);
-        }, duration);
+        const timeout = setTimeout(() => removeToast(toast), duration);
         
         function removeToast(toastElement) {
             if (!toastElement.parentNode) return;
@@ -764,7 +785,7 @@ window.notify = (title, message, type = 'info', duration = 2000) => {
 };
 
 // ======================================================================
-// INITIALISATION AVEC MASQUAGE DU SPLASH SCREEN
+// INITIALISATION
 // ======================================================================
 document.addEventListener('DOMContentLoaded', () => {
     const mapService = new MapService();
@@ -774,10 +795,8 @@ document.addEventListener('DOMContentLoaded', () => {
     window.routeManager = new RouteManager(mapService, window.geolocationManager);
     window.searchManager = new SearchManager(mapService, window.geolocationManager);
 
-    // Masquer le splash screen après un délai ou dès que la carte est prête
     const splash = document.getElementById('splashScreen');
     if (splash) {
-        // Attendre que les éléments essentiels soient chargés (un peu de délai pour l'animation)
         setTimeout(() => {
             splash.classList.add('hidden');
             setTimeout(() => splash.remove(), 500);
