@@ -11,7 +11,7 @@ const RELAY_URL = "https://bus-relais.onrender.com/api/positions";
 const OSRM_URL = "https://router.project-osrm.org";
 
 const CONFIG = {
-    map: { defaultCenter: [4.040770, 9.752837], defaultZoom: 18, minZoom: 12, maxZoom: 18 },
+    map: { defaultCenter: [4.040770, 9.752837], defaultZoom: 18, minZoom: 12, maxZoom: 19 },
     bus: { averageSpeedMps: 5.56, updateInterval: 2000, maxRealisticDistance: 15000 },
     geolocation: { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
     walking: { speedMps: 1.4 }
@@ -350,7 +350,6 @@ class GeolocationManager {
     constructor(mapService) {
         this.mapService = mapService;
         this.userMarker = null;
-        this.accuracyCircle = null;
         this.userCoords = null;
         this.watchId = null;
         this.followMode = false;
@@ -374,18 +373,30 @@ class GeolocationManager {
     }
 
     onPositionUpdate(pos) {
-        const lat = pos.coords.latitude, lng = pos.coords.longitude, acc = pos.coords.accuracy;
+        const lat = pos.coords.latitude, lng = pos.coords.longitude;
         this.userCoords = L.latLng(lat, lng);
+
         if (!this.userMarker) {
-            this.userMarker = L.circleMarker([lat, lng], { radius: 8, fillColor: COLORS.primary, color: 'white', weight: 2, fillOpacity: 1 }).addTo(this.mapService.map);
+            // Création du marqueur utilisateur avec un effet de vague pulsante
+            const customIcon = L.divIcon({
+                className: 'user-marker',
+                html: `
+                    <div class="pulse-ring"></div>
+                    <div class="core"></div>
+                `,
+                iconSize: [24, 24],
+                iconAnchor: [12, 12],
+                popupAnchor: [0, -12]
+            });
+            this.userMarker = L.marker([lat, lng], { icon: customIcon }).addTo(this.mapService.map);
             this.userMarker.bindPopup(`<div>📍 Ma position</div>`);
-            this.accuracyCircle = L.circle([lat, lng], { radius: acc, color: COLORS.primary, fillColor: COLORS.primary, fillOpacity: 0.15 }).addTo(this.mapService.map);
         } else {
             this.userMarker.setLatLng([lat, lng]);
-            this.accuracyCircle.setLatLng([lat, lng]);
-            this.accuracyCircle.setRadius(acc);
         }
-        if (this.followMode) this.mapService.map.setView([lat, lng], this.mapService.map.getZoom(), { animate: true });
+
+        if (this.followMode) {
+            this.mapService.map.setView([lat, lng], this.mapService.map.getZoom(), { animate: true });
+        }
     }
 
     onPositionError(err) {
