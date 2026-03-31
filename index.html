@@ -1,276 +1,137 @@
 <!DOCTYPE html>
 
-
-
 <html lang="fr">
-
 <head>
-    <!-- ===================================================== -->
-    <!-- META CONFIGURATION -->
-    <!-- ===================================================== -->
-
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BusEye - Suivi des bus scolaires</title>
 
-    <!-- Optimisation mobile + gestion du zoom propre -->
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
-    <title>Suivi des bus scolaires</title>
-
-    <!-- ===================================================== -->
-    <!-- FEUILLES DE STYLE -->
-    <!-- ===================================================== -->
-
-    <!-- Leaflet CSS (Carte) -->
-    <link rel="stylesheet"
-        href="https://unpkg.com/leaflet/dist/leaflet.css"
-        integrity=""
-        crossorigin=""/>
-
-    <!-- Google Material Icons -->
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
-        rel="stylesheet">
-  
-  <!-- Firebase 8.x -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Google Material Icons (conservés pour les autres icônes) -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <!-- CSS principal -->
     <link rel="stylesheet" href="style.css">
-  
-  
-
 </head>
-
 <body>
 
-    <!-- ===================================================== -->
-<!-- HEADER PRINCIPAL -->
-<!-- Contient : titre + barre de recherche améliorée -->
-<!-- ===================================================== -->
-<header class="header-container">
+    <!-- SPLASH SCREEN (image de chargement) -->
+    <div id="splashScreen" class="splash-screen">
+        <img src="busiug.png" alt="BusEye" class="splash-image">
+        <div class="splash-text">Chargement...</div>
+    </div>
 
-    <!-- Titre de l'application -->
-    <h1 class="header-title">BusEye</h1>
-
-    <!-- ================= Recherche améliorée ================= -->
-    <div class="search-wrapper">
-
-        <div class="search-bar-wrapper">
-
-            <!-- Bouton hamburger pour afficher la liste des arrêts -->
-            <button 
-                id="menuToggle" 
-                class="menu-toggle" 
-                aria-label="Afficher la liste des arrêts"
-                title="Liste des arrêts">
+    <!-- ================= HUBAR (barre fixe) ================= -->
+    <div class="hubar">
+        <div class="hubar-left">
+            <div class="logo-area" id="header-logo">
+                <img src="bus.png" alt="BusEye" class="logo-image">
+                <h1 id="header-title">BusEye</h1>
+            </div>
+        </div>
+        <div class="hubar-right">
+            <button id="searchToggleBtn" class="icon-btn" title="Rechercher un arrêt" aria-label="Rechercher">
+                <span class="material-icons">search</span>
+            </button>
+            <button id="routeBtn" class="icon-btn" title="Itinéraire" aria-label="Itinéraire">
+                <span class="material-icons">directions</span>
+            </button>
+            <button id="menuToggle" class="icon-btn" aria-label="Menu">
                 <span class="material-icons">menu</span>
             </button>
+        </div>
+    </div>
 
-            <!-- Input recherche arrêt avec autocomplete -->
-            <div class="search-container">
-                <input
-                    id="searchStop"
-                    class="search-bar"
-                    type="text"
-                    placeholder="Rechercher un arrêt..."
-                    autocomplete="off"
-                    aria-label="Rechercher un arrêt"
-                />
-                
-                <!-- Liste déroulante des suggestions (autocomplete) -->
-                <div id="suggestionsList" class="suggestions-list"></div>
-            </div>
-
-            <!-- Boutons associés à la recherche -->
-            <div class="search-buttons">
-                <!-- Bouton Rechercher -->
-                <button
-                    id="searchBtn"
-                    class="search-btn"
-                    title="Rechercher"
-                    aria-label="Rechercher un arrêt">
+    <!-- Panneau de recherche expansible -->
+    <div id="searchPanel" class="search-panel">
+        <div class="search-panel-content">
+            <div class="search-container-expandable">
+                <input id="searchStop" class="search-bar-expandable" type="text" placeholder="Rechercher un arrêt..." autocomplete="off" aria-label="Rechercher un arrêt">
+                <button id="searchBtnExp" class="search-btn-expandable" aria-label="Rechercher">
                     <span class="material-icons">search</span>
                 </button>
-
-                <!-- Bouton Itinéraire -->
-                <button
-                    id="routeBtn"
-                    class="route-btn"
-                    title="Ouvrir l'itinéraire"
-                    aria-label="Ouvrir la fenêtre d'itinéraire">
-                    <span class="material-icons">directions</span>
-                </button>
             </div>
-
-        </div>
-
-    </div>
-
-</header>
-
-<!-- ===================================================== -->
-<!-- MENU LATÉRAL (DRAWER) POUR LA LISTE COMPLÈTE DES ARRÊTS -->
-<!-- ===================================================== -->
-<div id="stopsDrawer" class="stops-drawer">
-    <div class="drawer-header">
-        <h2 class="drawer-title">
-            <span class="material-icons">map</span>
-            Liste des arrêts
-        </h2>
-        <button id="closeDrawer" class="close-drawer" aria-label="Fermer">
-            <span class="material-icons">close</span>
-        </button>
-    </div>
-    
-    <div class="drawer-search">
-        <span class="material-icons">search</span>
-        <input 
-            type="text" 
-            id="drawerSearchInput" 
-            placeholder="Filtrer les arrêts..." 
-            class="drawer-search-input"
-        />
-    </div>
-    
-    <div class="drawer-tabs">
-        <button class="drawer-tab active" data-tab="all">Tous</button>
-        <button class="drawer-tab" data-tab="bus4">BUS 4</button>
-        <button class="drawer-tab" data-tab="bus8">BUS 8</button>
-        <button class="drawer-tab" data-tab="favorites">Favoris</button>
-    </div>
-    
-    <div id="stopsList" class="stops-list">
-        <!-- La liste des arrêts sera générée dynamiquement -->
-    </div>
-    
-    <div class="drawer-footer">
-        <div class="drawer-stats" id="drawerStats">
-            Chargement...
+            <div id="suggestionsList" class="suggestions-list-expandable" role="listbox"></div>
         </div>
     </div>
-</div>
 
-<!-- Overlay pour le drawer -->
-<div id="drawerOverlay" class="drawer-overlay"></div>
-    <!-- ===================================================== -->
-    <!-- MINI FENÊTRE ITINÉRAIRE (MODAL) -->
-    <!-- ===================================================== -->
-    <div id="routeModal" class="route-modal" aria-hidden="true">
+    <!-- Menu latéral (drawer) -->
+    <div id="stopsDrawer" class="stops-drawer" aria-modal="true" aria-label="Liste des arrêts" aria-hidden="true">
+        <div class="drawer-header">
+            <h2 class="drawer-title">
+                <span class="material-icons" aria-hidden="true">map</span>
+                Liste des arrêts
+            </h2>
+            <button id="closeDrawer" class="close-drawer" aria-label="Fermer">
+                <span class="material-icons" aria-hidden="true">close</span>
+            </button>
+        </div>
+        <div class="drawer-search">
+            <span class="material-icons" aria-hidden="true">search</span>
+            <input type="text" id="drawerSearchInput" placeholder="Filtrer les arrêts..." class="drawer-search-input" aria-label="Filtrer les arrêts">
+        </div>
+        <div class="drawer-tabs" role="tablist">
+            <button class="drawer-tab active" data-tab="all" role="tab" aria-selected="true">Tous</button>
+            <button class="drawer-tab" data-tab="bus4" role="tab" aria-selected="false">BUS 4</button>
+            <button class="drawer-tab" data-tab="bus8" role="tab" aria-selected="false">BUS 8</button>
+            <button class="drawer-tab" data-tab="favorites" role="tab" aria-selected="false">Favoris</button>
+        </div>
+        <div id="stopsList" class="stops-list"></div>
+        <div class="drawer-footer">
+            <div class="drawer-stats" id="drawerStats">Chargement...</div>
+        </div>
+    </div>
+    <div id="drawerOverlay" class="drawer-overlay"></div>
 
+    <!-- Fenêtre modale itinéraire -->
+    <div id="routeModal" class="route-modal" aria-hidden="true" aria-label="Calcul d'itinéraire">
         <div class="route-modal-content">
-
-            <!-- Titre -->
             <h3>Itinéraire</h3>
-
-            <!-- ================= Point de départ ================= -->
             <div class="input-wrapper">
-
-                <span class="material-icons">my_location</span>
-
-                <!-- Non modifiable -->
-                <input
-                    type="text"
-                    id="startInput"
-                    value="Ma position"
-                    readonly
-                />
+                <span class="material-icons" aria-hidden="true">my_location</span>
+                <input type="text" id="startInput" value="Ma position" readonly>
             </div>
-
-            <!-- ================= Destination ================= -->
             <div class="input-wrapper">
-
-                <span class="material-icons">location_on</span>
-
-                <input
-                    type="text"
-                    id="endInput"
-                    placeholder="Entrez un arrêt..."
-                    autocomplete="off"
-                />
+                <span class="material-icons" aria-hidden="true">location_on</span>
+                <input type="text" id="endInput" placeholder="Entrez un arrêt..." autocomplete="off" aria-label="Destination">
+                <div id="endSuggestions" class="suggestions-list end-suggestions"></div>
             </div>
-
-            <!-- ================= Bouton Tracer ================= -->
             <button id="traceBtn" class="trace-btn">
-                <span class="material-icons">route</span>
+                <span class="material-icons" aria-hidden="true">route</span>
                 Tracer
             </button>
-
-            <!-- ================= Bouton Effacer ================= -->
             <button id="clearRouteBtn" class="clear-btn">
-                <span class="material-icons">highlight_off</span>
+                <span class="material-icons" aria-hidden="true">highlight_off</span>
                 Effacer itinéraire
             </button>
-
-            <!-- ================= Bouton Fermer ================= -->
-            <button
-                id="closeRouteModal"
-                class="close-btn"
-                aria-label="Fermer la fenêtre itinéraire">
-                ✖
-            </button>
-
+            <button id="closeRouteModal" class="close-btn" aria-label="Fermer la fenêtre itinéraire">✖</button>
         </div>
     </div>
 
-
-    <!-- ===================================================== -->
-    <!-- CARTE PRINCIPALE -->
-    <!-- ===================================================== -->
     <main>
         <div id="map"></div>
     </main>
 
-
-    <!-- ===================================================== -->
-    <!-- BOUTONS FLOTTANTS (Optimisés Mobile) -->
-    <!-- ===================================================== -->
-
-    <!-- Bouton Ma position -->
-    <button
-        class="mobile-btn"
-        id="locateBtn"
-        title="Ma position"
-        aria-label="Afficher ma position">
-
-        <span class="material-icons">my_location</span>
+    <!-- Boutons flottants -->
+    <button class="mobile-btn" id="locateBtn" title="Ma position" aria-label="Afficher ma position">
+        <span class="material-icons" aria-hidden="true">my_location</span>
+    </button>
+    <button class="mobile-btn" id="followBtn" title="Suivre ma position" aria-label="Activer le suivi automatique">
+        <span class="material-icons" aria-hidden="true">near_me</span>
+    </button>
+    <button class="mobile-btn" id="nearestStopBtn" title="Arrêt le plus proche" aria-label="Trouver l'arrêt le plus proche">
+        <span class="material-icons" aria-hidden="true">location_on</span>
     </button>
 
-    <!-- Bouton Arrêt le plus proche -->
-    <button
-        class="mobile-btn"
-        id="nearestStopBtn"
-        title="Arrêt le plus proche"
-        aria-label="Trouver l'arrêt le plus proche">
-
-        <span class="material-icons">location_on</span>
-    </button>
-
-
-    <!-- ===================================================== -->
-    <!-- FOOTER -->
-    <!-- ===================================================== -->
     <footer class="footer">
-        <div class="footer-title">
-            Institut Universitaire du Golfe de Guinée
-        </div>
+        <div class="footer-title">Institut Universitaire du Golfe de Guinée</div>
     </footer>
 
-
-    <!-- ===================================================== -->
-    <!-- SCRIPTS -->
-    <!-- ===================================================== -->
-
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
-    <!-- Script principal -->
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="script.js"></script>
-
 </body>
 </html>
-
-
 
 
 
