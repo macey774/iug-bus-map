@@ -1,6 +1,4 @@
 <!DOCTYPE html>
-
-
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -22,7 +20,7 @@
         <div class="splash-text">Chargement...</div>
     </div>
 
-    <!-- ================= HUBAR ================= -->
+    <!-- HUBAR -->
     <div class="hubar">
         <div class="hubar-left">
             <div class="logo-area" id="header-logo">
@@ -49,7 +47,7 @@
     <div id="searchPanel" class="search-panel">
         <div class="search-panel-content">
             <div class="search-container-expandable">
-                <input id="searchStop" class="search-bar-expandable" type="text" placeholder="Rechercher un arrêt..." autocomplete="off" aria-label="Rechercher un arrêt">
+                <input id="searchStop" class="search-bar-expandable" type="text" placeholder="Rechercher un arrêt..." autocomplete="off">
                 <button id="searchBtnExp" class="search-btn-expandable" aria-label="Rechercher">
                     <span class="material-icons">search</span>
                 </button>
@@ -58,23 +56,23 @@
         </div>
     </div>
 
-    <!-- CONTENEUR DE TOASTS (notifications) -->
+    <!-- CONTENEUR DE TOASTS -->
     <div id="toast-container" class="toast-container"></div>
 
-    <!-- Menu latéral (drawer) -->
-    <div id="stopsDrawer" class="stops-drawer" aria-modal="true" aria-label="Liste des arrêts" aria-hidden="true">
+    <!-- DRAWER LATÉRAL (LISTE DES ARRÊTS) -->
+    <div id="stopsDrawer" class="stops-drawer" aria-modal="true" aria-hidden="true">
         <div class="drawer-header">
             <h2 class="drawer-title">
-                <span class="material-icons" aria-hidden="true">map</span>
+                <span class="material-icons">map</span>
                 Liste des arrêts
             </h2>
             <button id="closeDrawer" class="close-drawer" aria-label="Fermer">
-                <span class="material-icons" aria-hidden="true">close</span>
+                <span class="material-icons">close</span>
             </button>
         </div>
         <div class="drawer-search">
-            <span class="material-icons" aria-hidden="true">search</span>
-            <input type="text" id="drawerSearchInput" placeholder="Filtrer les arrêts..." class="drawer-search-input" aria-label="Filtrer les arrêts">
+            <span class="material-icons">search</span>
+            <input type="text" id="drawerSearchInput" placeholder="Filtrer les arrêts..." class="drawer-search-input">
         </div>
         <div class="drawer-tabs" role="tablist">
             <button class="drawer-tab active" data-tab="all" role="tab" aria-selected="true">Tous</button>
@@ -89,28 +87,28 @@
     </div>
     <div id="drawerOverlay" class="drawer-overlay"></div>
 
-    <!-- Fenêtre modale itinéraire -->
-    <div id="routeModal" class="route-modal" aria-hidden="true" aria-label="Calcul d'itinéraire">
+    <!-- MODALE ITINÉRAIRE -->
+    <div id="routeModal" class="route-modal" aria-hidden="true">
         <div class="route-modal-content">
             <h3>Itinéraire</h3>
             <div class="input-wrapper">
-                <span class="material-icons" aria-hidden="true">my_location</span>
+                <span class="material-icons">my_location</span>
                 <input type="text" id="startInput" value="Ma position" readonly>
             </div>
             <div class="input-wrapper">
-                <span class="material-icons" aria-hidden="true">location_on</span>
-                <input type="text" id="endInput" placeholder="Entrez un arrêt..." autocomplete="off" aria-label="Destination">
+                <span class="material-icons">location_on</span>
+                <input type="text" id="endInput" placeholder="Entrez un arrêt..." autocomplete="off">
                 <div id="endSuggestions" class="suggestions-list end-suggestions"></div>
             </div>
             <button id="traceBtn" class="trace-btn">
-                <span class="material-icons" aria-hidden="true">route</span>
+                <span class="material-icons">route</span>
                 Tracer
             </button>
             <button id="clearRouteBtn" class="clear-btn">
-                <span class="material-icons" aria-hidden="true">highlight_off</span>
+                <span class="material-icons">highlight_off</span>
                 Effacer itinéraire
             </button>
-            <button id="closeRouteModal" class="close-btn" aria-label="Fermer la fenêtre itinéraire">✖</button>
+            <button id="closeRouteModal" class="close-btn" aria-label="Fermer">✖</button>
         </div>
     </div>
 
@@ -118,28 +116,22 @@
         <div id="map"></div>
     </main>
 
-    <!-- Boutons flottants -->
-    <button class="mobile-btn" id="locateBtn" title="Ma position" aria-label="Afficher ma position">
-        <span class="material-icons" aria-hidden="true">my_location</span>
+    <!-- BOUTONS FLOTTANTS -->
+    <button class="mobile-btn" id="locateBtn" title="Ma position">
+        <span class="material-icons">my_location</span>
     </button>
-    <button class="mobile-btn" id="followBtn" title="Suivre ma position" aria-label="Activer le suivi automatique">
-        <span class="material-icons" aria-hidden="true">near_me</span>
+    <button class="mobile-btn" id="followBtn" title="Suivre ma position">
+        <span class="material-icons">near_me</span>
     </button>
-    <button class="mobile-btn" id="nearestStopBtn" title="Arrêt le plus proche" aria-label="Trouver l'arrêt le plus proche">
-        <span class="material-icons" aria-hidden="true">location_on</span>
+    <button class="mobile-btn" id="nearestStopBtn" title="Arrêt le plus proche">
+        <span class="material-icons">location_on</span>
     </button>
 
     <footer class="footer">
         <div class="footer-title">Institut Universitaire du Golfe de Guinée</div>
     </footer>
 
-    <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
-
-
-
-
-
