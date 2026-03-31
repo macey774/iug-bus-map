@@ -86,9 +86,15 @@ const Icons = {
 // ======================================================================
 class MapService {
     constructor() {
-        this.map = L.map("map").setView(CONFIG.map.defaultCenter, CONFIG.map.defaultZoom);
+        this.map = L.map("map", {
+            zoomControl: false,
+            minZoom: CONFIG.map.minZoom,
+            maxZoom: CONFIG.map.maxZoom
+        }).setView(CONFIG.map.defaultCenter, CONFIG.map.defaultZoom);
+
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(this.map);
         L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { opacity: 0.5 }).addTo(this.map);
+
         this.layers = {
             bus4: L.layerGroup().addTo(this.map),
             bus8: L.layerGroup().addTo(this.map),
@@ -686,14 +692,64 @@ class SearchManager {
 }
 
 // ======================================================================
-// NOTIFICATION GLOBALE
+// NOTIFICATION GLOBALE (TOASTS) - une seule à la fois
 // ======================================================================
-window.notify = (title, message, type = 'info') => {
-    const notif = document.createElement('div');
-    notif.className = `notification notification-${type}`;
-    notif.innerHTML = `<div class="notification-title">${title}</div><div class="notification-message">${message}</div>`;
-    document.body.appendChild(notif);
-    setTimeout(() => { notif.style.opacity = '0'; setTimeout(() => notif.remove(), 300); }, 3000);
+window.notify = (title, message, type = 'info', duration = 2000) => {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    // Supprimer la notification existante (s'il y en a une)
+    const existingToast = container.querySelector('.toast');
+    if (existingToast) {
+        existingToast.classList.add('toast-exit');
+        setTimeout(() => {
+            if (existingToast.parentNode) existingToast.remove();
+            // Après suppression, créer la nouvelle notification
+            createToast();
+        }, 300);
+    } else {
+        createToast();
+    }
+
+    function createToast() {
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        
+        let icon = 'info';
+        if (type === 'success') icon = 'check_circle';
+        if (type === 'error') icon = 'error';
+        if (type === 'warning') icon = 'warning';
+        if (type === 'info') icon = 'info';
+        
+        toast.innerHTML = `
+            <span class="material-icons toast-icon">${icon}</span>
+            <div class="toast-content">
+                <div class="toast-title">${title}</div>
+                <div class="toast-message">${message}</div>
+            </div>
+            <button class="toast-close" aria-label="Fermer">✖</button>
+        `;
+        
+        container.appendChild(toast);
+        
+        const closeBtn = toast.querySelector('.toast-close');
+        closeBtn.addEventListener('click', () => {
+            removeToast(toast);
+        });
+        
+        const timeout = setTimeout(() => {
+            removeToast(toast);
+        }, duration);
+        
+        function removeToast(toastElement) {
+            if (!toastElement.parentNode) return;
+            toastElement.classList.add('toast-exit');
+            setTimeout(() => {
+                if (toastElement.parentNode) toastElement.remove();
+            }, 300);
+            clearTimeout(timeout);
+        }
+    }
 };
 
 // ======================================================================
