@@ -1,0 +1,21 @@
+{
+  "name": "BusEye IUG",
+  "short_name": "BusEye",
+  "description": "Suivi en temps réel des bus scolaires de l'IUG",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#1a73e8",
+  "background_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
