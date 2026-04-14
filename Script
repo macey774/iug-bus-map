@@ -1,0 +1,32 @@
+cd /home/claude/buseye
+pip install cairosvg --break-system-packages -q
+
+python3 << 'EOF'
+import cairosvg, os
+
+sizes = [72, 96, 128, 144, 152, 192, 384, 512]
+os.makedirs('icons', exist_ok=True)
+
+for s in sizes:
+    cairosvg.svg2png(
+        url='icons/icon.svg',
+        write_to=f'icons/icon-{s}.png',
+        output_width=s,
+        output_height=s
+    )
+    print(f"✓ icon-{s}.png")
+
+print("Toutes les icônes générées.")
+EOF
+Sortie
+
+WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7edb6051dbb0>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution')': /simple/cairosvg/
+WARNING: Retrying (Retry(total=3, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7edb6051d7f0>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution')': /simple/cairosvg/
+WARNING: Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7edb6051f1a0>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution')': /simple/cairosvg/
+WARNING: Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7edb6051ee10>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution')': /simple/cairosvg/
+WARNING: Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x7edb6051f3e0>: Failed to establish a new connection: [Errno -3] Temporary failure in name resolution')': /simple/cairosvg/
+ERROR: Could not find a version that satisfies the requirement cairosvg (from versions: none)
+ERROR: No matching distribution found for cairosvg
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+ModuleNotFoundError: No module named 'cairosvg'
