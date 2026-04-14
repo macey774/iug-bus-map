@@ -1,308 +1,320 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#1a73e8" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="description" content="BusEye - Suivi en temps réel des bus scolaires de l'IUG">
-  <title>BusEye · IUG</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a73e8">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="description" content="BusEye - Suivi en temps réel des bus scolaires de l'IUG">
+    <title>BusEye · IUG</title>
 
-  <!-- Manifest PWA -->
-  <link rel="manifest" href="/manifest.json">
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <meta name="apple-mobile-web-app-title" content="BusEye">
 
-  <!-- Préférence dark mode initiale -->
-  <script>
-    (function() {
-      const theme = localStorage.getItem('theme');
-      if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        document.documentElement.classList.add('dark-mode');
-      }
-    })();
-  </script>
-
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <!-- Material Icons -->
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-  <!-- Styles -->
-  <link rel="stylesheet" href="style.css">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-  <!-- SPLASH SCREEN -->
-  <div id="splashScreen" class="splash" role="status" aria-label="Chargement de BusEye">
+<!-- ═══════════════════════════════════════
+     SPLASH SCREEN
+═══════════════════════════════════════ -->
+<div id="splashScreen" class="splash" role="status" aria-label="Chargement de BusEye">
     <div class="splash__inner">
-      <div class="splash__logo">
-        <div class="splash__icon">
-          <span class="material-icons-round">directions_bus</span>
+        <div class="splash__logo">
+            <div class="splash__icon">
+                <span class="material-icons-round">directions_bus</span>
+            </div>
+            <div class="splash__wordmark">
+                <span class="splash__word-bus">Bus</span><span class="splash__word-eye">Eye</span>
+            </div>
         </div>
-        <div class="splash__wordmark">
-          <span class="splash__word-bus">Bus</span><span class="splash__word-eye">Eye</span>
+        <div class="splash__tagline">Institut Universitaire du Golfe de Guinée</div>
+        <div class="splash__loader">
+            <div class="splash__bar"></div>
         </div>
-      </div>
-      <div class="splash__tagline">Institut Universitaire du Golfe de Guinée</div>
-      <div class="splash__loader">
-        <div class="splash__bar"></div>
-      </div>
     </div>
-  </div>
+</div>
 
-  <!-- TOPBAR -->
-  <header class="topbar" role="banner">
+<!-- ═══════════════════════════════════════
+     TOPBAR
+═══════════════════════════════════════ -->
+<header class="topbar" role="banner">
     <div class="topbar__brand" id="brandLogo" role="button" tabindex="0" aria-label="BusEye accueil">
-      <div class="topbar__brand-icon">
-        <span class="material-icons-round">directions_bus</span>
-      </div>
-      <span class="topbar__brand-name">
-        <span class="topbar__bus">Bus</span><span class="topbar__eye">Eye</span>
-      </span>
+        <div class="topbar__brand-icon">
+            <span class="material-icons-round">directions_bus</span>
+        </div>
+        <span class="topbar__brand-name">
+            <span class="topbar__bus">Bus</span><span class="topbar__eye">Eye</span>
+        </span>
     </div>
 
     <div class="topbar__status" id="connectionStatus" aria-live="polite">
-      <span class="status-dot status-dot--live"></span>
-      <span class="status-label">En direct</span>
+        <span class="status-dot status-dot--live"></span>
+        <span class="status-label">En direct</span>
     </div>
 
     <nav class="topbar__actions" aria-label="Actions principales">
-      <button id="darkModeToggle" class="topbar__btn" title="Mode sombre" aria-label="Basculer le mode sombre">
-        <span class="material-icons-round">dark_mode</span>
-      </button>
-      <button id="searchToggleBtn" class="topbar__btn" title="Rechercher un arrêt" aria-label="Rechercher" aria-expanded="false">
-        <span class="material-icons-round">search</span>
-      </button>
-      <button id="notifBtn" class="topbar__btn" title="Notifications" aria-label="Notifications" aria-pressed="false">
-        <span class="material-icons-round">notifications_none</span>
-        <span class="topbar__badge" id="notifBadge" hidden>0</span>
-      </button>
-      <button id="menuToggle" class="topbar__btn" aria-label="Menu" aria-expanded="false">
-        <span class="material-icons-round">menu</span>
-      </button>
-    </nav>
-  </header>
-
-  <!-- PANNEAU DE RECHERCHE -->
-  <div id="searchPanel" class="search-panel" role="search" aria-hidden="true">
-    <div class="search-panel__inner">
-      <div class="search-panel__field">
-        <span class="material-icons-round search-panel__icon">search</span>
-        <input id="searchInput" class="search-panel__input" type="search" placeholder="Rechercher un arrêt…" autocomplete="off" aria-label="Rechercher un arrêt" aria-autocomplete="list" aria-controls="searchSuggestions">
-        <button id="searchClearBtn" class="search-panel__clear" aria-label="Effacer" hidden>
-          <span class="material-icons-round">close</span>
+        <button id="searchToggleBtn" class="topbar__btn" title="Rechercher un arrêt" aria-label="Rechercher" aria-expanded="false">
+            <span class="material-icons-round">search</span>
         </button>
-      </div>
-      <ul id="searchSuggestions" class="search-suggestions" role="listbox" aria-label="Suggestions d'arrêts"></ul>
+        <button id="notifBtn" class="topbar__btn" title="Notifications" aria-label="Notifications" aria-pressed="false">
+            <span class="material-icons-round">notifications_none</span>
+            <span class="topbar__badge" id="notifBadge" hidden>0</span>
+        </button>
+        <button id="menuToggle" class="topbar__btn" aria-label="Menu" aria-expanded="false">
+            <span class="material-icons-round">menu</span>
+        </button>
+    </nav>
+</header>
+
+<!-- ═══════════════════════════════════════
+     PANNEAU DE RECHERCHE
+═══════════════════════════════════════ -->
+<div id="searchPanel" class="search-panel" role="search" aria-hidden="true">
+    <div class="search-panel__inner">
+        <div class="search-panel__field">
+            <span class="material-icons-round search-panel__icon">search</span>
+            <input id="searchInput" class="search-panel__input" type="search"
+                   placeholder="Rechercher un arrêt…" autocomplete="off"
+                   aria-label="Rechercher un arrêt" aria-autocomplete="list"
+                   aria-controls="searchSuggestions">
+            <button id="searchClearBtn" class="search-panel__clear" aria-label="Effacer" hidden>
+                <span class="material-icons-round">close</span>
+            </button>
+        </div>
+        <ul id="searchSuggestions" class="search-suggestions" role="listbox" aria-label="Suggestions d'arrêts"></ul>
     </div>
-  </div>
+</div>
 
-  <!-- CARTE -->
-  <main id="mapContainer" role="main" aria-label="Carte de suivi des bus">
+<!-- ═══════════════════════════════════════
+     CARTE
+═══════════════════════════════════════ -->
+<main id="mapContainer" role="main" aria-label="Carte de suivi des bus">
     <div id="map" aria-label="Carte interactive"></div>
-  </main>
+</main>
 
-  <!-- FAB ACTIONS -->
-  <div class="fab-stack" role="group" aria-label="Actions carte">
+<!-- ═══════════════════════════════════════
+     FAB ACTIONS (boutons flottants)
+═══════════════════════════════════════ -->
+<div class="fab-stack" role="group" aria-label="Actions carte">
     <button class="fab" id="nearestStopBtn" title="Arrêt le plus proche" aria-label="Arrêt le plus proche">
-      <span class="material-icons-round">near_me</span>
+        <span class="material-icons-round">near_me</span>
     </button>
     <button class="fab" id="followBtn" title="Suivre ma position" aria-label="Suivre ma position" aria-pressed="false">
-      <span class="material-icons-round">navigation</span>
+        <span class="material-icons-round">navigation</span>
     </button>
     <button class="fab fab--primary" id="locateBtn" title="Ma position" aria-label="Centrer sur ma position">
-      <span class="material-icons-round">my_location</span>
+        <span class="material-icons-round">my_location</span>
     </button>
-  </div>
+</div>
 
-  <!-- DRAWER LATÉRAL -->
-  <div id="drawerOverlay" class="drawer-overlay" aria-hidden="true"></div>
-  <aside id="stopsDrawer" class="drawer" role="complementary" aria-label="Liste des arrêts" aria-hidden="true">
+<!-- ═══════════════════════════════════════
+     DRAWER LATÉRAL
+═══════════════════════════════════════ -->
+<div id="drawerOverlay" class="drawer-overlay" aria-hidden="true"></div>
+<aside id="stopsDrawer" class="drawer" role="complementary" aria-label="Liste des arrêts" aria-hidden="true">
     <div class="drawer__header">
-      <div class="drawer__title-group">
-        <span class="material-icons-round">map</span>
-        <h2 class="drawer__title">Arrêts</h2>
-      </div>
-      <button id="closeDrawer" class="drawer__close" aria-label="Fermer le panneau">
-        <span class="material-icons-round">close</span>
-      </button>
+        <div class="drawer__title-group">
+            <span class="material-icons-round">map</span>
+            <h2 class="drawer__title">Arrêts</h2>
+        </div>
+        <button id="closeDrawer" class="drawer__close" aria-label="Fermer le panneau">
+            <span class="material-icons-round">close</span>
+        </button>
     </div>
 
     <div class="drawer__search">
-      <span class="material-icons-round">search</span>
-      <input type="search" id="drawerSearchInput" placeholder="Filtrer…" class="drawer__search-input" aria-label="Filtrer les arrêts">
+        <span class="material-icons-round">search</span>
+        <input type="search" id="drawerSearchInput" placeholder="Filtrer…" class="drawer__search-input" aria-label="Filtrer les arrêts">
     </div>
 
     <div class="drawer__tabs" role="tablist" aria-label="Filtres">
-      <button class="drawer__tab drawer__tab--active" data-tab="all" role="tab" aria-selected="true">Tous</button>
-      <button class="drawer__tab" data-tab="bus4" role="tab" aria-selected="false">BUS 4</button>
-      <button class="drawer__tab" data-tab="bus8" role="tab" aria-selected="false">BUS 8</button>
-      <button class="drawer__tab" data-tab="favorites" role="tab" aria-selected="false">
-        <span class="material-icons-round" style="font-size:14px;vertical-align:middle">star</span>
-        Favoris
-      </button>
+        <button class="drawer__tab drawer__tab--active" data-tab="all" role="tab" aria-selected="true">Tous</button>
+        <button class="drawer__tab" data-tab="bus4" role="tab" aria-selected="false">BUS 4</button>
+        <button class="drawer__tab" data-tab="bus8" role="tab" aria-selected="false">BUS 8</button>
+        <button class="drawer__tab" data-tab="favorites" role="tab" aria-selected="false">
+            <span class="material-icons-round" style="font-size:14px;vertical-align:middle">star</span>
+            Favoris
+        </button>
     </div>
 
     <ul id="stopsList" class="drawer__list" role="list" aria-label="Liste des arrêts"></ul>
 
     <div class="drawer__footer">
-      <span id="drawerStats" aria-live="polite">Chargement…</span>
+        <span id="drawerStats" aria-live="polite">Chargement…</span>
     </div>
-  </aside>
+</aside>
 
-  <!-- MODALE ITINÉRAIRE -->
-  <div id="routeModal" class="modal" role="dialog" aria-modal="true" aria-label="Calculer un itinéraire" aria-hidden="true">
+<!-- ═══════════════════════════════════════
+     MODALE ITINÉRAIRE
+═══════════════════════════════════════ -->
+<div id="routeModal" class="modal" role="dialog" aria-modal="true" aria-label="Calculer un itinéraire" aria-hidden="true">
     <div class="modal__backdrop" id="routeModalBackdrop"></div>
     <div class="modal__card">
-      <div class="modal__header">
-        <h3 class="modal__title">Itinéraire</h3>
-        <button id="closeRouteModal" class="modal__close" aria-label="Fermer">
-          <span class="material-icons-round">close</span>
-        </button>
-      </div>
-      <div class="modal__body">
-        <div class="route-field">
-          <div class="route-field__dot route-field__dot--origin"></div>
-          <input type="text" id="startInput" value="Ma position" readonly class="route-field__input" aria-label="Point de départ">
+        <div class="modal__header">
+            <h3 class="modal__title">Itinéraire</h3>
+            <button id="closeRouteModal" class="modal__close" aria-label="Fermer">
+                <span class="material-icons-round">close</span>
+            </button>
         </div>
-        <div class="route-field__connector"></div>
-        <div class="route-field route-field--dest">
-          <div class="route-field__dot route-field__dot--dest"></div>
-          <input type="text" id="endInput" placeholder="Choisir un arrêt…" autocomplete="off" class="route-field__input" aria-label="Destination" aria-autocomplete="list" aria-controls="endSuggestions">
-          <ul id="endSuggestions" class="search-suggestions search-suggestions--modal" role="listbox"></ul>
-        </div>
+        <div class="modal__body">
+            <div class="route-field">
+                <div class="route-field__dot route-field__dot--origin"></div>
+                <input type="text" id="startInput" value="Ma position" readonly class="route-field__input" aria-label="Point de départ">
+            </div>
+            <div class="route-field__connector"></div>
+            <div class="route-field route-field--dest">
+                <div class="route-field__dot route-field__dot--dest"></div>
+                <input type="text" id="endInput" placeholder="Choisir un arrêt…" autocomplete="off"
+                       class="route-field__input" aria-label="Destination" aria-autocomplete="list"
+                       aria-controls="endSuggestions">
+                <ul id="endSuggestions" class="search-suggestions search-suggestions--modal" role="listbox"></ul>
+            </div>
 
-        <div id="routeInfo" class="route-info" hidden>
-          <div class="route-info__item">
-            <span class="material-icons-round">straighten</span>
-            <span id="routeDistance">—</span>
-          </div>
-          <div class="route-info__item">
-            <span class="material-icons-round">schedule</span>
-            <span id="routeDuration">—</span>
-          </div>
+            <div id="routeInfo" class="route-info" hidden>
+                <div class="route-info__item">
+                    <span class="material-icons-round">straighten</span>
+                    <span id="routeDistance">—</span>
+                </div>
+                <div class="route-info__item">
+                    <span class="material-icons-round">schedule</span>
+                    <span id="routeDuration">—</span>
+                </div>
+            </div>
         </div>
-      </div>
-      <div class="modal__footer">
-        <button id="clearRouteBtn" class="btn btn--ghost">
-          <span class="material-icons-round">delete_outline</span>
-          Effacer
-        </button>
-        <button id="traceBtn" class="btn btn--primary">
-          <span class="material-icons-round">route</span>
-          Tracer
-        </button>
-      </div>
+        <div class="modal__footer">
+            <button id="clearRouteBtn" class="btn btn--ghost">
+                <span class="material-icons-round">delete_outline</span>
+                Effacer
+            </button>
+            <button id="traceBtn" class="btn btn--primary">
+                <span class="material-icons-round">route</span>
+                Tracer
+            </button>
+        </div>
     </div>
-  </div>
+</div>
 
-  <!-- PANNEAU ETA -->
-  <div id="etaPanel" class="eta-panel" aria-live="polite" aria-hidden="true">
+<!-- ═══════════════════════════════════════
+     PANNEAU ETA (temps d'arrivée)
+═══════════════════════════════════════ -->
+<div id="etaPanel" class="eta-panel" aria-live="polite" aria-hidden="true">
     <div class="eta-panel__inner">
-      <div class="eta-panel__header">
-        <span class="material-icons-round">schedule</span>
-        <span id="etaStopName" class="eta-panel__stop">—</span>
-        <button id="etaPanelClose" class="eta-panel__close" aria-label="Fermer">
-          <span class="material-icons-round">close</span>
-        </button>
-      </div>
-      <div class="eta-panel__buses" id="etaBuses"></div>
+        <div class="eta-panel__header">
+            <span class="material-icons-round">schedule</span>
+            <span id="etaStopName" class="eta-panel__stop">—</span>
+            <button id="etaPanelClose" class="eta-panel__close" aria-label="Fermer">
+                <span class="material-icons-round">close</span>
+            </button>
+        </div>
+        <div class="eta-panel__buses" id="etaBuses"></div>
     </div>
-  </div>
+</div>
 
-  <!-- PANNEAU ADMIN -->
-  <div id="adminModal" class="modal" role="dialog" aria-modal="true" aria-label="Tableau de bord admin" aria-hidden="true">
+<!-- ═══════════════════════════════════════
+     PANNEAU ADMIN
+═══════════════════════════════════════ -->
+<div id="adminModal" class="modal" role="dialog" aria-modal="true" aria-label="Tableau de bord admin" aria-hidden="true">
     <div class="modal__backdrop" id="adminModalBackdrop"></div>
     <div class="modal__card modal__card--wide">
-      <div class="modal__header">
-        <h3 class="modal__title">
-          <span class="material-icons-round">admin_panel_settings</span>
-          Administration
-        </h3>
-        <button id="closeAdminModal" class="modal__close" aria-label="Fermer">
-          <span class="material-icons-round">close</span>
-        </button>
-      </div>
-      <div class="modal__body">
-        <!-- Login (caché en mode démo) -->
-        <div id="adminLogin" class="admin-login" hidden>
-          <p class="admin-login__hint">Accès réservé aux administrateurs IUG</p>
-          <div class="admin-field">
-            <label class="admin-field__label" for="adminPassword">Mot de passe</label>
-            <input type="password" id="adminPassword" class="admin-field__input" placeholder="••••••••" aria-label="Mot de passe administrateur">
-          </div>
-          <button id="adminLoginBtn" class="btn btn--primary btn--full">
-            <span class="material-icons-round">lock_open</span>
-            Connexion
-          </button>
-          <p id="adminLoginError" class="admin-login__error" hidden>Mot de passe incorrect</p>
-        </div>
-
-        <!-- Dashboard -->
-        <div id="adminDashboard" class="admin-dashboard">
-          <div class="admin-stats">
-            <div class="admin-stat">
-              <span class="admin-stat__value" id="adminBusCount">2</span>
-              <span class="admin-stat__label">Bus actifs</span>
-            </div>
-            <div class="admin-stat">
-              <span class="admin-stat__value" id="adminStopCount">—</span>
-              <span class="admin-stat__label">Arrêts</span>
-            </div>
-            <div class="admin-stat">
-              <span class="admin-stat__value" id="adminUserCount">—</span>
-              <span class="admin-stat__label">Connexions</span>
-            </div>
-          </div>
-          <div class="admin-section">
-            <h4 class="admin-section__title">État des bus</h4>
-            <div id="adminBusStatus" class="admin-bus-list"></div>
-          </div>
-          <div class="admin-section">
-            <h4 class="admin-section__title">Serveur de positions</h4>
-            <div class="admin-field">
-              <label class="admin-field__label" for="adminRelayUrl">URL du relay</label>
-              <input type="url" id="adminRelayUrl" class="admin-field__input" placeholder="https://…/api/positions">
-            </div>
-            <button id="adminSaveRelay" class="btn btn--primary">
-              <span class="material-icons-round">save</span>
-              Enregistrer
+        <div class="modal__header">
+            <h3 class="modal__title">
+                <span class="material-icons-round">admin_panel_settings</span>
+                Administration
+            </h3>
+            <button id="closeAdminModal" class="modal__close" aria-label="Fermer">
+                <span class="material-icons-round">close</span>
             </button>
-          </div>
-          <div class="admin-section">
-            <h4 class="admin-section__title">Mode simulation</h4>
-            <label class="admin-toggle">
-              <input type="checkbox" id="adminSimToggle" role="switch" aria-checked="true" checked>
-              <span class="admin-toggle__track"></span>
-              <span class="admin-toggle__label">Activer la simulation GPS</span>
-            </label>
-          </div>
-          <button id="adminLogout" class="btn btn--ghost btn--full" style="margin-top:1rem">
-            <span class="material-icons-round">logout</span>
-            Fermer
-          </button>
         </div>
-      </div>
+        <div class="modal__body">
+            <!-- Login -->
+            <div id="adminLogin" class="admin-login">
+                <p class="admin-login__hint">Accès réservé aux administrateurs IUG</p>
+                <div class="admin-field">
+                    <label class="admin-field__label" for="adminPassword">Mot de passe</label>
+                    <input type="password" id="adminPassword" class="admin-field__input" placeholder="••••••••" aria-label="Mot de passe administrateur">
+                </div>
+                <button id="adminLoginBtn" class="btn btn--primary btn--full">
+                    <span class="material-icons-round">lock_open</span>
+                    Connexion
+                </button>
+                <p id="adminLoginError" class="admin-login__error" hidden>Mot de passe incorrect</p>
+            </div>
+
+            <!-- Dashboard -->
+            <div id="adminDashboard" class="admin-dashboard" hidden>
+                <div class="admin-stats">
+                    <div class="admin-stat">
+                        <span class="admin-stat__value" id="adminBusCount">2</span>
+                        <span class="admin-stat__label">Bus actifs</span>
+                    </div>
+                    <div class="admin-stat">
+                        <span class="admin-stat__value" id="adminStopCount">—</span>
+                        <span class="admin-stat__label">Arrêts</span>
+                    </div>
+                    <div class="admin-stat">
+                        <span class="admin-stat__value" id="adminUserCount">—</span>
+                        <span class="admin-stat__label">Connexions</span>
+                    </div>
+                </div>
+                <div class="admin-section">
+                    <h4 class="admin-section__title">État des bus</h4>
+                    <div id="adminBusStatus" class="admin-bus-list"></div>
+                </div>
+                <div class="admin-section">
+                    <h4 class="admin-section__title">Serveur de positions</h4>
+                    <div class="admin-field">
+                        <label class="admin-field__label" for="adminRelayUrl">URL du relay</label>
+                        <input type="url" id="adminRelayUrl" class="admin-field__input" placeholder="https://…/api/positions">
+                    </div>
+                    <button id="adminSaveRelay" class="btn btn--primary">
+                        <span class="material-icons-round">save</span>
+                        Enregistrer
+                    </button>
+                </div>
+                <div class="admin-section">
+                    <h4 class="admin-section__title">Mode simulation</h4>
+                    <label class="admin-toggle">
+                        <input type="checkbox" id="adminSimToggle" role="switch" aria-checked="true">
+                        <span class="admin-toggle__track"></span>
+                        <span class="admin-toggle__label">Activer la simulation GPS</span>
+                    </label>
+                </div>
+                <button id="adminLogout" class="btn btn--ghost btn--full" style="margin-top:1rem">
+                    <span class="material-icons-round">logout</span>
+                    Déconnexion
+                </button>
+            </div>
+        </div>
     </div>
-  </div>
+</div>
 
-  <!-- TOAST CONTAINER -->
-  <div id="toastContainer" class="toast-container" role="region" aria-label="Notifications" aria-live="polite"></div>
+<!-- ═══════════════════════════════════════
+     TOAST CONTAINER
+═══════════════════════════════════════ -->
+<div id="toastContainer" class="toast-container" role="region" aria-label="Notifications" aria-live="polite"></div>
 
-  <!-- FOOTER -->
-  <footer class="footer" role="contentinfo">
+<!-- ═══════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════ -->
+<footer class="footer" role="contentinfo">
     <span class="footer__text">Institut Universitaire du Golfe de Guinée</span>
-  </footer>
+</footer>
 
-  <!-- Scripts -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="script.js"></script>
+<!-- Scripts -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="script.js"></script>
 </body>
-
 </html>
