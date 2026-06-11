@@ -1,14 +1,14 @@
 /**
  * BusEye · script.js
- * Suivi des bus scolaires — IUG Douala
- * Fonctionnalités : Carte Leaflet, Géolocalisation, Simulation GPS,
- * ETA, Favoris, Itinéraire, Notifications Push, Cache offline, Admin
+ * Suivi d'un bus scolaire — IUG Douala
+ * Source : ThingSpeak (channel 3387395, clé 803BAR68N6ODE4Z3)
+ * field1 = latitude, field2 = longitude – lecture toutes les 15 secondes
  */
 
 'use strict';
 
 // ══════════════════════════════════════════════════════════════════
-// CONFIGURATION CENTRALE
+// CONFIGURATION
 // ══════════════════════════════════════════════════════════════════
 const CONFIG = {
     map: {
@@ -17,10 +17,18 @@ const CONFIG = {
         minZoom: 12,
         maxZoom: 19,
     },
+    thingspeak: {
+        readApiKey: '803BAR68N6ODE4Z3',
+        channelId: 3387395,
+        updateInterval: 15000,          // 15 secondes
+        fields: {
+            bus_lat: 'field1',
+            bus_lng: 'field2',
+        }
+    },
     bus: {
-        speedMps: 5.5,           // ~20 km/h vitesse moyenne
-        updateInterval: 3000,    // ms entre chaque position
-        maxDistance: 12000,      // distance max réaliste (m)
+        speedMps: 5.5,                  // vitesse moyenne pour estimation ETA
+        maxDistance: 12000,
     },
     geo: {
         enableHighAccuracy: true,
@@ -28,27 +36,21 @@ const CONFIG = {
         maximumAge: 5000,
     },
     admin: {
-        password: 'iug2024',     // À changer en production
-    },
-    simulation: {
-        enabled: true,
-        stepInterval: 3000,      // ms entre chaque étape simulée
-        stepSize: 3,             // nb de points OSRM avancés par étape
+        password: 'iug2024',
     },
 };
 
 const COLORS = {
     primary: '#1a73e8',
-    bus4:    '#f9ab00',
-    bus8:    '#1e8e3e',
+    bus:     '#f9ab00',                // couleur unique pour le bus
     route:   '#1a73e8',
 };
 
 // ══════════════════════════════════════════════════════════════════
-// DONNÉES : ARRÊTS & BUS
+// DONNÉES : ARRÊTS (une seule ligne)
 // ══════════════════════════════════════════════════════════════════
 const BUS_STOPS = {
-    bus4: [
+    bus: [                             // clé unique 'bus'
         { name: "Campus C",                           coords: [4.039735, 9.751857] },
         { name: "Carrefour Chefferie",                coords: [4.024806, 9.769245] },
         { name: "Saint Nicolas",                      coords: [4.020080, 9.761518] },
@@ -64,18 +66,10 @@ const BUS_STOPS = {
         { name: "Rails Nyalla",                       coords: [4.034902, 9.777759] },
         { name: "Campus C",                           coords: [4.039735, 9.751857] },
     ],
-    bus8: [
-        { name: "Village Ndogpassi (Station Bocom)",  coords: [4.007123, 9.756094] },
-        { name: "Total Danger",                       coords: [4.012732, 9.757205] },
-        { name: "Saint Nicolas",                      coords: [4.020080, 9.761518] },
-        { name: "Carrefour Chefferie",                coords: [4.024806, 9.769245] },
-        { name: "Campus C",                           coords: [4.039735, 9.751857] },
-    ],
 };
 
 const BUS_INFO = {
-    bus4: { id: 'bus4', label: 'BUS 4', company: 'Socatur',  color: COLORS.bus4, textColor: '#5f4300' },
-    bus8: { id: 'bus8', label: 'BUS 8', company: 'Coaster',  color: COLORS.bus8, textColor: '#ffffff' },
+    bus: { id: 'bus', label: 'BUS IUG', company: 'IUG', color: COLORS.bus, textColor: '#5f4300' },
 };
 
 const POI = {
@@ -95,9 +89,6 @@ const POI = {
 const $ = (sel, ctx = document) => ctx.querySelector(sel);
 const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 
-/**
- * Distance Haversine entre deux coordonnées [lat, lng]
- */
 function haversine([lat1, lng1], [lat2, lng2]) {
     const R = 6371000;
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -106,16 +97,10 @@ function haversine([lat1, lng1], [lat2, lng2]) {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-/**
- * Formatte une distance en m / km
- */
 function fmtDistance(m) {
     return m < 1000 ? `${Math.round(m)} m` : `${(m / 1000).toFixed(1)} km`;
 }
 
-/**
- * Formatte des secondes en durée lisible
- */
 function fmtDuration(sec) {
     if (sec < 60) return `< 1 min`;
     const min = Math.round(sec / 60);
@@ -132,7 +117,6 @@ const Toast = (() => {
     function show(title, message = '', type = 'info', duration = 4000) {
         const existing = container.querySelector('.toast');
         if (existing) dismiss(existing, true);
-
         const el = document.createElement('div');
         el.className = `toast toast--${type}`;
         el.setAttribute('role', 'alert');
@@ -146,7 +130,6 @@ const Toast = (() => {
                 <span class="material-icons-round">close</span>
             </button>
         `;
-
         container.appendChild(el);
         el.querySelector('.toast__close').addEventListener('click', () => dismiss(el));
         const timer = setTimeout(() => dismiss(el), duration);
@@ -163,22 +146,16 @@ const Toast = (() => {
     return { show };
 })();
 
-// Alias global
-window.notify = (title, msg, type, dur) => Toast.show(title, msg, type, dur);
-
 // ══════════════════════════════════════════════════════════════════
 // FAVORIS
 // ══════════════════════════════════════════════════════════════════
 const Favorites = (() => {
     const KEY = 'buseye_favorites';
-
     function getAll() {
         try { return JSON.parse(localStorage.getItem(KEY)) || []; }
         catch { return []; }
     }
-
     function has(name) { return getAll().includes(name); }
-
     function toggle(name) {
         const favs = getAll();
         const idx = favs.indexOf(name);
@@ -191,25 +168,22 @@ const Favorites = (() => {
         }
         localStorage.setItem(KEY, JSON.stringify(favs));
         window.dispatchEvent(new CustomEvent('favoritesChanged'));
-        return idx === -1; // true = ajouté
+        return idx === -1;
     }
-
     return { getAll, has, toggle };
 })();
 
 // ══════════════════════════════════════════════════════════════════
-// PUSH NOTIFICATIONS
+// PUSH
 // ══════════════════════════════════════════════════════════════════
 const PushManager = (() => {
     let permission = 'default';
     let badge = 0;
-
     async function request() {
         if (!('Notification' in window)) return false;
         permission = await Notification.requestPermission();
         return permission === 'granted';
     }
-
     function push(title, body, icon = '🚌') {
         badge++;
         _updateBadge();
@@ -219,24 +193,21 @@ const PushManager = (() => {
             Toast.show(title, body, 'info');
         }
     }
-
     function _updateBadge() {
         const el = $('#notifBadge');
         if (!el) return;
         el.textContent = badge > 9 ? '9+' : badge;
         el.hidden = badge === 0;
     }
-
     function clearBadge() {
         badge = 0;
         _updateBadge();
     }
-
     return { request, push, clearBadge };
 })();
 
 // ══════════════════════════════════════════════════════════════════
-// SERVICE WORKER (cache offline)
+// SERVICE WORKER
 // ══════════════════════════════════════════════════════════════════
 function registerSW() {
     if ('serviceWorker' in navigator) {
@@ -247,7 +218,7 @@ function registerSW() {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// MAP SERVICE
+// MAP SERVICE (suppression des couches bus8)
 // ══════════════════════════════════════════════════════════════════
 class MapService {
     constructor() {
@@ -256,7 +227,6 @@ class MapService {
             minZoom: CONFIG.map.minZoom,
             maxZoom: CONFIG.map.maxZoom,
         }).setView(CONFIG.map.center, CONFIG.map.zoom);
-
         this._setupLayers();
         this._routeCache = new Map();
     }
@@ -265,32 +235,26 @@ class MapService {
         const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors',
         });
-
         const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             attribution: '© Esri',
             opacity: 0.85,
         });
-
         osm.addTo(this.map);
 
         this.layers = {
-            bus4Stops:   L.layerGroup().addTo(this.map),
-            bus8Stops:   L.layerGroup().addTo(this.map),
-            bus4Route:   L.layerGroup().addTo(this.map),
-            bus8Route:   L.layerGroup().addTo(this.map),
-            campus:      L.layerGroup().addTo(this.map),
-            parking:     L.layerGroup().addTo(this.map),
+            busStops:   L.layerGroup().addTo(this.map),   // unique couche d'arrêts
+            busRoute:   L.layerGroup().addTo(this.map),   // unique couche de ligne
+            campus:     L.layerGroup().addTo(this.map),
+            parking:    L.layerGroup().addTo(this.map),
         };
 
         L.control.layers(
             { '🗺️ Standard': osm, '🛰️ Satellite': sat },
             {
-                '🟡 Ligne BUS 4': this.layers.bus4Route,
-                '🟢 Ligne BUS 8': this.layers.bus8Route,
-                '🛑 Arrêts BUS 4': this.layers.bus4Stops,
-                '🛑 Arrêts BUS 8': this.layers.bus8Stops,
-                '🎓 Campus':       this.layers.campus,
-                '🅿️ Parkings':     this.layers.parking,
+                '🚌 Ligne du bus':   this.layers.busRoute,
+                '🛑 Arrêts':         this.layers.busStops,
+                '🎓 Campus':         this.layers.campus,
+                '🅿️ Parkings':       this.layers.parking,
             },
             { collapsed: true }
         ).addTo(this.map);
@@ -299,7 +263,6 @@ class MapService {
     async fetchRoute(coords) {
         const key = coords.map(c => c.join(',')).join('|');
         if (this._routeCache.has(key)) return this._routeCache.get(key);
-
         try {
             const pts = coords.map(c => `${c[1]},${c[0]}`).join(';');
             const url = `https://router.project-osrm.org/route/v1/driving/${pts}?overview=full&geometries=geojson`;
@@ -313,59 +276,41 @@ class MapService {
             return coords;
         }
     }
-
-    distance(a, b) { return haversine(a, b); }
 }
 
 // ══════════════════════════════════════════════════════════════════
-// STOP MANAGER
+// STOP MANAGER (une seule ligne, un seul bus)
 // ══════════════════════════════════════════════════════════════════
 class StopManager {
     constructor(mapService) {
         this.map = mapService;
-        this._stopMarkers = [];
         this._allStops = null;
         this._init();
     }
 
     _init() {
-        BUS_STOPS.bus4.forEach(s => this._addStopMarker(s, 'bus4'));
-        BUS_STOPS.bus8.forEach(s => this._addStopMarker(s, 'bus8'));
-
-        POI.campuses.forEach(p => L.marker(p.coords)
-            .bindPopup(`<b>🎓 ${p.name}</b>`)
-            .addTo(this.map.layers.campus));
-
-        POI.parkings.forEach(p => L.marker(p.coords)
-            .bindPopup(`<b>🅿️ ${p.name}</b>`)
-            .addTo(this.map.layers.parking));
-    }
-
-    _addStopMarker(stop, busId) {
-        const info = BUS_INFO[busId];
-        const icon = L.divIcon({
-            className: '',
-            html: `<div style="
-                width:12px;height:12px;
-                background:${info.color};
-                border:2px solid white;
-                border-radius:50%;
-                box-shadow:0 1px 4px rgba(0,0,0,.3);
-            "></div>`,
-            iconSize: [12, 12],
-            iconAnchor: [6, 6],
+        const info = BUS_INFO.bus;
+        // Ajouter les arrêts
+        BUS_STOPS.bus.forEach(stop => {
+            const icon = L.divIcon({
+                className: '',
+                html: `<div style="width:12px;height:12px;background:${info.color};border:2px solid white;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.3);"></div>`,
+                iconSize: [12, 12],
+                iconAnchor: [6, 6],
+            });
+            const marker = L.marker(stop.coords, { icon }).addTo(this.map.layers.busStops);
+            marker.on('click', () => this._showStopPopup(marker, stop));
         });
 
-        const layer = busId === 'bus4' ? this.map.layers.bus4Stops : this.map.layers.bus8Stops;
-        const marker = L.marker(stop.coords, { icon }).addTo(layer);
-        marker.on('click', () => this._showStopPopup(marker, stop));
-        this._stopMarkers.push({ marker, stop, busId });
+        // POI
+        POI.campuses.forEach(p => L.marker(p.coords).bindPopup(`<b>🎓 ${p.name}</b>`).addTo(this.map.layers.campus));
+        POI.parkings.forEach(p => L.marker(p.coords).bindPopup(`<b>🅿️ ${p.name}</b>`).addTo(this.map.layers.parking));
     }
 
     _showStopPopup(marker, stop) {
-        const lines = this._getLinesForStop(stop.name);
+        const lines = ['BUS IUG'];  // toujours cette ligne
         const isFav = Favorites.has(stop.name);
-        const badges = lines.map(l => `<span class="badge badge--${l.toLowerCase().replace(' ', '')}">${l}</span>`).join('');
+        const badges = lines.map(l => `<span class="badge badge--bus4">${l}</span>`).join(''); // on recycle le style badge--bus4
 
         const popup = L.popup({ className: '', maxWidth: 260 })
             .setLatLng(stop.coords)
@@ -394,26 +339,12 @@ class StopManager {
                     </div>
                 </div>
             `);
-
         popup.openOn(this.map.map);
-    }
-
-    _getLinesForStop(name) {
-        const lines = [];
-        if (BUS_STOPS.bus4.some(s => s.name === name)) lines.push('BUS 4');
-        if (BUS_STOPS.bus8.some(s => s.name === name)) lines.push('BUS 8');
-        return lines;
     }
 
     getAllStops() {
         if (this._allStops) return this._allStops;
-        const map = new Map();
-        [...BUS_STOPS.bus4, ...BUS_STOPS.bus8].forEach(s => {
-            if (!map.has(s.name)) {
-                map.set(s.name, { ...s, lines: this._getLinesForStop(s.name) });
-            }
-        });
-        this._allStops = [...map.values()];
+        this._allStops = BUS_STOPS.bus.map(s => ({ ...s, lines: ['BUS IUG'] }));
         return this._allStops;
     }
 
@@ -428,144 +359,99 @@ class StopManager {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// BUS MANAGER (positions + simulation + ETA)
+// BUS MANAGER (ThingSpeak – un seul bus)
 // ══════════════════════════════════════════════════════════════════
 class BusManager {
     constructor(mapService) {
         this.map = mapService;
-        this._markers   = new Map(); // busId → marker
-        this._routes    = new Map(); // busId → array of coords
-        this._simState  = new Map(); // busId → { stepIndex, routePoints }
-        this._simTimers = new Map();
-        this._busData   = new Map(); // busId → { lat, lng, speed, timestamp, currentStop, nextStop, eta }
-        this._relayUrl  = localStorage.getItem('buseye_relay') || '';
-        this._simEnabled = true;
+        this._marker = null;
+        this._route = null;
+        this._busData = null;
+        this._lastFavNotif = null;
+        this._status = 'loading';
 
-        this._buildRoutes();
+        this._buildRoute();
+        this._startPolling();
     }
 
-    async _buildRoutes() {
-        for (const [busId, stops] of Object.entries(BUS_STOPS)) {
-            const coords = stops.map(s => s.coords);
-            const route  = await this.map.fetchRoute(coords);
-            const layer  = busId === 'bus4' ? this.map.layers.bus4Route : this.map.layers.bus8Route;
-            const info   = BUS_INFO[busId];
+    async _buildRoute() {
+        const stops = BUS_STOPS.bus;
+        const coords = stops.map(s => s.coords);
+        const route = await this.map.fetchRoute(coords);
+        this._route = route;
 
-            L.polyline(route, {
-                color:  info.color,
-                weight: 5,
-                opacity: .85,
-                dashArray: null,
-            }).addTo(layer);
+        L.polyline(route, {
+            color: COLORS.bus,
+            weight: 5,
+            opacity: .85,
+        }).addTo(this.map.layers.busRoute);
+    }
 
-            this._routes.set(busId, route);
+    _startPolling() {
+        const fetchData = async () => {
+            try {
+                const url = `https://api.thingspeak.com/channels/${CONFIG.thingspeak.channelId}/feeds/last.json?api_key=${CONFIG.thingspeak.readApiKey}`;
+                const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                if (!data) return;
 
-            if (this._simEnabled) {
-                this._startSimulation(busId, route);
+                const lat = parseFloat(data[CONFIG.thingspeak.fields.bus_lat]);
+                const lng = parseFloat(data[CONFIG.thingspeak.fields.bus_lng]);
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    this._updateBusPosition(lat, lng, Date.now());
+                }
+                this._setStatus('live');
+            } catch (err) {
+                console.warn('Erreur ThingSpeak :', err);
+                this._setStatus('offline');
             }
-        }
-    }
-
-    // ── Simulation GPS ──────────────────────────────────────────
-    _startSimulation(busId, route) {
-        if (!route || route.length === 0) return;
-        this._simState.set(busId, { stepIndex: 0 });
-
-        const tick = () => {
-            const state = this._simState.get(busId);
-            const total = route.length;
-            state.stepIndex = (state.stepIndex + CONFIG.simulation.stepSize) % total;
-            const [lat, lng] = route[state.stepIndex];
-            const speed = 4 + Math.random() * 4; // 4–8 m/s
-            this._updateBusPosition(busId, lat, lng, speed, Date.now());
         };
 
-        tick();
-        const timer = setInterval(tick, CONFIG.simulation.stepInterval);
-        this._simTimers.set(busId, timer);
+        fetchData();
+        this._pollTimer = setInterval(fetchData, CONFIG.thingspeak.updateInterval);
     }
 
-    stopSimulation(busId) {
-        clearInterval(this._simTimers.get(busId));
-        this._simTimers.delete(busId);
-    }
+    _updateBusPosition(lat, lng, timestamp) {
+        const info = BUS_INFO.bus;
+        const stops = BUS_STOPS.bus;
+        const pos = [lat, lng];
 
-    restartSimulation() {
-        this._simTimers.forEach((_, id) => this.stopSimulation(id));
-        for (const [busId, route] of this._routes.entries()) {
-            this._startSimulation(busId, route);
-        }
-    }
-
-    // ── Position réelle (relay) ──────────────────────────────────
-    async fetchPositions() {
-        if (!this._relayUrl) return;
-        try {
-            const res  = await fetch(this._relayUrl, { signal: AbortSignal.timeout(5000) });
-            const data = await res.json();
-            for (const [id, pos] of Object.entries(data)) {
-                if (pos?.lat && pos?.lng) {
-                    const busId = id.toLowerCase().includes('4') ? 'bus4' : 'bus8';
-                    this._updateBusPosition(busId, pos.lat, pos.lng, pos.speed ?? 0, pos.timestamp ?? Date.now());
-                }
-            }
-            this._setStatus('live');
-        } catch {
-            this._setStatus('offline');
-        }
-    }
-
-    _setStatus(state) {
-        const dot   = $('.status-dot');
-        const label = $('.status-label');
-        if (!dot || !label) return;
-        dot.className = `status-dot status-dot--${state}`;
-        label.textContent = { live: 'En direct', offline: 'Hors ligne', loading: 'Connexion…' }[state] || state;
-    }
-
-    // ── Mise à jour position d'un bus ────────────────────────────
-    _updateBusPosition(busId, lat, lng, speed, timestamp) {
-        const info  = BUS_INFO[busId];
-        const stops = BUS_STOPS[busId];
-        const pos   = [lat, lng];
-
-        // Arrêt actuel et prochain
         const { stop: currentStop } = this._findClosest(stops, pos);
-        const nextStop = this._findNext(stops, currentStop, pos, busId);
+        const nextStop = this._findNext(stops, currentStop, pos);
 
-        // ETA vers arrêt favori
+        // Notification si arrive à un arrêt favori
         const favStops = Favorites.getAll();
         const favMatch = stops.find(s => favStops.includes(s.name));
         if (favMatch) {
-            const eta = this._calcEta(pos, favMatch.coords, busId);
-            if (eta !== null && eta <= 5 * 60 && !this._lastFavNotif?.[busId]) {
+            const eta = this._calcEta(pos, favMatch.coords);
+            if (eta !== null && eta <= 5 * 60 && !this._lastFavNotif) {
                 PushManager.push(`${info.label} arrive bientôt`, `${fmtDuration(eta)} avant ${favMatch.name}`);
-                this._lastFavNotif = { ...(this._lastFavNotif || {}), [busId]: Date.now() };
+                this._lastFavNotif = Date.now();
             }
-            // Reset notification après 10 min
-            if (this._lastFavNotif?.[busId] && Date.now() - this._lastFavNotif[busId] > 600000) {
-                delete this._lastFavNotif[busId];
+            if (this._lastFavNotif && Date.now() - this._lastFavNotif > 600000) {
+                this._lastFavNotif = null;
             }
         }
 
-        this._busData.set(busId, { lat, lng, speed, timestamp, currentStop, nextStop });
+        this._busData = { lat, lng, timestamp, currentStop, nextStop };
 
-        if (this._markers.has(busId)) {
-            this._animateMarker(this._markers.get(busId), pos);
-            this._markers.get(busId).setPopupContent(this._makePopup(busId));
+        if (this._marker) {
+            this._animateMarker(this._marker, pos);
+            this._marker.setPopupContent(this._makePopup());
         } else {
-            const icon   = this._makeIcon(info);
+            const icon = this._makeIcon(info);
             const marker = L.marker(pos, { icon }).addTo(this.map.map);
-            marker.bindPopup(this._makePopup(busId), { maxWidth: 280 });
+            marker.bindPopup(this._makePopup(), { maxWidth: 280 });
             marker.on('click', () => marker.openPopup());
-            this._markers.set(busId, marker);
+            this._marker = marker;
         }
     }
 
     _makeIcon(info) {
         return L.divIcon({
             className: '',
-            html: `<div class="bus-marker bus-marker--${info.id}">
+            html: `<div class="bus-marker bus-marker--bus4">
                        <div class="bus-marker__body">
                            <span class="material-icons-round bus-marker__icon">directions_bus</span>
                            ${info.label}
@@ -577,17 +463,16 @@ class BusManager {
         });
     }
 
-    _makePopup(busId) {
-        const data = this._busData.get(busId);
-        const info = BUS_INFO[busId];
+    _makePopup() {
+        const data = this._busData;
+        const info = BUS_INFO.bus;
         if (!data) return '';
 
-        const { currentStop, nextStop, speed, timestamp } = data;
+        const { currentStop, nextStop, timestamp } = data;
         const timeStr = timestamp ? new Date(timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—';
-        const speedStr = speed ? `${(speed * 3.6).toFixed(0)} km/h` : '—';
 
         return `<div class="bus-popup">
-            <div class="bus-popup__header bus-popup__header--${busId}">
+            <div class="bus-popup__header bus-popup__header--bus4">
                 <div class="bus-popup__header-icon"><span class="material-icons-round">directions_bus</span></div>
                 <div>
                     <div class="bus-popup__name">${info.label}</div>
@@ -613,7 +498,7 @@ class BusManager {
                 <div class="bus-popup__row">
                     <span class="material-icons-round">speed</span>
                     <span class="bus-popup__label">Vitesse</span>
-                    <span class="bus-popup__value">${speedStr}</span>
+                    <span class="bus-popup__value">—</span>
                 </div>
                 <div class="bus-popup__row">
                     <span class="material-icons-round">access_time</span>
@@ -648,71 +533,60 @@ class BusManager {
         return { stop: nearest, distance: minDist };
     }
 
-    _findNext(stops, currentStop, pos, busId) {
+    _findNext(stops, currentStop, pos) {
         if (!currentStop) return null;
-        const idx     = stops.findIndex(s => s.name === currentStop.name);
+        const idx = stops.findIndex(s => s.name === currentStop.name);
         const nextIdx = (idx + 1) % stops.length;
-        const next    = stops[nextIdx];
-        const eta     = this._calcEta(pos, next.coords, busId);
+        const next = stops[nextIdx];
+        const eta = this._calcEta(pos, next.coords);
         return { stop: next, eta };
     }
 
-    _calcEta(pos, destCoords, busId) {
-        const route = this._routes.get(busId);
-        if (!route || route.length === 0) {
+    _calcEta(pos, destCoords) {
+        if (!this._route || this._route.length === 0) {
             const dist = haversine(pos, destCoords);
             return dist / CONFIG.bus.speedMps;
         }
-
         let idxPos = 0, idxDest = 0, minPos = Infinity, minDest = Infinity;
-        route.forEach((p, i) => {
+        this._route.forEach((p, i) => {
             const dp = haversine(pos, p);
             const dd = haversine(destCoords, p);
-            if (dp < minPos)  { minPos  = dp;  idxPos  = i; }
+            if (dp < minPos)  { minPos  = dp; idxPos  = i; }
             if (dd < minDest) { minDest = dd; idxDest = i; }
         });
-
         let dist = 0;
         if (idxDest >= idxPos) {
-            for (let i = idxPos; i < idxDest; i++) dist += haversine(route[i], route[i+1]);
+            for (let i = idxPos; i < idxDest; i++) dist += haversine(this._route[i], this._route[i+1]);
         } else {
-            for (let i = idxPos; i < route.length - 1; i++) dist += haversine(route[i], route[i+1]);
-            for (let i = 0; i < idxDest; i++) dist += haversine(route[i], route[i+1]);
+            for (let i = idxPos; i < this._route.length - 1; i++) dist += haversine(this._route[i], this._route[i+1]);
+            for (let i = 0; i < idxDest; i++) dist += haversine(this._route[i], this._route[i+1]);
         }
-
         return Math.min(dist / CONFIG.bus.speedMps, CONFIG.bus.maxDistance / CONFIG.bus.speedMps);
     }
 
-    // ETA de tous les bus vers un arrêt nommé
+    _setStatus(state) {
+        const dot   = $('.status-dot');
+        const label = $('.status-label');
+        if (!dot || !label) return;
+        dot.className = `status-dot status-dot--${state}`;
+        label.textContent = { live: 'En direct', offline: 'Hors ligne', loading: 'Connexion…' }[state] || state;
+        this._status = state;
+    }
+
+    // Méthode publique pour l'ETA vers un arrêt
     getEtaForStop(stopName) {
-        const result = [];
-        for (const [busId, data] of this._busData.entries()) {
-            const stops = BUS_STOPS[busId];
-            const target = stops.find(s => s.name === stopName);
-            if (!target) continue;
-            const eta = this._calcEta([data.lat, data.lng], target.coords, busId);
-            result.push({ busId, info: BUS_INFO[busId], eta, currentStop: data.currentStop });
-        }
-        return result;
+        if (!this._busData) return [];
+        const stop = BUS_STOPS.bus.find(s => s.name === stopName);
+        if (!stop) return [];
+        const eta = this._calcEta([this._busData.lat, this._busData.lng], stop.coords);
+        return [{ busId: 'bus', info: BUS_INFO.bus, eta, currentStop: this._busData.currentStop }];
     }
 
-    getBusData(busId) { return this._busData.get(busId); }
-    getAllBusData()   { return this._busData; }
-
-    setRelayUrl(url) {
-        this._relayUrl = url;
-        localStorage.setItem('buseye_relay', url);
-    }
-
-    setSimEnabled(enabled) {
-        this._simEnabled = enabled;
-        if (enabled) this.restartSimulation();
-        else this._simTimers.forEach((_, id) => this.stopSimulation(id));
-    }
+    getBusData() { return this._busData; }
 }
 
 // ══════════════════════════════════════════════════════════════════
-// GEOLOCATION MANAGER
+// GEOLOCATION MANAGER (inchangé, adapté pour l'arrêt le plus proche)
 // ══════════════════════════════════════════════════════════════════
 class GeoManager {
     constructor(mapService) {
@@ -721,35 +595,29 @@ class GeoManager {
         this._marker = null;
         this._watch  = null;
         this._follow = false;
-
         this._bindButtons();
         this._startWatch();
     }
-
     _bindButtons() {
-        $('#locateBtn').addEventListener('click',      () => this.centerOnUser());
-        $('#followBtn').addEventListener('click',      () => this.toggleFollow());
+        $('#locateBtn').addEventListener('click', () => this.centerOnUser());
+        $('#followBtn').addEventListener('click', () => this.toggleFollow());
         $('#nearestStopBtn').addEventListener('click', () => this.goToNearest());
     }
-
     _startWatch() {
         if (!navigator.geolocation) {
-            Toast.show('Géolocalisation indisponible', 'Votre navigateur ne la supporte pas', 'error');
+            Toast.show('Géolocalisation indisponible', '', 'error');
             return;
         }
-
         this._watch = navigator.geolocation.watchPosition(
             pos => this._onUpdate(pos),
             err => this._onError(err),
             CONFIG.geo,
         );
     }
-
     _onUpdate(pos) {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
         this.coords = [lat, lng];
-
         if (!this._marker) {
             const icon = L.divIcon({
                 className: 'user-marker',
@@ -762,53 +630,32 @@ class GeoManager {
         } else {
             this._marker.setLatLng([lat, lng]);
         }
-
         if (this._follow) {
             this.map.map.setView([lat, lng], this.map.map.getZoom(), { animate: true });
         }
-
-        // Rafraîchir la liste si drawer ouvert
         window.dispatchEvent(new CustomEvent('userMoved'));
     }
-
     _onError(err) {
-        const msgs = {
-            1: 'Accès à la position refusé.',
-            2: 'Position non disponible.',
-            3: 'Délai dépassé.',
-        };
+        const msgs = { 1: 'Accès refusé.', 2: 'Position indisponible.', 3: 'Délai dépassé.' };
         Toast.show('Erreur GPS', msgs[err.code] || 'Erreur inconnue', 'warning');
     }
-
     centerOnUser() {
-        if (!this.coords) {
-            Toast.show('Position non disponible', 'Activez la géolocalisation', 'warning');
-            return;
-        }
+        if (!this.coords) { Toast.show('Position non disponible', '', 'warning'); return; }
         this.map.map.setView(this.coords, 17, { animate: true });
         this._marker?.openPopup();
     }
-
     toggleFollow() {
         this._follow = !this._follow;
         const btn = $('#followBtn');
         btn.classList.toggle('is-active', this._follow);
         btn.setAttribute('aria-pressed', String(this._follow));
-        Toast.show(
-            this._follow ? 'Suivi activé' : 'Suivi désactivé',
-            this._follow ? 'La carte suit votre position' : '',
-            this._follow ? 'success' : 'info',
-        );
+        Toast.show(this._follow ? 'Suivi activé' : 'Suivi désactivé', '', this._follow ? 'success' : 'info');
         if (this._follow && this.coords) {
             this.map.map.setView(this.coords, this.map.map.getZoom(), { animate: true });
         }
     }
-
     goToNearest() {
-        if (!this.coords) {
-            Toast.show('Position inconnue', "Activez d'abord la géolocalisation", 'warning');
-            return;
-        }
+        if (!this.coords) { Toast.show('Position inconnue', '', 'warning'); return; }
         const { stop, distance } = window._stopManager.getNearestStop(this.coords);
         if (!stop) return;
         this.map.map.setView(stop.coords, 17, { animate: true });
@@ -817,12 +664,11 @@ class GeoManager {
             .setContent(`<div class="stop-popup__header"><div class="stop-popup__name">${stop.name}</div><small>Distance : ${fmtDistance(distance)}</small></div>`)
             .openOn(this.map.map);
     }
-
     getCoords() { return this.coords; }
 }
 
 // ══════════════════════════════════════════════════════════════════
-// ROUTE MANAGER
+// ROUTE MANAGER (inchangé, une seule ligne)
 // ══════════════════════════════════════════════════════════════════
 class RouteManager {
     constructor(mapService, geoManager) {
@@ -831,48 +677,37 @@ class RouteManager {
         this._line = null;
         this._init();
     }
-
     _init() {
-        // Ouvrir modale
-        $('#routeBtn')?.addEventListener('click', () => this.openModal());
         $('#routeModalBackdrop').addEventListener('click', () => this.closeModal());
         $('#closeRouteModal').addEventListener('click', () => this.closeModal());
         $('#traceBtn').addEventListener('click', () => this.calculate());
         $('#clearRouteBtn').addEventListener('click', () => { this.clear(); this.closeModal(); });
-
-        // Suggestions destination
         const endInput = $('#endInput');
         const endSug   = $('#endSuggestions');
         endInput.addEventListener('input', () => this._suggest(endInput.value, endSug));
         document.addEventListener('click', e => {
             if (!endInput.contains(e.target)) endSug.innerHTML = '';
         });
-
-        // Fermer avec Escape
-        document.addEventListener('keydown', e => {
-            if (e.key === 'Escape') this.closeModal();
-        });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') this.closeModal(); });
     }
-
     _suggest(term, container) {
         container.innerHTML = '';
         if (term.length < 2) return;
         const stops = window._stopManager.getAllStops()
             .filter(s => s.name.toLowerCase().includes(term.toLowerCase()))
             .slice(0, 6);
-
         stops.forEach(s => {
             const li = document.createElement('li');
             li.className = 'suggestion-item';
             li.setAttribute('role', 'option');
             li.innerHTML = `
-                <div class="suggestion-item__icon suggestion-item__icon--both">
+                <div class="suggestion-item__icon suggestion-item__icon--bus4">
                     <span class="material-icons-round">location_on</span>
                 </div>
                 <div class="suggestion-item__body">
                     <div class="suggestion-item__name">${s.name}</div>
                     <div class="suggestion-item__meta">
-                        ${s.lines.map(l => `<span class="badge badge--${l.toLowerCase().replace(' ', '')}">${l}</span>`).join('')}
+                        <span class="badge badge--bus4">BUS IUG</span>
                     </div>
                 </div>
             `;
@@ -883,36 +718,26 @@ class RouteManager {
             container.appendChild(li);
         });
     }
-
     openModal() {
         const modal = $('#routeModal');
         modal.classList.add('is-open');
         modal.removeAttribute('aria-hidden');
         $('#endInput').focus();
     }
-
     closeModal() {
         const modal = $('#routeModal');
         modal.classList.remove('is-open');
         modal.setAttribute('aria-hidden', 'true');
     }
-
     async calculate() {
         const userCoords = this.geo.getCoords();
-        if (!userCoords) {
-            Toast.show('Position requise', "Activez la géolocalisation d'abord", 'warning');
-            return;
-        }
-
+        if (!userCoords) { Toast.show('Position requise', '', 'warning'); return; }
         const destName = $('#endInput').value.trim();
-        if (!destName) { Toast.show('Destination manquante', 'Entrez un nom d\'arrêt', 'warning'); return; }
-
+        if (!destName) { Toast.show('Destination manquante', '', 'warning'); return; }
         const stop = window._stopManager.getAllStops()
             .find(s => s.name.toLowerCase().includes(destName.toLowerCase()));
-        if (!stop) { Toast.show('Arrêt introuvable', 'Vérifiez le nom', 'error'); return; }
-
+        if (!stop) { Toast.show('Arrêt introuvable', '', 'error'); return; }
         Toast.show('Calcul en cours…', '', 'info', 2000);
-
         try {
             const [uo, ul] = userCoords;
             const [do_, dl] = stop.coords;
@@ -920,11 +745,9 @@ class RouteManager {
             const res  = await fetch(url);
             const data = await res.json();
             if (!data.routes?.[0]) throw new Error('Aucun itinéraire');
-
             const route    = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
             const distM    = data.routes[0].distance;
             const durSec   = data.routes[0].duration;
-
             this.clear();
             this._line = L.polyline(route, {
                 color:  COLORS.route,
@@ -932,24 +755,19 @@ class RouteManager {
                 opacity: .85,
                 dashArray: '10, 6',
             }).addTo(this.map.map);
-
             this.map.map.fitBounds(this._line.getBounds(), { padding: [60, 60] });
-
-            // Afficher infos itinéraire
             const info = $('#routeInfo');
             if (info) {
                 $('#routeDistance').textContent = fmtDistance(distM);
                 $('#routeDuration').textContent = fmtDuration(durSec);
                 info.hidden = false;
             }
-
             Toast.show('Itinéraire tracé', `${fmtDistance(distM)} · ${fmtDuration(durSec)}`, 'success');
             this.closeModal();
         } catch (err) {
             Toast.show('Erreur itinéraire', 'Impossible de calculer le trajet', 'error');
         }
     }
-
     clear() {
         if (this._line) { this.map.map.removeLayer(this._line); this._line = null; }
         const info = $('#routeInfo');
@@ -958,7 +776,7 @@ class RouteManager {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// SEARCH & DRAWER MANAGER
+// SEARCH & DRAWER MANAGER (un seul bus, suppression de l'onglet BUS 8)
 // ══════════════════════════════════════════════════════════════════
 class SearchManager {
     constructor(mapService, geoManager) {
@@ -969,14 +787,16 @@ class SearchManager {
     }
 
     _init() {
-        // Drawer
+        // Cacher l'onglet BUS 8 car il n'y a qu'un bus
+        const tabBus8 = $('.drawer__tab[data-tab="bus8"]');
+        if (tabBus8) tabBus8.style.display = 'none';
+
         $('#menuToggle').addEventListener('click', () => this.openDrawer());
         $('#closeDrawer').addEventListener('click', () => this.closeDrawer());
         $('#drawerOverlay').addEventListener('click', () => this.closeDrawer());
         $('#drawerSearchInput').addEventListener('input', () => this._renderList());
         $$('.drawer__tab').forEach(t => t.addEventListener('click', () => this._switchTab(t)));
 
-        // Search panel
         const toggle = $('#searchToggleBtn');
         const panel  = $('#searchPanel');
         const input  = $('#searchInput');
@@ -1018,18 +838,12 @@ class SearchManager {
             }
         });
 
-        // Notif button
         $('#notifBtn').addEventListener('click', async () => {
             const granted = await PushManager.request();
             PushManager.clearBadge();
-            Toast.show(
-                granted ? 'Notifications activées' : 'Notifications refusées',
-                granted ? 'Vous serez alerté à l\'approche d\'un bus favori' : '',
-                granted ? 'success' : 'warning',
-            );
+            Toast.show(granted ? 'Notifications activées' : 'Notifications refusées', '', granted ? 'success' : 'warning');
         });
 
-        // Rafraîchir la liste quand les données changent
         window.addEventListener('favoritesChanged', () => this._renderList());
         window.addEventListener('userMoved', () => this._renderList());
 
@@ -1044,21 +858,17 @@ class SearchManager {
             .slice(0, 6);
 
         stops.forEach(s => {
-            const iconClass = s.lines.includes('BUS 4') && s.lines.includes('BUS 8')
-                ? 'both'
-                : s.lines.includes('BUS 4') ? 'bus4' : 'bus8';
-
             const li = document.createElement('li');
             li.className = 'suggestion-item';
             li.setAttribute('role', 'option');
             li.innerHTML = `
-                <div class="suggestion-item__icon suggestion-item__icon--${iconClass}">
+                <div class="suggestion-item__icon suggestion-item__icon--bus4">
                     <span class="material-icons-round">location_on</span>
                 </div>
                 <div class="suggestion-item__body">
                     <div class="suggestion-item__name">${s.name}</div>
                     <div class="suggestion-item__meta">
-                        ${s.lines.map(l => `<span class="badge badge--${l.toLowerCase().replace(' ','')}">${l}</span>`).join('')}
+                        <span class="badge badge--bus4">BUS IUG</span>
                     </div>
                 </div>
             `;
@@ -1077,8 +887,6 @@ class SearchManager {
         if (!stop) return;
         this.map.map.setView(stop.coords, 18, { animate: true });
         setTimeout(() => {
-            const iconClass = stop.lines.includes('BUS 4') && stop.lines.includes('BUS 8') ? 'both'
-                : stop.lines.includes('BUS 4') ? 'bus4' : 'bus8';
             L.popup({ maxWidth: 260 })
                 .setLatLng(stop.coords)
                 .setContent(`
@@ -1086,7 +894,7 @@ class SearchManager {
                         <div class="stop-popup__header">
                             <div class="stop-popup__name">${stop.name}</div>
                             <div class="stop-popup__lines">
-                                ${stop.lines.map(l => `<span class="badge badge--${l.toLowerCase().replace(' ','')}">${l}</span>`).join('')}
+                                <span class="badge badge--bus4">BUS IUG</span>
                             </div>
                         </div>
                         <div class="stop-popup__body">
@@ -1144,12 +952,11 @@ class SearchManager {
         const userPos = this.geo.getCoords();
         let stops = window._stopManager.getAllStops();
 
-        if (tab === 'bus4')      stops = stops.filter(s => s.lines.includes('BUS 4'));
-        if (tab === 'bus8')      stops = stops.filter(s => s.lines.includes('BUS 8'));
+        if (tab === 'bus4')      stops = stops.filter(s => s.lines.includes('BUS IUG'));
+        if (tab === 'bus8')      stops = [];  // ne devrait plus apparaître, onglet caché
         if (tab === 'favorites') stops = stops.filter(s => Favorites.has(s.name));
         if (term)                stops = stops.filter(s => s.name.toLowerCase().includes(term));
 
-        // Trier par distance si position disponible
         if (userPos) {
             stops = stops.map(s => ({ ...s, _dist: haversine(userPos, s.coords) }))
                          .sort((a, b) => a._dist - b._dist);
@@ -1159,36 +966,28 @@ class SearchManager {
         if (!list) return;
 
         if (stops.length === 0) {
-            list.innerHTML = `
-                <li class="empty-state">
-                    <span class="material-icons-round">search_off</span>
-                    <p>Aucun arrêt trouvé</p>
-                </li>`;
+            list.innerHTML = `<li class="empty-state"><span class="material-icons-round">search_off</span><p>Aucun arrêt trouvé</p></li>`;
             $('#drawerStats').textContent = '0 arrêt';
             return;
         }
 
         list.innerHTML = stops.map(s => {
             const isFav = Favorites.has(s.name);
-            const iconClass = s.lines.includes('BUS 4') && s.lines.includes('BUS 8') ? 'both'
-                : s.lines.includes('BUS 4') ? 'bus4' : 'bus8';
-            const borderClass = s.lines.includes('BUS 4') ? 'bus4' : 'bus8';
             const distHtml = s._dist !== undefined
                 ? `<span class="stop-card__dist"><span class="material-icons-round">straighten</span>${fmtDistance(s._dist)}</span>`
                 : '';
 
             return `
-                <li class="stop-card stop-card--${borderClass} ${isFav ? 'stop-card--favorite' : ''}"
+                <li class="stop-card stop-card--bus4 ${isFav ? 'stop-card--favorite' : ''}"
                     onclick="window._searchManager.goToStop('${s.name}')"
-                    role="button" tabindex="0"
-                    aria-label="Aller à l'arrêt ${s.name}">
-                    <div class="stop-card__icon stop-card__icon--${iconClass}">
+                    role="button" tabindex="0" aria-label="Aller à l'arrêt ${s.name}">
+                    <div class="stop-card__icon stop-card__icon--bus4">
                         <span class="material-icons-round">location_on</span>
                     </div>
                     <div class="stop-card__body">
                         <div class="stop-card__name">${s.name}</div>
                         <div class="stop-card__meta">
-                            ${s.lines.map(l => `<span class="badge badge--${l.toLowerCase().replace(' ','')}">${l}</span>`).join('')}
+                            <span class="badge badge--bus4">BUS IUG</span>
                             ${distHtml}
                         </div>
                     </div>
@@ -1208,23 +1007,22 @@ class SearchManager {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// ETA PANEL
+// ETA PANEL (un seul bus)
 // ══════════════════════════════════════════════════════════════════
 function showEtaPanel(stopName) {
     const panel = $('#etaPanel');
     if (!panel) return;
 
     $('#etaStopName').textContent = stopName;
-
     const etas = window._busManager.getEtaForStop(stopName);
     const container = $('#etaBuses');
 
     if (etas.length === 0) {
-        container.innerHTML = '<div style="color:var(--clr-text-secondary);font-size:.85rem;text-align:center;padding:8px">Aucun bus en service actuellement</div>';
+        container.innerHTML = '<div style="color:var(--clr-text-secondary);font-size:.85rem;text-align:center;padding:8px">Aucun bus en service</div>';
     } else {
         container.innerHTML = etas.map(e => `
             <div class="eta-row">
-                <span class="eta-row__badge badge badge--${e.busId}">${e.info.label}</span>
+                <span class="eta-row__badge badge badge--bus4">${e.info.label}</span>
                 <span class="eta-row__stop">${e.currentStop?.name || 'En circulation'}</span>
                 <span class="eta-row__time">${fmtDuration(e.eta)}</span>
             </div>
@@ -1236,43 +1034,24 @@ function showEtaPanel(stopName) {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// ADMIN PANEL
+// ADMIN PANEL (simplifié)
 // ══════════════════════════════════════════════════════════════════
 class AdminManager {
     constructor() {
         this._authed = false;
         this._init();
     }
-
     _init() {
-        // Ouvrir via topbar (triple-clic sur le logo)
         let clicks = 0;
         $('#brandLogo').addEventListener('click', () => {
             clicks++;
             if (clicks >= 3) { clicks = 0; this.openModal(); }
             setTimeout(() => { clicks = 0; }, 600);
         });
-
-        // Fermer
         $('#adminModalBackdrop').addEventListener('click', () => this.closeModal());
         $('#closeAdminModal').addEventListener('click', () => this.closeModal());
-
-        // Login
         $('#adminLoginBtn').addEventListener('click', () => this._login());
         $('#adminPassword').addEventListener('keydown', e => { if (e.key === 'Enter') this._login(); });
-
-        // Actions dashboard
-        $('#adminSaveRelay').addEventListener('click', () => {
-            const url = $('#adminRelayUrl').value.trim();
-            window._busManager.setRelayUrl(url);
-            Toast.show('URL enregistrée', url || '(effacée)', 'success');
-        });
-
-        $('#adminSimToggle').addEventListener('change', e => {
-            window._busManager.setSimEnabled(e.target.checked);
-            Toast.show(e.target.checked ? 'Simulation activée' : 'Simulation désactivée', '', 'info');
-        });
-
         $('#adminLogout').addEventListener('click', () => {
             this._authed = false;
             $('#adminLogin').hidden = false;
@@ -1280,7 +1059,6 @@ class AdminManager {
             $('#adminPassword').value = '';
         });
     }
-
     _login() {
         const pw = $('#adminPassword').value;
         const err = $('#adminLoginError');
@@ -1296,29 +1074,27 @@ class AdminManager {
             $('#adminPassword').focus();
         }
     }
-
     _refreshDashboard() {
         const stops = window._stopManager?.getAllStops() || [];
         $('#adminStopCount').textContent = stops.length;
+        $('#adminBusCount').textContent = '1';
 
-        const busData = window._busManager?.getAllBusData();
+        const busData = window._busManager?.getBusData();
         const list = $('#adminBusStatus');
         if (list && busData) {
-            list.innerHTML = [...busData.entries()].map(([id, d]) => {
-                const info = BUS_INFO[id];
-                return `<div class="admin-bus-row">
-                    <div class="admin-bus-row__dot" style="background:${info.color}"></div>
-                    <div class="admin-bus-row__name">${info.label}</div>
-                    <div class="admin-bus-row__status">${d.currentStop?.name || '—'}</div>
-                </div>`;
-            }).join('');
+            list.innerHTML = `<div class="admin-bus-row">
+                <div class="admin-bus-row__dot" style="background:${COLORS.bus}"></div>
+                <div class="admin-bus-row__name">BUS IUG</div>
+                <div class="admin-bus-row__status">${busData.currentStop?.name || '—'}</div>
+            </div>`;
         }
 
-        // Relayer URL
-        const relayUrl = localStorage.getItem('buseye_relay') || '';
-        $('#adminRelayUrl').value = relayUrl;
+        // Afficher les infos de connexion
+        $('#adminRelayUrl').value = `${CONFIG.thingspeak.readApiKey} (canal ${CONFIG.thingspeak.channelId})`;
+        $('#adminRelayUrl').disabled = true;
+        $('#adminSaveRelay').disabled = true;
+        $('#adminSimToggle').parentElement.style.display = 'none';
     }
-
     openModal() {
         const modal = $('#adminModal');
         modal.classList.add('is-open');
@@ -1326,7 +1102,6 @@ class AdminManager {
         if (this._authed) this._refreshDashboard();
         else $('#adminPassword').focus();
     }
-
     closeModal() {
         const modal = $('#adminModal');
         modal.classList.remove('is-open');
@@ -1335,7 +1110,7 @@ class AdminManager {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// CALLBACKS GLOBAUX (utilisés dans les popups innerHTML)
+// CALLBACKS GLOBAUX
 // ══════════════════════════════════════════════════════════════════
 window._stopFavToggle = (name, btn) => {
     const added = Favorites.toggle(name);
@@ -1347,14 +1122,11 @@ window._stopFavToggle = (name, btn) => {
         if (text?.nodeType === 3) text.textContent = added ? ' Retiré' : ' Favori';
     }
 };
-
 window._openRouteToStop = (name) => {
     $('#endInput').value = name;
     window._routeManager.openModal();
-    // Fermer popup
     window._mapService.map.closePopup();
 };
-
 window._showEta = (name) => {
     showEtaPanel(name);
     window._mapService.map.closePopup();
@@ -1364,51 +1136,34 @@ window._showEta = (name) => {
 // INITIALISATION
 // ══════════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async () => {
-    // Splash
     const splash = $('#splashScreen');
 
-    // Initialisation des services
     const mapService = new MapService();
     window._mapService = mapService;
-
     const stopManager = new StopManager(mapService);
     window._stopManager = stopManager;
-
     const busManager = new BusManager(mapService);
     window._busManager = busManager;
-
     const geoManager = new GeoManager(mapService);
     window._geoManager = geoManager;
-
     const routeManager = new RouteManager(mapService, geoManager);
     window._routeManager = routeManager;
-
     const searchManager = new SearchManager(mapService, geoManager);
     window._searchManager = searchManager;
-
     new AdminManager();
 
-    // Bouton itinéraire topbar
-    $('#routeBtn')?.addEventListener('click', () => routeManager.openModal());
-
-    // ETA panel fermeture
     $('#etaPanelClose')?.addEventListener('click', () => {
         const p = $('#etaPanel');
         p.classList.remove('is-visible');
         p.setAttribute('aria-hidden', 'true');
     });
 
-    // Polling relay (si URL configurée)
-    setInterval(() => busManager.fetchPositions(), CONFIG.bus.updateInterval);
-
-    // Service Worker
     registerSW();
 
-    // Masquer splash
     setTimeout(() => {
         splash?.classList.add('is-hidden');
         setTimeout(() => splash?.remove(), 500);
     }, 1600);
 
-    Toast.show('BusEye prêt', 'Suivi en temps réel · IUG', 'success');
+    Toast.show('BusEye prêt', '1 bus suivi via ThingSpeak · IUG', 'success');
 });
